@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const dist=path.join(root,'dist');
-const basePath='/Adventures-Of-Daniel/';
+const basePath='/himrgame.github.io/';
 const base=new URL('https://example.invalid'+basePath);
 const files=new Map();
 const references=new Set();

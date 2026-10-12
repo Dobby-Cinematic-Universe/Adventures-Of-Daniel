@@ -7,8 +7,8 @@ A playable browser port of the supplied version 1.6 Windows release. It runs the
 Use Node.js 22 or newer (Node.js 24 LTS is used in CI). No npm dependencies need to be installed.
 
 ```sh
-git clone https://github.com/Dobby-Cinematic-Universe/Adventures-Of-Daniel.git
-cd Adventures-Of-Daniel
+git clone https://github.com/Dobby-Cinematic-Universe/himrgame.github.io.git
+cd himrgame.github.io
 npm start
 ```
 
@@ -16,19 +16,21 @@ Open http://localhost:4173. Alternatively, serve `dist/` with any static HTTP se
 
 ## GitHub Pages
 
-The deployment URL is [dobby-cinematic-universe.github.io/Adventures-Of-Daniel/](https://dobby-cinematic-universe.github.io/Adventures-Of-Daniel/) once the first Pages deployment succeeds.
+The deployment URL is [dobby-cinematic-universe.github.io/himrgame.github.io/](https://dobby-cinematic-universe.github.io/himrgame.github.io/) once the first Pages deployment succeeds.
 
-For the initial setup, open [Settings → Pages](https://github.com/Dobby-Cinematic-Universe/Adventures-Of-Daniel/settings/pages) and choose **GitHub Actions** as the build and deployment source. Push `main`, or run **Check and deploy GitHub Pages** from the Actions tab. The workflow rebuilds and compares generated files, checks syntax, runs the regression suites sequentially, verifies all deployment assets under the repository URL path, and deploys only `dist/`. Pull requests run the same checks without deploying. The official GitHub actions are pinned to commit hashes, and only the deployment job receives permission to publish Pages.
+The repository is owned by **Dobby-Cinematic-Universe**, so this is a project site with a repository path. A root site at `https://himrgame.github.io/` requires the owner account or organization to be named `himrgame`, with its repository named `himrgame.github.io`. A root site under the current owner instead requires `dobby-cinematic-universe.github.io` as the repository name. See [GitHub Pages site naming](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
+
+For the initial setup, open [Settings → Pages](https://github.com/Dobby-Cinematic-Universe/himrgame.github.io/settings/pages) and choose **GitHub Actions** as the build and deployment source. Push `main`, or run **Check and deploy GitHub Pages** from the Actions tab. The workflow rebuilds and compares generated files, checks syntax, runs the regression suites sequentially, verifies all deployment assets under the repository URL path, and deploys only `dist/`. Pull requests run the same checks without deploying. The official GitHub actions are pinned to commit hashes, and only the deployment job receives permission to publish Pages.
 
 No custom domain, server, npm install, or repository secret is required. See [GitHub's custom workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) for Pages configuration.
 
 To preview the repository path locally:
 
 ```sh
-BASE_PATH=/Adventures-Of-Daniel/ npm start
+BASE_PATH=/himrgame.github.io/ npm start
 ```
 
-Open http://localhost:4173/Adventures-Of-Daniel/. Asset URLs are relative, so the same `dist/` works at a domain root or repository path.
+Open http://localhost:4173/himrgame.github.io/. Asset URLs are relative, so the same `dist/` works at a domain root or repository path.
 
 World saves and control preferences belong to the browser origin. Before moving from the previous hosted site or localhost to GitHub Pages, export world slots from **World saves**, then import them on the new site. Preferences can be set again in **Controls**. The game does not upload saves to a server.
 
@@ -98,7 +100,7 @@ npm test
 npm run check:pages
 ```
 
-`npm run check:pages` checks the static artifact for unsupported files or links, resolves module and asset references, and serves every deployment file under `/Adventures-Of-Daniel/` to verify its content and MIME type. It uses a temporary loopback server on an automatically assigned port and stops it afterward. `npm run benchmark` is available separately for simulation profiling.
+`npm run check:pages` checks the static artifact for unsupported files or links, resolves module and asset references, and serves every deployment file under `/himrgame.github.io/` to verify its content and MIME type. It uses a temporary loopback server on an automatically assigned port and stops it afterward. `npm run benchmark` is available separately for simulation profiling.
 
 Seventy-three checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quests and doors, weapons, arena waves, original menu/story/ending transitions, collision masks, grenade use, death/revival, repeated petrol shifts, sleep and the companion's bed interaction, shops and number formatting, controls, fullscreen pointer mapping, complete world round-trips, deterministic continuation, visited-room persistence, mid-shift/mid-sleep saves, original statistics separation, failed writes, invalid imports, cheats, bounded long sessions, and the moon trigger, persistent deactivation target, neck/collar connection, appearance preference, rendering scope, smooth sampling, and menu music lifecycle. The final scan adds numeric boolean compatibility, enemy sight-line firing, complete physics validation, synchronous IndexedDB rollback, and indexed firing guards. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
 
