@@ -8,9 +8,10 @@
   "scripts": {
     "start": "node server.mjs",
     "rebuild:game": "python3 tools/transpile.py && python3 tools/package-data.py",
+    "rebuild:audio": "python3 tools/audio-fallbacks.py",
     "check:pages": "node --max-old-space-size=128 tools/check-pages.mjs",
-    "test": "node --max-old-space-size=128 test/game.test.mjs && node --max-old-space-size=128 test/bindings.test.mjs && node --max-old-space-size=128 test/world-save.test.mjs && node --max-old-space-size=128 test/runtime-audit.test.mjs && node --max-old-space-size=128 test/gamepad.test.mjs",
-    "check": "node --check dist/engine.js && node --check dist/code.js && node --check dist/app.js && node --check dist/bindings.js && node --check dist/world-state.js && node --check dist/world-saves.js && node --check dist/player-menus.js && node --check dist/easter-egg.js && node --check dist/gamepad.js && node --check server.mjs && node --check tools/check-pages.mjs",
+    "test": "node --max-old-space-size=128 test/game.test.mjs && node --max-old-space-size=128 test/bindings.test.mjs && node --max-old-space-size=128 test/world-save.test.mjs && node --max-old-space-size=128 test/runtime-audit.test.mjs && node --max-old-space-size=128 test/gamepad.test.mjs && node --max-old-space-size=128 test/audio.test.mjs",
+    "check": "node --check dist/engine.js && node --check dist/code.js && node --check dist/app.js && node --check dist/bindings.js && node --check dist/world-state.js && node --check dist/world-saves.js && node --check dist/player-menus.js && node --check dist/easter-egg.js && node --check dist/gamepad.js && node --check dist/audio.js && node --check server.mjs && node --check tools/check-pages.mjs",
     "benchmark": "node --max-old-space-size=128 test/performance.mjs"
   }
 }

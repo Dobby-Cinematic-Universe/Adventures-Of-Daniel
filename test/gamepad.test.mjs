@@ -78,3 +78,22 @@ test('accessible button clicks remain pressed for exactly one simulation step',(
  const {g,pad}=make();pad.pulse('jump');assert.ok(g.input.pressed.has(32));pad.tick(100);g.step();pad.afterStep();
  assert.equal(g.first(g.assets.Object1).jumps,1);assert.equal(g.input.keys.size,0);step(g,4);assert.equal(g.first(g.assets.Object1).jumps,1);
 });
+test('overlapping ground below the house never sends gamepad movement to a distant wall edge',()=>{
+ for(const direction of [-1,1]){
+  const {g,pad}=make(),p=g.first(g.assets.Object1);p.x=6300;p.y=2740;p.vsp=0;
+  assert.ok(g.place(p,p.x,p.y,g.assets.wall));pad.startStick('move',1,vector(direction));
+  for(let n=0;n<48;n++){const before=[p.x,p.y];pad.tick(n*16);g.step();assert.ok(Math.hypot(p.x-before[0],p.y-before[1])<=12,'movement and recovery must remain local');}
+  assert.ok(Math.abs(p.x-6300)<=192);assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);assert.equal(g.errors.length,0);
+ }
+});
+test('shallow stair recovery takes small steps and then allows the gamepad to walk',()=>{
+ const {g,pad}=make(),p=g.first(g.assets.Object1);p.x=11100;p.y=2140;p.vsp=0;
+ for(let n=0;n<16&&g.place(p,p.x,p.y,g.assets.wall);n++){const before=[p.x,p.y];g.step();assert.ok(Math.hypot(p.x-before[0],p.y-before[1])<=8);}
+ assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);const x=p.x;pad.startStick('move',1,vector(-1));step(g,5);assert.ok(p.x<x);assert.equal(g.errors.length,0);
+});
+test('saving during recovery resumes the same bounded movement after restoration',()=>{
+ const {g}=make(),p=g.first(g.assets.Object1);p.x=6300;p.y=2740;p.vsp=0;step(g,6);const snapshot=g.captureWorld();
+ const restored=new Engine(data,null,null,{seed:12345});restored.audioEnabled=false;restored.applyWorld(snapshot);
+ g.input.keys.add(65);restored.input.keys.add(65);step(g,50);step(restored,50);
+ const a=g.captureWorld(),b=restored.captureWorld();delete a.savedAt;delete b.savedAt;assert.deepEqual(a,b);assert.equal(g.errors.length,0);assert.equal(restored.errors.length,0);
+});

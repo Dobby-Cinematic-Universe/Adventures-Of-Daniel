@@ -230,7 +230,12 @@ E.call("game_set_speed",[60,E.get("gamespeed_fps")]);
 return ;
 }
 else {}
-E.call("player_unstick",[]);
+if(E.truthy(E.call("player_unstick",[]))){
+E.set("gunkickx",0);
+E.set("gunkicky",0);
+return ;
+}
+else {}
 if(E.truthy(E.member(E.get("global"),"hascontrol"))){
 E.set("key_left",(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_left")])) || E.truthy(E.call("keyboard_check",[E.call("ord",["A"])]))));
 E.set("key_right",(E.truthy(E.call("keyboard_check",[E.get("vk_right")])) || E.truthy(E.call("keyboard_check",[E.call("ord",["D"])]))));

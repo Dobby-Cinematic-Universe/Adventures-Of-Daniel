@@ -45,7 +45,7 @@ async function verify(basePath){
   }
  }
  const data=JSON.parse(await readFile(path.join(dist,'data.json'),'utf8'));
- for(const sound of data.sounds)reference('assets/'+sound.path);
+ for(const sound of data.sounds){reference('assets/'+sound.path);if(sound.fallback)reference('assets/'+sound.fallback);}
  for(const texture of [...data.sprites.flatMap(sprite=>sprite.textures),...data.fonts.map(font=>font.texture)]){
   const index=/^Texture (\d+)$/.exec(texture.TexturePage);
   assert.ok(index,'Unknown texture atlas: '+texture.TexturePage);

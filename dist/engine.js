@@ -1,6 +1,7 @@
 import {CODE, SCRIPTS} from './code.js';
 import {WORLD_FORMAT,WORLD_VERSION,DEFAULT_CHEATS,ROOM_VARIABLES,cloneState,validateWorld,encodeWorld} from './world-state.js';
 import {FaceEasterEgg} from './easter-egg.js';
+import {GameAudio} from './audio.js';
 
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 const rad=d=>d*Math.PI/180;
@@ -164,7 +165,7 @@ export class Engine {
   this.randomState=(options.seed??Math.floor(Math.random()*4294967296))>>>0||12345;
   this.roomStates=new Map();this.worldInitialized=false;this.cheats={...DEFAULT_CHEATS};
   this.input={keys:new Set(),pressed:new Set(),released:new Set(),buttons:new Set(),bpressed:new Set(),breleased:new Set(),mx:0.5,my:0.5};
-  this.errors=[];this.errorSet=new Set();this.paused=false;this.audioEnabled=true;this.audioPool=new Map();this.soundsPlaying=new Map();this.nextSound=1;
+  this.errors=[];this.errorSet=new Set();this.paused=false;this.audioEnabled=true;this.audio=new GameAudio(this);this.audioPool=this.audio.pool;this.soundsPlaying=this.audio.playing;
   this.storage=storage;try{this.storage??=typeof localStorage!=='undefined'?localStorage:null;}catch{}this.memoryFiles=new Map();this.ini=null;this.faceEgg=new FaceEasterEgg(this);this.renderer=new Renderer(this,canvas);this.builtins=this.makeBuiltins();this.pendingRoom=null;
   this.objectMeta=this.objects.map((o,index)=>{
    const ancestors=[];for(let n=index;n>=0;){ancestors.push(n);const p=this.objects[n].info.ParentId;n=p?this.assets[p]:-1;}
@@ -259,7 +260,7 @@ export class Engine {
   this.roomIndex=this.assets[state.room];this.room=this.data.rooms[this.roomIndex];this.layers=structuredClone(this.room.layers);
   for(const info of state.layers)Object.assign(this.getLayerFrom(info.LayerId,this.layers).info,info);
   this.instances=[...cloneState(state.instances),...persistent];this.camera={...state.camera};this.gui={...state.gui};this.frame=state.frame;this.fps=state.fps;
-  Object.assign(this.global,state.locals);this.rebuildIndexes();this.pendingRoom=null;this.needsSweep=false;this.audioStop();this.drawVersion++;
+  Object.assign(this.global,state.locals);this.rebuildIndexes();this.pendingRoom=null;this.needsSweep=false;this.audioStop();this.resumeAudio();this.drawVersion++;
  }
  getLayerFrom(id,layers){return layers.find(l=>l.info.LayerId===id);}
  applyWorld(source){
@@ -275,7 +276,7 @@ export class Engine {
   const player=this.first(this.assets.Object1);if(!player)throw new Error('Enter the world to use this cheat.');
   if(action==='heal'){
    const dead=this.first(this.assets.oPDead);
-   if(dead){dead.done=1;dead.vsp=0;const wasPaused=this.paused;this.paused=false;this.input.pressed.add(32);this.step();this.paused=wasPaused;this.input.pressed.clear();}
+   if(dead){dead.done=1;dead.vsp=0;const wasPaused=this.paused,enabled=this.audioEnabled;this.paused=false;this.audioEnabled=enabled&&!wasPaused;this.input.pressed.add(32);try{this.step();}finally{this.paused=wasPaused;this.audioEnabled=enabled;this.input.pressed.clear();}}
    this.global.php=8;
   }else if(action==='money')this.global.kills+=1000;
   else if(action==='ammo')this.global.ammo+=1000;
@@ -309,7 +310,7 @@ export class Engine {
   for(const s of this.instances)this.runEvent(s,7,4);
   if(progress){Object.assign(this.global,progress);this.reconcileWeapon(progress.equippedweapon);}
   if(this.first(this.assets.Object1))this.worldInitialized=true;
-  this.repairWeaponOwnership();this.buildGrid();this.pendingRoom=null;this.onRoomChange?.(this.room.info.Name);
+  this.repairWeaponOwnership();this.buildGrid();this.pendingRoom=null;this.resumeAudio();this.onRoomChange?.(this.room.info.Name);
  }
  bounds(s,x=s.x,y=s.y){
   const spr=this.sprites[s.mask_index>=0?s.mask_index:s.sprite_index];if(!spr)return {left:x,right:x,top:y,bottom:y,valid:false};
@@ -365,18 +366,22 @@ export class Engine {
  query(b,target,self){const found=[];for(const s of this.candidates(b,target,self))if(this.collides(b,this.bounds(s)))found.push(s);return found;}
  place(s,x,y,target){const b=this.bounds(s,x,y);for(const other of this.candidates(b,target,s))if(this.collides(b,this.bounds(other)))return other;return null;}
  recoverPlayer(s){
-  if(!gmlBoolean(this.global.hascontrol)||this.first(this.assets.oPDead))return;
-  const b=this.bounds(s),walls=this.query(b,this.assets.wall,s);if(!walls.length)return;
-  // Test the edges of overlapping walls, including adjoining stair tiles.
-  // Only the player moves; enemy collision and normal movement remain unchanged.
-  let best=null;
-  for(const wall of walls){const w=this.bounds(wall);
-   for(const [dx,dy] of [[0,w.top-b.bottom],[0,w.bottom-b.top],[w.left-b.right,0],[w.right-b.left,0]]){
-    const distance=Math.abs(dx)+Math.abs(dy);if(best&&distance>=best.distance)continue;
-    if(!this.place(s,s.x+dx,s.y+dy,this.assets.wall))best={dx,dy,distance};
-   }
+  if(!gmlBoolean(this.global.hascontrol)||this.first(this.assets.oPDead))return false;
+  const b=this.bounds(s),walls=this.query(b,this.assets.wall,s);
+  if(!walls.length)return false;
+  // Search only around the character. A distant edge of a large floor is not an escape.
+  const rx=Math.min(128,b.right-b.left+8),ry=Math.min(512,(b.bottom-b.top)*4),xs=new Set([0]),ys=new Set([0]);let best=null;
+  const consider=(dx,dy)=>{const distance=Math.hypot(dx,dy);if(!distance||Math.abs(dx)>rx||Math.abs(dy)>ry||best&&distance>=best.distance)return;if(!this.place(s,s.x+dx,s.y+dy,this.assets.wall))best={dx,dy,distance};};
+  const search={...b,left:b.left-rx,right:b.right+rx,top:b.top-ry,bottom:b.bottom+ry};
+  for(const wall of this.candidates(search,this.assets.wall,s)){const w=this.bounds(wall);if(!this.overlaps(search,w))continue;
+   for(const dx of [w.left-b.right-1e-6,w.right-b.left+1e-6])if(Math.abs(dx)<=rx)xs.add(dx);
+   for(const dy of [w.top-b.bottom-1e-6,w.bottom-b.top+1e-6])if(Math.abs(dy)<=ry)ys.add(dy);
   }
-  if(best){s.x+=best.dx;s.y+=best.dy;if(best.dy)s.vsp=0;}
+  // Diagonal corrections handle adjacent tiles without falling back to a remote wall edge.
+  for(const dx of xs)for(const dy of ys)consider(dx,dy);
+  if(!best)return false;
+  const fraction=Math.min(1,8/best.distance);s.x+=best.dx*fraction;s.y+=best.dy*fraction;s.hsp=0;s.vsp=0;
+  return !!this.place(s,s.x,s.y,this.assets.wall);
  }
  movePlayerVertical(s,amount){
   if(!Number.isFinite(amount)||!amount)return;
@@ -392,7 +397,7 @@ export class Engine {
   s.y+=move;if(move!==amount)s.vsp=0;
  }
  step(){
-  if(this.paused||!this.room)return;this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
+  if(this.paused||!this.room)return;const wasDead=!!this.first(this.assets.oPDead);this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
   for(const s of before){if(s.dead)continue;s.xprevious=s.x;s.yprevious=s.y;this.runEvent(s,3,1);}
   for(const s of before){if(s.dead)continue;for(let i=0;i<12;i++)if(s.alarm[i]>0){if(--s.alarm[i]===0){s.alarm[i]=-1;this.runEvent(s,2,i);}}}
   for(const s of before){if(s.dead)continue;for(const k of this.input.pressed)this.runEvent(s,9,k);for(const k of this.input.released)this.runEvent(s,10,k);for(const k of this.input.keys)this.runEvent(s,5,k);if(this.input.pressed.size)this.runEvent(s,9,1);this.runMouse(s);this.runEvent(s,3,0);}
@@ -404,6 +409,7 @@ export class Engine {
   if(this.needsSweep){this.instances=this.instances.filter(s=>!s.dead);this.needsSweep=false;}
   this.input.pressed.clear();this.input.released.clear();this.input.bpressed.clear();this.input.breleased.clear();
   if(this.pendingRoom!==null)this.loadRoom(this.pendingRoom);
+  if(wasDead&&!this.first(this.assets.oPDead))this.resumeAudio();
   this.faceEgg.syncAudio();
  }
  runMouse(s){if(!this.objectMeta[s.object_index].mouse||!(this.input.buttons.size||this.input.bpressed.size||this.input.breleased.size))return;const b=this.bounds(s),x=this.camera.x+this.input.mx*this.camera.w,y=this.camera.y+this.input.my*this.camera.h,inside=x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom;for(const n of this.input.bpressed){this.runEvent(s,6,49+n);if(inside)this.runEvent(s,6,3+n);}for(const n of this.input.buttons)if(inside)this.runEvent(s,6,n-1);for(const n of this.input.breleased)if(inside)this.runEvent(s,6,6+n);}
@@ -420,8 +426,14 @@ export class Engine {
   isolated.repairWeaponOwnership();isolated.repairPetrolMessages();isolated.reconcileWeapon(isolated.global.equippedweapon);const world=isolated.captureWorld();if(Number.isFinite(s.time))world.savedAt=s.time;return validateWorld(world,this.data);
  }
  restoreCheckpoint(){try{const text=this.readFile('checkpoint');if(!text)return false;return this.applyWorld(this.convertLegacyCheckpoint(text));}catch{return false;}}
- audioPlay(id,loop){if(!this.audioEnabled||typeof Audio==='undefined')return 0;const spec=this.data.sounds[id];if(!spec)return 0;let pool=this.audioPool.get(id);if(!pool){pool=[];this.audioPool.set(id,pool);}let a=pool.find(a=>a.paused||a.ended);if(!a&&pool.length<3){a=new Audio('assets/'+spec.path);a.preload='none';pool.push(a);}if(!a){if(loop)return 0;a=pool[0];a.pause();}a.loop=!!loop;a.volume=(spec.Volume??1)*.55;a.currentTime=0;a.play().catch(()=>{});const handle=this.nextSound++;this.soundsPlaying.set(handle,a);if(this.soundsPlaying.size>100)this.soundsPlaying.delete(this.soundsPlaying.keys().next().value);return handle;}
- audioStop(){for(const pool of this.audioPool.values())for(const a of pool)a.pause();this.soundsPlaying.clear();this.faceEgg?.stopAudio();}
+ audioPlay(id,loop,priority=0){return this.audio.play(id,loop,priority);}
+ suspendAudio(){this.audio.suspend();this.faceEgg?.stopAudio(false);}
+ audioStop(){this.audio.stop();this.faceEgg?.stopAudio();}
+ resumeAudio(){
+  const world=['room26','room1','room3','petrolstationroom'].includes(this.room?.info.Name),alive=!!this.first(this.assets.Object1)&&!this.first(this.assets.oPDead);
+  if(world&&alive)this.audio.play(this.assets.nightsounds,true,7);
+  if(alive)this.audio.resume();this.faceEgg?.syncAudio(true);
+ }
  makeBuiltins(){
   const g=this,r=this.renderer;
   const f={
@@ -436,7 +448,7 @@ export class Engine {
    draw_set_colour:(_,c)=>r.col=c,draw_set_color:(_,c)=>r.col=c,draw_set_alpha:(_,a)=>r.alpha=a,draw_set_font:(_,f)=>r.font=f,draw_set_halign:(_,v)=>r.halign=v,draw_set_valign:(_,v)=>r.valign=v,draw_self:(e)=>r.self(e.self),draw_sprite:(_,s,n,x,y)=>r.sprite(s,n,x,y),draw_text:(_,x,y,t)=>r.text(x,y,t),draw_text_transformed:(_,x,y,t,sx,sy,a)=>{const c=r.ctx;if(!c)return;c.save();c.translate(x,y);c.rotate(-rad(a));c.scale(sx,sy);r.text(0,0,t);c.restore();},draw_rectangle:(_,a,b,c,d,o)=>r.rectangle(a,b,c,d,o),draw_roundrect_ext:(_,a,b,c,d,rx,ry,o)=>r.rectangle(a,b,c,d,o,true),shader_set:()=>r.white=true,shader_reset:()=>r.white=false,
    string:(_,v)=>typeof v==='number'?formatGameNumber(v):String(v),string_length:(_,v)=>String(v).length,string_copy:(_,v,start,n)=>String(v).substr(Math.max(0,start-1),n),string_height:(_,v)=>r.measure(v).height,string_width:(_,v)=>r.measure(v).width,string_insert:(_,s,t,n)=>String(t).slice(0,Math.max(0,n-1))+s+String(t).slice(Math.max(0,n-1)),array_length_1d:(_,a)=>a.length||0,
    ds_list_create:()=>[],ds_list_add:(_,a,...v)=>a.push(...v),ds_list_size:(_,a)=>a.length||0,ds_list_find_value:(_,a,i)=>a[i]??0,ds_list_destroy:(_,a)=>{a.length=0;},ds_map_find_value:(_,a,k)=>a?.[k]??0,get_timer:()=>g.timeMs*1000,
-   audio_play_sound:(_,id,priority,loop)=>g.audioPlay(id,loop),audio_stop_all:()=>g.audioStop(),file_exists:(_,n)=>g.readFile(n)!==null,file_delete:(_,n)=>{g.memoryFiles.delete(n);try{g.storage?.removeItem('himr:file:'+n);}catch{}},ini_open:(_,n)=>{const parsed=parseFile(g.readFile(n),{});g.ini={name:n,data:parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:{}};},ini_read_real:(_,section,k,d)=>{const v=g.ini?.data[section]?.[k];return typeof v==='boolean'?Number(v):Number.isFinite(v)?v:d;},ini_write_real:(_,section,k,v)=>{g.ini.data[section]??={};g.ini.data[section][k]=v;},ini_close:()=>{if(g.ini)g.writeFile(g.ini.name,JSON.stringify(g.ini.data));g.ini=null;},
+   audio_play_sound:(_,id,priority,loop)=>g.audioPlay(id,loop,priority),audio_stop_all:()=>g.audioStop(),file_exists:(_,n)=>g.readFile(n)!==null,file_delete:(_,n)=>{g.memoryFiles.delete(n);try{g.storage?.removeItem('himr:file:'+n);}catch{}},ini_open:(_,n)=>{const parsed=parseFile(g.readFile(n),{});g.ini={name:n,data:parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:{}};},ini_read_real:(_,section,k,d)=>{const v=g.ini?.data[section]?.[k];return typeof v==='boolean'?Number(v):Number.isFinite(v)?v:d;},ini_write_real:(_,section,k,v)=>{g.ini.data[section]??={};g.ini.data[section][k]=v;},ini_close:()=>{if(g.ini)g.writeFile(g.ini.name,JSON.stringify(g.ini.data));g.ini=null;},
    file_text_open_write:(_,n)=>({name:n,values:[],index:0}),file_text_write_real:(_,file,v)=>file.values.push(v),file_text_open_read:(_,n)=>{const values=parseFile(g.readFile(n),[]);const valid=Array.isArray(values)&&values.every(Number.isFinite);return {name:n,values:valid&&!(n==='Save.sav'&&!g.data.rooms[values[0]])?values:n==='Save.sav'?[g.assets.room26,g.global.kills]:[],index:0,read:true};},file_text_read_real:(_,f)=>f.values[f.index++]??0,file_text_close:(_,f)=>{if(!f.read)g.writeFile(f.name,JSON.stringify(f.values));}
   };
   return f;

@@ -8,7 +8,12 @@ if (!global.hascontrol && (instance_exists(ojobmenu) || instance_exists(oQuestBo
     game_set_speed(60, gamespeed_fps);
     return;
 }
-player_unstick();
+if (player_unstick())
+{
+    gunkickx = 0;
+    gunkicky = 0;
+    return;
+}
 if (global.hascontrol)
 {
     key_left = keyboard_check_pressed(vk_left) || keyboard_check(ord("A"));

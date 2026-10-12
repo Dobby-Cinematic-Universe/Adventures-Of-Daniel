@@ -37,12 +37,13 @@ export class FaceEasterEgg {
  syncAudio(retry=false){
   if(!this.musicActive()){this.stopAudio(!this.enabled||this.game.room?.info.Name!=='rMenu');return;}
   if(typeof Audio==='undefined')return;
-  if(!this.music){this.music=new Audio('assets/easter-egg-menu.mp3');this.music.preload='none';this.music.loop=true;this.music.volume=.55;}
+  if(!this.music){this.music=new Audio('assets/easter-egg-menu.mp3');this.music.preload='none';this.music.loop=true;this.music.volume=.55;this.music.addEventListener?.('error',()=>{if(!this.music.error)return;this.music.pause();this.musicAttempt=null;this.musicBlocked=true;});}
   if(this.musicAttempt||!this.music.paused||(this.musicBlocked&&!retry))return;
+  if(this.music.error){const position=this.music.currentTime;this.music.load?.();try{this.music.currentTime=position;}catch{}}
   this.musicBlocked=false;const attempt={};this.musicAttempt=attempt;
   try{
-   Promise.resolve(this.music.play()).catch(()=>{if(this.musicAttempt===attempt)this.musicBlocked=true;}).finally(()=>{if(this.musicAttempt===attempt)this.musicAttempt=null;});
-  }catch{this.musicBlocked=true;this.musicAttempt=null;}
+   Promise.resolve(this.music.play()).then(()=>{if(!this.musicActive())this.music.pause();}).catch(()=>{if(this.musicAttempt===attempt){this.musicBlocked=true;this.music.pause();}}).finally(()=>{if(this.musicAttempt===attempt)this.musicAttempt=null;});
+  }catch{this.musicBlocked=true;this.musicAttempt=null;this.music.pause();}
  }
  stopAudio(reset=!this.enabled||this.game.room?.info.Name!=='rMenu'){
   if(this.music){if(!this.music.paused||this.musicAttempt)this.music.pause();if(reset&&this.music.currentTime!==0)try{this.music.currentTime=0;}catch{}}

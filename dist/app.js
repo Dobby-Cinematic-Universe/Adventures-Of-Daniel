@@ -26,9 +26,9 @@ function paused(value){
   $('panelDescription').textContent='Your world is right where you left it.';$('playLabel').textContent='Resume game';
   $('continueButton').hidden=true;$('startHint').textContent=pauseHint();$('pauseLabel').textContent=value?'Resume':'Pause';
   $('playerStatus').textContent=value?'PAUSED':'PLAYING';$('statusDot').classList.toggle('paused',value);
-  if(value)game.audioStop();else{resumeAmbience();focusGame();}last=0;accumulator=0;
+  if(value)game.suspendAudio();else{resumeAmbience();focusGame();}last=0;accumulator=0;
 }
-function resumeAmbience(){if(game.audioEnabled&&['room26','petrolstationroom'].includes(game.room.info.Name))game.audioPlay(game.assets.nightsounds,true);game.faceEgg.syncAudio(true);}
+function resumeAmbience(){game.resumeAudio();}
 function start(){
   if(!game?.room)return;
   if(started){paused(false);return;}started=true;game.paused=false;
@@ -82,7 +82,7 @@ $('soundButton').onclick=()=>{
   const muted=$('soundButton').classList.toggle('muted');$('soundButton').setAttribute('aria-pressed',String(muted));
   $('soundButton').setAttribute('aria-label',muted?'Unmute sound':'Mute sound');$('soundButton').title=muted?'Unmute sound':'Mute sound';
   document.querySelector('.sound-waves').style.opacity=muted?'0.15':'1';
-  if(game){game.audioEnabled=started&&!muted;if(muted)game.audioStop();else if(started&&!game.paused)resumeAmbience();}focusGame();
+  if(game){game.audioEnabled=started&&!muted;if(muted)game.suspendAudio();else if(started&&!game.paused)resumeAmbience();}focusGame();
 };
 $('fullscreenButton').onclick=async()=>{
  clearInput();
@@ -149,6 +149,8 @@ dialog.addEventListener('close',()=>{capture=null;$('cancelBinding').hidden=true
 dialog.addEventListener('cancel',e=>{if(capture){e.preventDefault();cancelCapture();}});
 
 function handleCommands(commands){for(const command of commands){if(command==='pause')paused(!game.paused);if(command==='menu')openMenu();if(command==='worldSaves')menus.openWorld();if(command==='cheats')menus.openCheats();}}
+// A later gesture can unblock browser-rejected audio without retrying every frame.
+document.addEventListener('pointerdown',()=>{if(started&&game?.audioEnabled&&!game.paused)resumeAmbience();});
 document.addEventListener('keydown',e=>{
   if(stage.classList.contains('expanded')&&e.code==='Escape'&&!dialog.open&&!menus.isOpen()){e.preventDefault();stage.classList.remove('expanded');document.body.classList.remove('player-expanded');updateFullscreen();if(started)paused(true);return;}
   if(menus.isOpen())return;
@@ -169,6 +171,7 @@ document.addEventListener('keydown',e=>{
   const commandActions=profile.matches(e.code,gameContext(game)).filter(a=>a.command);
   if(commandActions.length){e.preventDefault();if(!e.repeat)handleCommands(router.down(e.code).commands);return;}
   if(game.paused)return;
+  if(!e.repeat)resumeAmbience();
   const result=router.down(e.code);if(result.handled)e.preventDefault();
 });
 document.addEventListener('keyup',e=>router.up(e.code));

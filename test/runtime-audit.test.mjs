@@ -67,7 +67,7 @@ test('extreme launch falls and upward impulses cannot tunnel through a thin plat
 });
 test('an embedded player recovers from adjoining stair tiles and can walk again',()=>{
  const g=make(),p=obj(g,'Object1');p.x=11100;p.y=2140;p.vsp=0;
- assert.ok(g.place(p,p.x,p.y,g.assets.wall));g.step();assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);assert.equal(g.global.hascontrol,true);
+ assert.ok(g.place(p,p.x,p.y,g.assets.wall));for(let n=0;n<16&&g.place(p,p.x,p.y,g.assets.wall);n++)g.step();assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);assert.equal(g.global.hascontrol,true);
  const x=p.x;g.input.keys.add(65);step(g,5);assert.ok(p.x<x);assert.equal(g.errors.length,0);
 });
 test('opening a world dialog during a launch stops the camera from leaving its choices',()=>{

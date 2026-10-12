@@ -32,6 +32,6 @@ if room_patch_path.exists():
   for layer_name,changes in layer_patches.items():
    layer=next(l for l in room['layers'] if l['info']['LayerName']==layer_name)
    for group,values in changes.items():layer[group].update(values)
-for s in m['sounds']:s['path']=s['Name']+'.ogg';skeys=['Name','Volume','path'];ks=list(s);[s.pop(k) for k in ks if k not in skeys]
+for s in m['sounds']:s['path']=s['Name']+'.ogg';s['fallback']=s['Name']+'.mp3';skeys=['Name','Volume','path','fallback'];ks=list(s);[s.pop(k) for k in ks if k not in skeys]
 (ROOT/'dist/data.json').write_text(json.dumps(m,separators=(',',':')))
 print('Game data',(ROOT/'dist/data.json').stat().st_size,'bytes')
