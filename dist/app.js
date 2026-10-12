@@ -2,6 +2,7 @@ import {Engine} from './engine.js';
 import {ACTIONS,BindingProfile,InputRouter,gameContext,keyLabel,canvasPoint} from './bindings.js';
 import {PlayerMenus} from './player-menus.js';
 import {VirtualGamepad} from './gamepad.js';
+import {gameplayHint} from './gameplay-hints.js';
 
 const $=id=>document.getElementById(id);
 const canvas=$('game'),overlay=$('overlay'),dialog=$('controlsDialog');
@@ -18,7 +19,7 @@ const gamepad=new VirtualGamepad({element:$('virtualGamepad'),router,getGame:()=
 const focusGame=()=>canvas.focus({preventScroll:true});
 
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2200);}
-function clearInput(){router.clear();gamepad.clear();}
+function clearInput(){router.clear();gamepad.clear();game?.clearPointer();}
 function pauseHint(){if(gamepad.visible)return 'Tap Resume game to continue';const key=profile.first('pause');return key?`Press ${keyLabel(key)} to resume`:'Use Resume to continue';}
 function paused(value){
   if(!started)return;game.paused=value;clearInput();overlay.hidden=!value;
@@ -48,25 +49,9 @@ function frame(time){
 }
 function updateGameplayHelp(){
   if(!game)return;
-  const dead=game.first(game.assets.oPDead),gun=game.first(game.assets.oGun),launcher=game.first(game.assets.oGun59),p=game.first(game.assets.Object1),girl=game.first(game.assets.oGirl16364),bed=game.first(game.assets.oBedSleep);
-  const moon=game.room?.info.Name==='rMenu'?game.faceEgg.moonFrame():null;
-  const moonAvailable=moon&&game.faceEgg.moonImage&&moon.x-moon.r>=game.camera.x&&moon.x+moon.r<=game.camera.x+game.camera.w;
-  const touch=gamepad.visible,tap=touch?'tap':'click';
-  const touchLabels={jump:'Jump',interact:'Use',secondary:'Close',weapon:'Grenade'};
-  const key=id=>touch&&touchLabels[id]?touchLabels[id]:profile.first(id)?keyLabel(profile.first(id)):null;
-  const revive=key('jump')?`press ${key('jump')} or click Revive`:'click Revive';
-  let text=`Walk up to people and objects, then ${tap} them. `+(key('interact')?`${key('interact')} opens doors and collects crates.`:'Use Controls to choose an interaction key.');
+  const dead=game.first(game.assets.oPDead);
+  const text=gameplayHint(game,{touch:gamepad.visible,key:id=>profile.first(id)?keyLabel(profile.first(id)):null,weaponMode:gamepad.input.selectedWeapon()});
   $('reviveButton').hidden=!(dead&&dead.done===1&&dead.vsp===0);
-  if(dead)text=dead.done===1&&dead.vsp===0?touch?'Defeated — tap Revive to return.':`Defeated — ${revive} to return.`:`Wait for Daniel to land, then ${touch?'tap Revive':revive}.`;
-  else if(gameContext(game)==='story')text=touch?'Tap Next to continue the story.':key('weapon')?`Press ${key('weapon')} to continue the story.`:'Set a story key in Controls to continue.';
-  else if(gameContext(game)==='menu')text=(touch?'Choose with the left stick, then tap Select.':`Choose with ${key('menuUp')||'a menu key'} / ${key('menuDown')||'a menu key'}, then ${key('confirm')||'your confirm key'}.`)+(moonAvailable?game.faceEgg.enabled?` ${tap} the moon to restore the original faces.`:` ${tap} the moon to reveal a familiar face.`:'');
-  else if(gameContext(game)==='ending')text=touch?'Tap Next to advance the ending text.':'Press any key to advance the ending text.';
-  else if(game.global.clickedbed)text='Sleeping — wait for the fade to clear. Health and slow motion recover.';
-  else if(!game.global.hascontrol)text=game.resolve(game.assets.oButtonOff).length?`${tap} an option. The power button closes the computer.`:`${tap} an option to continue.`;
-  else if(p&&p.x>18000&&game.resolve(game.assets.oQuestObjectives3).length)text=game.global.quest3===1?`Shift complete — ${tap} the door on the right to go home.`:`${key('interact')||'Your interaction key'} collects each crate. Serve all three customers, then use the exit door.`;
-  else if(p&&girl&&Math.hypot(p.x-girl.x,p.y-girl.y)<=111)text=`Hold ${key('interact')||'your interaction key'} while moving to guide her. From her left, ${key('secondary')||'your secondary key'} kisses. Bring her onto the bed to restore hearts.`;
-  else if(p&&bed&&Math.hypot(p.x-bed.x,p.y-bed.y)<=130)text=`${tap} the bed to sleep. Bring the companion onto the bed to restore hearts.`;
-  else if(gun||launcher){const primary=game.global.weapon1?'the gun':'grenades';text=`${touch?'Right stick aims and fires':'Left click fires'} ${primary}${game.cheats.infiniteAmmo?' · Unlimited ammunition':''}${game.global.weapon2&&key('weapon')?` · ${key('weapon')} fires grenades`:''}.`;}
   if(started&&!game.paused)$('playerStatus').textContent=Object.values(game.cheats).some(Boolean)?'PLAYING · CHEATS':'PLAYING';
   if($('gameHelpText').textContent!==text)$('gameHelpText').textContent=text;
 }
@@ -102,7 +87,7 @@ function updateHints(){
   $('pauseButton').title=`Pause${profile.first('pause')?` (${keyLabel(profile.first('pause'))})`:''}`;
   $('saveButton').title='Save, load, import, or export a full world';
   if(started&&game?.paused)$('startHint').textContent=pauseHint();
-  canvas.setAttribute('aria-label',gamepad.visible?'HIMR game. Left stick moves, right stick aims and fires. Jump double jumps or revives. Use opens doors and collects crates. Tap objects to interact.':`HIMR game. Move with ${keyLabel(profile.first('left'))} and ${keyLabel(profile.first('right'))}. Jump with ${keyLabel(profile.first('jump'))}. Mouse aims and interacts.`);
+  canvas.setAttribute('aria-label',gamepad.visible?'HIMR game. Left stick moves, right stick aims and fires. Tap Grenade to select grenades, then aim and throw with the right stick. Jump double jumps or revives. Use opens doors and collects crates. Tap objects to interact.':`HIMR game. Move with ${keyLabel(profile.first('left'))} and ${keyLabel(profile.first('right'))}. Jump with ${keyLabel(profile.first('jump'))}. Mouse aims and interacts.`);
   if(!started)$('startHint').textContent=gamepad.visible?'Touch controls ready · Best in landscape':'Keyboard + mouse recommended';
   updateGameplayHelp();
 }
@@ -182,7 +167,7 @@ canvas.addEventListener('pointerdown',async e=>{
   game.input.mx=point.mx;game.input.my=point.my;
   const secret=e.button===0?game.faceEgg.menuClick(point.mx,point.my):{handled:false};
   if(secret.handled){e.preventDefault();clearInput();if(secret.triggered){try{toast('A familiar face is arriving…');const enabled=await game.faceEgg.toggle();if(enabled!==null)toast(enabled?'A familiar face.':'The original face returns.');}catch(error){toast(error.message);}}return;}
-  router.mouse(mouseNumber(e),`pointer:${e.pointerId}:${e.button}`);e.preventDefault();
+  router.mouse(mouseNumber(e),`pointer:${e.pointerId}:${e.button}`);game.queuePointerPress();e.preventDefault();
 });
 canvas.addEventListener('pointerup',e=>router.up(`pointer:${e.pointerId}:${e.button}`));
 canvas.addEventListener('pointercancel',()=>clearInput());canvas.addEventListener('lostpointercapture',e=>{for(const source of [...router.sources.keys()])if(source.startsWith(`pointer:${e.pointerId}:`))router.up(source);});
@@ -196,7 +181,7 @@ async function init(){
     for(let i=0;i<2;i++)game.step();game.paused=true;
     game.onRoomChange=name=>{clearInput();$('location').textContent=roomNames[name]||'Exploring';};
     game.onStatsSave=persisted=>toast(persisted?'Original statistics saved':'Statistics saved for this session; browser storage is unavailable');game.onExit=()=>paused(true);
-    game.onFallRecovery=dead=>toast(dead?'Daniel reached solid ground. Revival is available.':'Daniel returned to solid ground.');
+    game.onFallRecovery=()=>toast('Daniel fell into the void. Revival is available.');
     $('playButton').disabled=false;$('playLabel').textContent='Play the game';$('continueButton').hidden=true;
     window.himr=game;requestAnimationFrame(frame);await menus.initialize(game);
   }catch(error){console.error(error);$('panelTitle').textContent='The adventure is loading.';$('panelDescription').textContent='Reload the page to try again.';$('playLabel').textContent='Unable to load';}

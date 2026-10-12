@@ -1,10 +1,17 @@
-function KillPlayer()
+function KillPlayer(force)
 {
-    if (cheat_enabled("invincible") || instance_exists(oPDead))
+    if ((!force && cheat_enabled("invincible")) || instance_exists(oPDead))
     {
         return;
     }
-    global.php = max(0, global.php - 1);
+    if (force)
+    {
+        global.php = 0;
+    }
+    else
+    {
+        global.php = max(0, global.php - 1);
+    }
     if (global.php == 0)
     {
         global.respawnweapon = oGun;

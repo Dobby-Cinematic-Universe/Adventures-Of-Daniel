@@ -29,7 +29,16 @@ else
 var move = key_right - key_left;
 hsp = (move * walksp) + gunkickx;
 gunkickx = 0;
-vsp = vsp + grv + gunkicky;
+if (instance_exists(oPDead))
+{
+    // The hidden player must not keep falling while an off-map body waits for Revive.
+    hsp = 0;
+    vsp = 0;
+}
+else
+{
+    vsp = vsp + grv + gunkicky;
+}
 gunkicky = 0;
 if (place_meeting(x, y + 1, wall) || place_meeting(x, y + 1, oSign))
 {
@@ -52,27 +61,35 @@ else
 {
     game_set_speed(60, gamespeed_fps);
 }
+// Fractional recoil and rotated masks can disagree with a whole-pixel probe.
+// Collision searches must never travel farther than the attempted movement.
 if (place_meeting(x + hsp, y, wall))
 {
-    while (!place_meeting(x + sign(hsp), y, wall))
+    var wall_move_left = abs(hsp);
+    while (wall_move_left >= 1 && !place_meeting(x + sign(hsp), y, wall))
     {
         x += sign(hsp);
+        wall_move_left -= 1;
     }
     hsp = -hsp;
 }
 if (place_meeting(x + hsp, y, Object1))
 {
-    while (!place_meeting(x + sign(hsp), y, Object1))
+    var player_move_left = abs(hsp);
+    while (player_move_left >= 1 && !place_meeting(x + sign(hsp), y, Object1))
     {
         x += sign(hsp);
+        player_move_left -= 1;
     }
     hsp = 0;
 }
 if (place_meeting(x + hsp, y, oDoor))
 {
-    while (!place_meeting(x + sign(hsp), y, oDoor))
+    var door_move_left = abs(hsp);
+    while (door_move_left >= 1 && !place_meeting(x + sign(hsp), y, oDoor))
     {
         x += sign(hsp);
+        door_move_left -= 1;
     }
     hsp = 0;
 }
@@ -85,9 +102,11 @@ else
 {
     if (place_meeting(x, y + vsp, wall))
     {
-        while (!place_meeting(x, y + sign(vsp), wall))
+        var vertical_move_left = abs(vsp);
+        while (vertical_move_left >= 1 && !place_meeting(x, y + sign(vsp), wall))
         {
             y += sign(vsp);
+            vertical_move_left -= 1;
         }
         vsp = 0;
     }

@@ -2,6 +2,7 @@ import {CODE, SCRIPTS} from './code.js';
 import {WORLD_FORMAT,WORLD_VERSION,DEFAULT_CHEATS,ROOM_VARIABLES,cloneState,validateWorld,encodeWorld} from './world-state.js';
 import {FaceEasterEgg} from './easter-egg.js';
 import {GameAudio} from './audio.js';
+import {AlarmIndex} from './alarms.js';
 
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 const rad=d=>d*Math.PI/180;
@@ -32,8 +33,8 @@ class Context {
   if(k==='room_width')return g.room.info.Width;
   if(k==='room_height')return g.room.info.Height;
   if(k==='room_speed')return g.fps;
-  if(k==='mouse_x')return g.camera.x+g.input.mx*g.camera.w;
-  if(k==='mouse_y')return g.camera.y+g.input.my*g.camera.h;
+  if(k==='mouse_x')return g.pointerWorld().x;
+  if(k==='mouse_y')return g.pointerWorld().y;
   if(k==='view_camera')return [0];
   if(k.startsWith('bbox_'))return g.bounds(s)[k.slice(5)];
   if(k==='sprite_width')return g.sprites[s.sprite_index]?.info.Width||0;
@@ -94,40 +95,45 @@ class Context {
 }
 
 export class Renderer {
- constructor(game,canvas){this.g=game;this.canvas=canvas;this.ctx=canvas?.getContext('2d');this.images=[];this.tintCache=new Map();this.reset();}
+ constructor(game,canvas){this.g=game;this.canvas=canvas;this.ctx=canvas?.getContext('2d',{alpha:false});this.images=[];this.texturePages=new WeakMap();this.tintCache=new Map();this.cacheSizes=new Map();this.cacheBytes=0;this.cacheLimit=8*1024*1024;this.cacheCount=64;this.commandPool=[];this.commandSlots=[];this.commands=[];this.commandCount=0;this.poolUsed=0;this.guiCommands=[];this.reset();}
  reset(){this.col=0xffffff;this.alpha=1;this.font=0;this.halign=0;this.valign=0;this.white=false;}
  async load(){if(typeof Image==='undefined')return;for(let i=0;i<7;i++){const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src=`assets/texture${i}.png`;});this.images.push(im);}if(this.g.faceEgg.enabled)try{await this.g.faceEgg.load();}catch{this.g.faceEgg.setEnabled(false);}}
  sprite(si,frame,x,y,sx=1,sy=1,angle=0,blend=0xffffff,alpha=1,secretFace=false){
   const s=this.g.sprites[si];if(!s?.textures.length||!this.ctx||!Number.isFinite(x+y+sx+sy))return;
   const info=s.info,frameIndex=((Math.floor(frame)%s.textures.length)+s.textures.length)%s.textures.length,t=s.textures[frameIndex];
   if(!t)return;
-  const im=this.images[Number(t.TexturePage.split(' ').pop())];if(!im)return;
+  const im=this.images[this.texturePage(t)];if(!im)return;
   const c=this.ctx;c.save();c.translate(x,y);c.rotate(-rad(angle));c.scale(sx,sy);c.globalAlpha=Math.max(0,Math.min(1,alpha*this.alpha));
   const face=secretFace?this.g.faceEgg.layout(info.Name,frameIndex):null;
   if(face){c.save();c.beginPath();c.rect(t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);c.rect(face.cut[0]-info.OriginX,face.cut[1]-info.OriginY,face.cut[2],face.cut[3]);c.clip('evenodd');}
   if((blend&0xffffff)!==0xffffff&&!this.white){
-   const key=`c${si}:${frameIndex}:${blend&0xffffff}`;let tinted=this.tintCache.get(key);
+   const key=`c${si}:${frameIndex}:${blend&0xffffff}`;let tinted=this.cached(key);
    if(!tinted){tinted=document.createElement('canvas');tinted.width=t.SourceWidth;tinted.height=t.SourceHeight;const mc=tinted.getContext('2d');mc.drawImage(im,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,0,0,tinted.width,tinted.height);const pixels=mc.getImageData(0,0,tinted.width,tinted.height),r=(blend&255)/255,g=((blend>>>8)&255)/255,b=((blend>>>16)&255)/255;for(let n=0;n<pixels.data.length;n+=4){pixels.data[n]*=r;pixels.data[n+1]*=g;pixels.data[n+2]*=b;}mc.putImageData(pixels,0,0);this.cache(key,tinted);}
    c.drawImage(tinted,t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);
   }else c.drawImage(im,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);
-  if(this.white){const key=`s${si}:${frameIndex}`;let mask=this.tintCache.get(key);if(!mask){mask=document.createElement('canvas');mask.width=t.SourceWidth;mask.height=t.SourceHeight;const mc=mask.getContext('2d');mc.drawImage(im,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,0,0,t.SourceWidth,t.SourceHeight);mc.globalCompositeOperation='source-in';mc.fillStyle='white';mc.fillRect(0,0,mask.width,mask.height);this.cache(key,mask);}c.drawImage(mask,t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);}
+  if(this.white){const key=`s${si}:${frameIndex}`;let mask=this.cached(key);if(!mask){mask=document.createElement('canvas');mask.width=t.SourceWidth;mask.height=t.SourceHeight;const mc=mask.getContext('2d');mc.drawImage(im,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,0,0,t.SourceWidth,t.SourceHeight);mc.globalCompositeOperation='source-in';mc.fillStyle='white';mc.fillRect(0,0,mask.width,mask.height);this.cache(key,mask);}c.drawImage(mask,t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);}
   if(face){c.restore();this.g.faceEgg.draw(c,face,info.OriginX,info.OriginY,this.white);}
   c.restore();
  }
- cache(k,v){if(this.tintCache.size>=24)this.tintCache.delete(this.tintCache.keys().next().value);this.tintCache.set(k,v);}
+ texturePage(t){let page=this.texturePages.get(t);if(page===undefined){page=Number(t.TexturePage.split(' ').pop());this.texturePages.set(t,page);}return page;}
+ // Canvas backing stores, rather than entry count alone, bound the tint cache.
+ cached(k){const v=this.tintCache.get(k);if(v){this.tintCache.delete(k);this.tintCache.set(k,v);}return v;}
+ dropCache(k){const v=this.tintCache.get(k);if(!v)return;this.cacheBytes-=this.cacheSizes.get(k);this.tintCache.delete(k);this.cacheSizes.delete(k);v.width=0;v.height=0;}
+ cache(k,v){const bytes=v.width*v.height*4;if(bytes>this.cacheLimit)return;if(this.tintCache.has(k)){if(this.tintCache.get(k)===v){this.cached(k);return;}this.dropCache(k);}while(this.tintCache.size>=this.cacheCount||this.cacheBytes+bytes>this.cacheLimit)this.dropCache(this.tintCache.keys().next().value);this.tintCache.set(k,v);this.cacheSizes.set(k,bytes);this.cacheBytes+=bytes;}
  fontInfo(){return this.g.fonts[this.font]||this.g.fonts[0];}
  lines(text){return String(text??'').replace(/#/g,'\n').split('\n');}
- measure(text){const f=this.fontInfo(),ls=this.lines(text);return {width:Math.max(0,...ls.map(l=>[...l].reduce((w,ch)=>w+(f.glyphMap.get(ch.codePointAt(0))?.Shift||f.info.EmSize*.55),0))),height:ls.length*f.lineHeight};}
+ lineWidth(line,f){let width=0;for(const ch of line)width+=f.glyphMap.get(ch.codePointAt(0))?.Shift||f.info.EmSize*.55;return width;}
+ measure(text){const f=this.fontInfo(),ls=this.lines(text);let width=0;for(const line of ls)width=Math.max(width,this.lineWidth(line,f));return {width,height:ls.length*f.lineHeight};}
  text(x,y,text){
   const c=this.ctx;if(!c)return;const f=this.fontInfo(),ls=this.lines(text),h=ls.length*f.lineHeight;
-  const t=f.texture,key=`f${this.font}:${this.col}`;let im=this.tintCache.get(key);
-  if(!im){const source=this.images[Number(t.TexturePage.split(' ').pop())];if(!source)return;im=document.createElement('canvas');im.width=t.SourceWidth;im.height=t.SourceHeight;const ic=im.getContext('2d');ic.drawImage(source,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,0,0,im.width,im.height);ic.globalCompositeOperation='source-in';ic.fillStyle=color(this.col);ic.fillRect(0,0,im.width,im.height);this.cache(key,im);}
+  const t=f.texture,key=`f${this.font}:${this.col}`;let im=this.cached(key);
+  if(!im){const source=this.images[this.texturePage(t)];if(!source)return;im=document.createElement('canvas');im.width=t.SourceWidth;im.height=t.SourceHeight;const ic=im.getContext('2d');ic.drawImage(source,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,0,0,im.width,im.height);ic.globalCompositeOperation='source-in';ic.fillStyle=color(this.col);ic.fillRect(0,0,im.width,im.height);this.cache(key,im);}
   c.save();c.globalAlpha=Math.min(1,Math.max(0,this.alpha));y-=h*(this.valign/2);
-  for(const line of ls){let xx=x-this.measure(line).width*(this.halign/2);for(const ch of line){const glyph=f.glyphMap.get(ch.codePointAt(0));if(glyph){if(glyph.SourceWidth&&glyph.SourceHeight)c.drawImage(im,glyph.SourceX,glyph.SourceY,glyph.SourceWidth,glyph.SourceHeight,xx+glyph.Offset,y,glyph.SourceWidth,glyph.SourceHeight);xx+=glyph.Shift;}else xx+=f.info.EmSize*.55;}y+=f.lineHeight;}
+  for(const line of ls){let xx=x-this.lineWidth(line,f)*(this.halign/2);for(const ch of line){const glyph=f.glyphMap.get(ch.codePointAt(0));if(glyph){if(glyph.SourceWidth&&glyph.SourceHeight)c.drawImage(im,glyph.SourceX,glyph.SourceY,glyph.SourceWidth,glyph.SourceHeight,xx+glyph.Offset,y,glyph.SourceWidth,glyph.SourceHeight);xx+=glyph.Shift;}else xx+=f.info.EmSize*.55;}y+=f.lineHeight;}
   c.restore();
  }
  rectangle(x1,y1,x2,y2,outline=false,round=false){const c=this.ctx;if(!c)return;c.save();c.globalAlpha=Math.min(1,Math.max(0,this.alpha));c.fillStyle=c.strokeStyle=color(this.col);c.beginPath();const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);if(round&&c.roundRect)c.roundRect(x,y,w,h,Math.min(10,w/2,h/2));else c.rect(x,y,w,h);outline?c.stroke():c.fill();c.restore();}
- inView(si,x,y,sx=1,sy=1,angle=0){const s=this.g.sprites[si];if(!s)return false;const i=s.info,cam=this.g.camera;let left=x-i.OriginX*sx,top=y-i.OriginY*sy,right=left+i.Width*sx,bottom=top+i.Height*sy;if(angle){const cosine=Math.cos(rad(angle)),sine=Math.sin(rad(angle)),points=[[left-x,top-y],[right-x,top-y],[right-x,bottom-y],[left-x,bottom-y]].map(([a,b])=>[x+a*cosine+b*sine,y-a*sine+b*cosine]);left=Math.min(...points.map(p=>p[0]));right=Math.max(...points.map(p=>p[0]));top=Math.min(...points.map(p=>p[1]));bottom=Math.max(...points.map(p=>p[1]));}else{if(left>right)[left,right]=[right,left];if(top>bottom)[top,bottom]=[bottom,top];}return right>=cam.x-150&&left<=cam.x+cam.w+150&&bottom>=cam.y-150&&top<=cam.y+cam.h+150;}
+ inView(si,x,y,sx=1,sy=1,angle=0){const s=this.g.sprites[si];if(!s)return false;const i=s.info,cam=this.g.camera;let left=x-i.OriginX*sx,top=y-i.OriginY*sy,right=left+i.Width*sx,bottom=top+i.Height*sy;if(angle){const cosine=Math.cos(rad(angle)),sine=Math.sin(rad(angle)),a=left-x,b=top-y,d=right-x,e=bottom-y,x1=x+a*cosine+b*sine,x2=x+d*cosine+b*sine,x3=x+d*cosine+e*sine,x4=x+a*cosine+e*sine,y1=y-a*sine+b*cosine,y2=y-d*sine+b*cosine,y3=y-d*sine+e*cosine,y4=y-a*sine+e*cosine;left=Math.min(x1,x2,x3,x4);right=Math.max(x1,x2,x3,x4);top=Math.min(y1,y2,y3,y4);bottom=Math.max(y1,y2,y3,y4);}else{if(left>right){const t=left;left=right;right=t;}if(top>bottom){const t=top;top=bottom;bottom=t;}}return right>=cam.x-150&&left<=cam.x+cam.w+150&&bottom>=cam.y-150&&top<=cam.y+cam.h+150;}
  self(s){this.sprite(s.sprite_index,s.image_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle,s.image_blend,s.image_alpha,s.object_index===this.g.assets.Object1||s.object_index===this.g.assets.oPDead||s.object_index===this.g.assets.oDanielbaby);}
  background(l){
   const d=l.data,i=l.info,c=this.ctx,cam=this.g.camera;if(!c||!i.IsVisible||!d.Visible)return;
@@ -140,16 +146,34 @@ export class Renderer {
   const ys=d.TiledVertically?Math.floor((cam.y-y)/h):0,ye=d.TiledVertically?Math.ceil((cam.y+cam.h-y)/h):0;
   for(let a=xs;a<=xe;a++)for(let b=ys;b<=ye;b++)this.sprite(si,frame,x+a*w,y+b*h,1,1,0,d.Color);
  }
+ command(index,depth,kind,ref=null,layer=null,si=null,event=null){
+  let cmd=this.commandPool[index];if(!cmd){cmd={index};if(index<2048)this.commandPool[index]=cmd;this.commandOrderDirty=true;}
+  if(cmd.depth!==depth)this.commandOrderDirty=true;
+  cmd.depth=depth;cmd.kind=kind;cmd.ref=ref;cmd.layer=layer;cmd.si=si;cmd.event=event;this.commandSlots[index]=cmd;
+ }
  draw(){
-  const c=this.ctx;if(!c)return;this.reset();c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,this.canvas.width,this.canvas.height);c.fillStyle='#101318';c.fillRect(0,0,this.canvas.width,this.canvas.height);
+  const c=this.ctx;if(!c)return;this.reset();c.setTransform(1,0,0,1,0,0);c.fillStyle='#101318';c.fillRect(0,0,this.canvas.width,this.canvas.height);
   const cam=this.g.camera;c.setTransform(this.canvas.width/cam.w,0,0,this.canvas.height/cam.h,-cam.x*this.canvas.width/cam.w,-cam.y*this.canvas.height/cam.h);c.imageSmoothingEnabled=false;
-  const commands=[];
-  if(this.g.room.info.Name==='rMenu')commands.push({depth:950,run:()=>this.g.faceEgg.drawMoon(c)});else this.g.faceEgg.applySampling();
-  for(const l of this.g.layers){if(l.info.LayerType===1)commands.push({depth:l.info.LayerDepth,run:()=>this.background(l)});if(l.info.IsVisible)for(const a of l.sprites||[]){const si=this.g.assets[a.Sprite];if(this.inView(si,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation))commands.push({depth:l.info.LayerDepth,run:()=>{const sp=this.g.sprites[si].info;const rate=a.AnimationSpeedType?a.AnimationSpeed:sp.GMS2PlaybackSpeed*(a.AnimationSpeed||1)/60;this.sprite(si,(a.FrameIndex||0)+this.g.frame*rate,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation,a.Color,1,this.g.room.info.Name==='rMenu'&&a.Sprite==='runningSprite73');}});}}
-  for(const s of this.g.instances){if(s.dead||!s.visible||!this.g.layerVisible(s.layer))continue;const ev=this.g.eventFor(s.object_index,8,0);if(ev||this.inView(s.sprite_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle))commands.push({depth:s.depth,run:()=>{this.reset();if(ev)this.g.runEvent(s,8,0);else this.self(s);}});}
-  commands.sort((a,b)=>b.depth-a.depth);for(const cmd of commands)cmd.run();
+  let count=0;this.commandOrderDirty=false;
+  if(this.g.room.info.Name==='rMenu')this.command(count++,950,0);else this.g.faceEgg.applySampling();
+  for(const l of this.g.layers){if(l.info.LayerType===1)this.command(count++,l.info.LayerDepth,1,l);if(l.info.IsVisible)for(const a of l.sprites||[]){const si=this.g.assets[a.Sprite];if(this.inView(si,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation))this.command(count++,l.info.LayerDepth,2,a,l,si);}}
+  for(const s of this.g.instances){if(s.dead||!s.visible||!this.g.layerVisible(s.layer))continue;const ev=this.g.eventFor(s.object_index,8,0);if(ev||this.inView(s.sprite_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle))this.command(count++,s.depth,3,s,null,null,ev);}
+  if(count!==this.commandCount)this.commandOrderDirty=true;
+  for(let n=count;n<this.poolUsed;n++){const old=this.commandPool[n];old.ref=old.layer=old.event=null;}this.poolUsed=Math.min(count,2048);
+  this.commandSlots.length=count;
+  // Reuse only the depth ordering: animation, visibility and draw events still run every frame.
+  if(this.commandOrderDirty){this.commands.length=0;for(const cmd of this.commandSlots)this.commands.push(cmd);this.commands.sort((a,b)=>b.depth-a.depth||a.index-b.index);}
+  this.commandCount=count;
+  for(const cmd of this.commands){
+   if(cmd.kind===0)this.g.faceEgg.drawMoon(c);
+   else if(cmd.kind===1)this.background(cmd.ref);
+   else if(cmd.kind===2){const a=cmd.ref,l=cmd.layer,sp=this.g.sprites[cmd.si].info,rate=a.AnimationSpeedType?a.AnimationSpeed:sp.GMS2PlaybackSpeed*(a.AnimationSpeed||1)/60;this.sprite(cmd.si,(a.FrameIndex||0)+this.g.frame*rate,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation,a.Color,1,this.g.room.info.Name==='rMenu'&&a.Sprite==='runningSprite73');}
+   else{this.reset();if(cmd.event)this.g.runEvent(cmd.ref,8,0);else this.self(cmd.ref);}
+  }
   c.setTransform(this.canvas.width/this.g.gui.w,0,0,this.canvas.height/this.g.gui.h,0,0);
-  for(const s of this.g.instances.filter(s=>!s.dead&&s.visible&&this.g.objectMeta[s.object_index].gui&&this.g.layerVisible(s.layer)).sort((a,b)=>b.depth-a.depth)){this.reset();this.g.runEvent(s,8,64);}
+  const gui=this.guiCommands;gui.length=0;for(const s of this.g.instances)if(!s.dead&&s.visible&&this.g.objectMeta[s.object_index].gui&&this.g.layerVisible(s.layer))gui.push(s);gui.sort((a,b)=>b.depth-a.depth);
+  for(const s of gui){this.reset();this.g.runEvent(s,8,64);}gui.length=0;
+  if(count>2048){this.commands.length=this.commandSlots.length=0;this.commandCount=0;}
   c.setTransform(1,0,0,1,0,0);
  }
 }
@@ -163,6 +187,7 @@ export class Engine {
   this.objects=data.objects.map(o=>({...o,events:new Map(o.events.flatMap(t=>t.events.map(e=>[`${t.type}:${e.subtype}`,e.code])))}));
   this.eventCache=new Map();this.boundsCache=new WeakMap();this.nullInstance={};this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.instances=[];this.byId=new Map();this.byObject=new Map();this.dynamicByObject=new Map();this.gridDirty=true;this.nextId=200000;this.roomIndex=0;this.fps=60;this.frame=0;this.timeMs=0;this.drawVersion=0;this.camera={x:0,y:0,w:1366,h:768};this.gui={w:1024,h:768};
   this.randomState=(options.seed??Math.floor(Math.random()*4294967296))>>>0||12345;
+  this.alarms=new AlarmIndex();
   this.roomStates=new Map();this.worldInitialized=false;this.cheats={...DEFAULT_CHEATS};
   this.input={keys:new Set(),pressed:new Set(),released:new Set(),buttons:new Set(),bpressed:new Set(),breleased:new Set(),mx:0.5,my:0.5};
   this.errors=[];this.errorSet=new Set();this.paused=false;this.audioEnabled=true;this.audio=new GameAudio(this);this.audioPool=this.audio.pool;this.soundsPlaying=this.audio.playing;
@@ -179,7 +204,8 @@ export class Engine {
  random(){let x=this.randomState;x^=x<<13;x^=x>>>17;x^=x<<5;this.randomState=x>>>0;return this.randomState/4294967296;}
  isDynamic(s){return this.objectMeta[s.object_index].dynamic||s.dynamicMotion===true;}
  promoteDynamic(s){if(this.isDynamic(s))return;s.dynamicMotion=true;for(const type of this.objectMeta[s.object_index].ancestors){let set=this.dynamicByObject.get(type);if(!set)this.dynamicByObject.set(type,set=new Set());set.add(s);}this.gridDirty=true;}
- register(s){
+ register(s,ownedAlarm=false){
+  this.alarms.register(s,ownedAlarm);
   this.byId.set(s.id,s);
   const meta=this.objectMeta[s.object_index];
   for(const type of meta.ancestors){let set=this.byObject.get(type);if(!set)this.byObject.set(type,set=new Set());set.add(s);if(this.isDynamic(s)){let dynamic=this.dynamicByObject.get(type);if(!dynamic)this.dynamicByObject.set(type,dynamic=new Set());dynamic.add(s);}}
@@ -205,7 +231,7 @@ export class Engine {
  create(obj,x,y,layer=null,id=null,initial={},run=true){
   const o=this.objects[obj];if(!o)throw new Error('Unknown object '+obj);if(run&&['oDanielText6','oBulletsLeftGreen','oBulletsLeftRed'].includes(o.info.Name)){const existing=this.instances.find(s=>!s.dead&&s.object_index===obj);if(existing)return existing;}const l=this.getLayer(layer);
   const s={id:id??this.nextId++,object_index:obj,x,y,xstart:x,ystart:y,xprevious:x,yprevious:y,sprite_index:o.info.Sprite?this.assets[o.info.Sprite]:-1,mask_index:o.info.TextureMaskId?this.assets[o.info.TextureMaskId]:-1,visible:o.info.Visible,persistent:o.info.Persistent,depth:l?.info.LayerDepth??o.info.Depth,layer:l?.info.LayerId??-1,image_index:0,image_speed:1,image_xscale:1,image_yscale:1,image_angle:0,image_alpha:1,image_blend:0xffffff,speed:0,direction:0,hspeed:0,vspeed:0,gravity:0,gravity_direction:270,friction:0,alarm:Array(12).fill(-1),...initial};
-  this.instances.push(s);this.register(s);this.drawVersion++;
+  this.instances.push(s);this.register(s,!own(initial,'alarm'));this.drawVersion++;
   if(run){this.runEvent(s,14,0);this.runEvent(s,0,0);}return s;
  }
  destroy(target,self){for(const s of this.resolve(target===undefined?self:target,self)){if(s.dead||s.destroying)continue;s.destroying=true;this.runEvent(s,1,0);s.dead=true;this.unregister(s);this.needsSweep=true;this.runEvent(s,12,0);this.drawVersion++;}}
@@ -258,9 +284,11 @@ export class Engine {
   return {format:WORLD_FORMAT,version:WORLD_VERSION,game:'himr-1.6',savedAt:Date.now(),active:this.room.info.Name,global:cloneState({...this.global}),rooms,nextId:this.nextId,randomState:this.randomState,timeMs:this.timeMs,cheats:{...this.cheats}};
  }
  installRoom(state,persistent=[]){
+  this.clearPointer();
   this.roomIndex=this.assets[state.room];this.room=this.data.rooms[this.roomIndex];this.layers=structuredClone(this.room.layers);
   for(const info of state.layers)Object.assign(this.getLayerFrom(info.LayerId,this.layers).info,info);
-  this.instances=[...cloneState(state.instances),...persistent];this.camera={...state.camera};this.gui={...state.gui};this.frame=state.frame;this.fps=state.fps;
+  const restored=cloneState(state.instances);for(const s of restored)this.alarms.register(s,true);
+  this.instances=[...restored,...persistent];this.camera={...state.camera};this.gui={...state.gui};this.frame=state.frame;this.fps=state.fps;
   Object.assign(this.global,state.locals);this.rebuildIndexes();this.pendingRoom=null;this.needsSweep=false;this.audioStop();this.resumeAudio();this.drawVersion++;
  }
  getLayerFrom(id,layers){return layers.find(l=>l.info.LayerId===id);}
@@ -271,7 +299,7 @@ export class Engine {
   for(const set of ['keys','pressed','released','buttons','bpressed','breleased'])this.input[set].clear();this.input.mx=.5;this.input.my=.5;
   this.errors=[];this.errorSet.clear();this.onRoomChange?.(this.room.info.Name);return true;
  }
- beginNewAdventure(){this.roomStates.clear();this.worldInitialized=false;this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.cheats={...DEFAULT_CHEATS};this.timeMs=0;}
+ beginNewAdventure(){this.clearPointer();this.roomStates.clear();this.worldInitialized=false;this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.cheats={...DEFAULT_CHEATS};this.timeMs=0;}
  setCheat(name,enabled){if(!own(DEFAULT_CHEATS,name))throw new Error('Unknown cheat.');this.cheats[name]=!!enabled;this.drawVersion++;}
  applyCheat(action){
   const player=this.first(this.assets.Object1);if(!player)throw new Error('Enter the world to use this cheat.');
@@ -289,13 +317,22 @@ export class Engine {
   }else throw new Error('Unknown cheat action.');
   this.drawVersion++;
  }
+ pointerWorld(){return this.stepPointer||{x:this.camera.x+this.input.mx*this.camera.w,y:this.camera.y+this.input.my*this.camera.h};}
+ queuePointerPress(){const {mx,my}=this.input;this.pendingPointer={mx,my,...this.pointerWorld()};}
+ freezePointer(){
+  const sample=this.pendingPointer;this.pendingPointer=null;
+  // Camera scripts run during Step. A click must still hit the point that was displayed.
+  this.stepPointer=sample&&this.input.bpressed.size&&sample.mx===this.input.mx&&sample.my===this.input.my?{x:sample.x,y:sample.y}:this.pointerWorld();
+ }
+ clearPointer(){this.stepPointer=null;this.pendingPointer=null;}
  updateFireEligibility(){
-  const x=this.camera.x+this.input.mx*this.camera.w,y=this.camera.y+this.input.my*this.camera.h;
+  const {x,y}=this.pointerWorld();
   this.global.dontshoot=true;
   this.fireBlockers??=new Set(['oBedSleep','oJobSign','oMum','oPetrolstationDoor','oSign'].map(n=>this.assets[n]));
   for(const type of this.fireBlockers)for(const s of this.byObject.get(type)||[]){if(s.dead||s.object_index!==type||!s.visible||!this.layerVisible(s.layer))continue;const b=this.bounds(s);if(x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom){this.global.dontshoot=false;return;}}
  }
  loadRoom(index,keep=true){
+  this.clearPointer();
   if(typeof index==='string')index=this.assets[index];if(!this.data.rooms[index])throw new Error('Unknown room '+index);this.pendingRoom=null;
   for(const s of this.instances)this.runEvent(s,7,5);
   const progress=keep&&this.worldInitialized?Object.fromEntries(sharedProgress.filter(k=>own(this.global,k)).map(k=>[k,this.global[k]])):null;
@@ -400,45 +437,29 @@ export class Engine {
   }
   s.y+=move;if(move!==amount)s.vsp=0;
  }
- safeLanding(s,references){
-  const walls=this.resolve(this.assets.wall),offset=this.bounds(s,0,0);
-  for(const [x,y] of references){
-   if(!Number.isFinite(x)||!Number.isFinite(y))continue;
-   let best=null;
-   for(const wall of walls){const w=this.bounds(wall);if(!w.valid||x+offset.left>=w.right||x+offset.right<=w.left)continue;
-    const ground=w.top-offset.bottom-1e-6,distance=Math.abs(ground-y);
-    if(best&&distance>=best.distance)continue;
-    if(!this.place(s,x,ground,this.assets.wall)&&this.place(s,x,ground+1,this.assets.wall)&&!this.place(s,x,ground,this.assets.oKillTrigger))best={x,y:ground,distance};
-   }
-   if(best)return best;
-  }
-  return null;
- }
  guardMapFall(){
   if(this.pendingRoom!==null)return;
   const player=this.first(this.assets.Object1),body=this.first(this.assets.oPDead),s=body||player;
   if(!s||!body&&!gmlBoolean(this.global.hascontrol))return;
+  if(body?.done===1&&body.vsp===0)return;
   const b=this.bounds(s);
-  // Remember solid ground in the serialized player state, never an airborne or embedded position.
-  if(!body&&s.vsp===0&&!this.place(s,s.x,s.y,this.assets.wall)&&this.place(s,s.x,s.y+1,this.assets.wall)&&!this.place(s,s.x,s.y,this.assets.oKillTrigger)){
-   s.fallSafeX=s.x;s.fallSafeY=s.y;return;
-  }
-  if(!b.valid||b.top<=this.room.info.Height+256)return;
-  // Some original floors extend below the nominal room height. Recovery starts below all terrain.
-  const bottom=this.resolve(this.assets.wall).reduce((y,wall)=>Math.max(y,this.bounds(wall).bottom),this.room.info.Height);
-  if(b.top<=bottom+256)return;
-  const bed=this.first(this.assets.oBedSleep),spawn=this.room.instances.find(i=>i.ObjectDefinition==='Object1');
-  const target=this.safeLanding(s,[[player?.fallSafeX,player?.fallSafeY],[bed?.x,bed?.y-90],[spawn?.X,spawn?.Y]]);
-  if(!target)return;
-  Object.assign(s,{x:target.x,y:target.y,xprevious:target.x,yprevious:target.y,hsp:0,vsp:0,hspeed:0,vspeed:0,speed:0,gunkickx:0,gunkicky:0});
-  if(body){body.done=0;if(player){player.hsp=0;player.vsp=0;player.gunkickx=0;player.gunkicky=0;}}
-  else {player.fallSafeX=target.x;player.fallSafeY=target.y;player.jumps=2;}
-  this.onFallRecovery?.(!!body);
+  if(!b.valid||b.top<=this.room.info.Height+256&&b.right>=-256&&b.left<=this.room.info.Width+256)return;
+  // Original terrain extends beyond the nominal room. Only the outer void is lethal.
+  let left=0,right=this.room.info.Width,bottom=this.room.info.Height;
+  for(const wall of this.resolve(this.assets.wall)){const w=this.bounds(wall);if(w.valid){left=Math.min(left,w.left);right=Math.max(right,w.right);bottom=Math.max(bottom,w.bottom);}}
+  if(b.top<=bottom+256&&b.right>=left-256&&b.left<=right+256)return;
+  if(!body)new Context(this,player).call('KillPlayer',[true]);
+  const corpse=body||this.first(this.assets.oPDead);if(!corpse)return;
+  const ready=corpse.done===1&&corpse.vsp===0;
+  // No floor exists here to finish the normal landing. Enable its existing revive path.
+  Object.assign(corpse,{done:1,hsp:0,vsp:0,hspeed:0,vspeed:0,speed:0,gravity:0,image_index:1});
+  if(player)Object.assign(player,{hsp:0,vsp:0,gunkickx:0,gunkicky:0});
+  if(!ready){corpse.alarm[0]=60;this.onFallRecovery?.(true);}
  }
  step(){
-  if(this.paused||!this.room)return;this.guardMapFall();const wasDead=!!this.first(this.assets.oPDead);this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
+  if(this.paused||!this.room)return;this.freezePointer();try{this.guardMapFall();const wasDead=!!this.first(this.assets.oPDead);this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
   for(const s of before){if(s.dead)continue;s.xprevious=s.x;s.yprevious=s.y;if(this.objectMeta[s.object_index].beginStep)this.runEvent(s,3,1);}
-  for(const s of before){if(s.dead)continue;for(let i=0;i<12;i++)if(s.alarm[i]>0){if(--s.alarm[i]===0){s.alarm[i]=-1;this.runEvent(s,2,i);}}}
+  this.alarms.step(before,(s,i)=>this.runEvent(s,2,i));
   for(const s of before){if(s.dead)continue;if(this.objectMeta[s.object_index].keysPressed)for(const k of this.input.pressed)this.runEvent(s,9,k);if(this.objectMeta[s.object_index].keysReleased)for(const k of this.input.released)this.runEvent(s,10,k);if(this.objectMeta[s.object_index].keysHeld)for(const k of this.input.keys)this.runEvent(s,5,k);if(this.input.pressed.size&&this.objectMeta[s.object_index].keysPressed)this.runEvent(s,9,1);this.runMouse(s);if(this.objectMeta[s.object_index].step)this.runEvent(s,3,0);}
   for(const s of before){if(s.dead||!(s.hspeed||s.vspeed||s.gravity||s.speed))continue;if(s.hspeed||s.vspeed){s.x+=s.hspeed;s.y+=s.vspeed;}if(s.gravity){s.hspeed+=lx(s.gravity,s.gravity_direction);s.vspeed+=ly(s.gravity,s.gravity_direction);}const speed=Math.hypot(s.hspeed,s.vspeed);if(speed&&s.friction>0){const ratio=Math.max(0,speed-s.friction)/speed;s.hspeed*=ratio;s.vspeed*=ratio;}s.speed=Math.hypot(s.hspeed,s.vspeed);if(s.speed)s.direction=direction(0,0,s.hspeed,s.vspeed);}
   for(const s of before){if(s.dead)continue;for(const sub of this.objectMeta[s.object_index].collisions)for(const t of this.query(this.bounds(s),sub,s)){this.runEvent(s,4,sub,t);if(s.dead)break;}}
@@ -450,8 +471,9 @@ export class Engine {
   if(this.pendingRoom!==null)this.loadRoom(this.pendingRoom);
   if(wasDead&&!this.first(this.assets.oPDead))this.resumeAudio();
   this.faceEgg.syncAudio();
+  }finally{this.stepPointer=null;}
  }
- runMouse(s){if(!this.objectMeta[s.object_index].mouse||!(this.input.buttons.size||this.input.bpressed.size||this.input.breleased.size))return;const b=this.bounds(s),x=this.camera.x+this.input.mx*this.camera.w,y=this.camera.y+this.input.my*this.camera.h,inside=x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom;for(const n of this.input.bpressed){this.runEvent(s,6,49+n);if(inside)this.runEvent(s,6,3+n);}for(const n of this.input.buttons)if(inside)this.runEvent(s,6,n-1);for(const n of this.input.breleased)if(inside)this.runEvent(s,6,6+n);}
+ runMouse(s){if(!this.objectMeta[s.object_index].mouse||!(this.input.buttons.size||this.input.bpressed.size||this.input.breleased.size))return;const b=this.bounds(s),{x,y}=this.pointerWorld(),inside=x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom;for(const n of this.input.bpressed){this.runEvent(s,6,49+n);if(inside)this.runEvent(s,6,3+n);}for(const n of this.input.buttons)if(inside)this.runEvent(s,6,n-1);for(const n of this.input.breleased)if(inside)this.runEvent(s,6,6+n);}
  readFile(name){if(this.memoryFiles.has(name))return this.memoryFiles.get(name);try{return this.storage?.getItem('himr:file:'+name)??null;}catch{return null;}}
  writeFile(name,text){this.memoryFiles.set(name,text);this.lastFileWritePersistent=false;try{if(this.storage){this.storage.setItem('himr:file:'+name,text);this.lastFileWritePersistent=true;this.memoryFiles.delete(name);}}catch{}return this.lastFileWritePersistent;}
  saveCheckpoint(){try{const {text}=encodeWorld(this.captureWorld(),this.data);this.writeFile('checkpoint',text);return true;}catch{return false;}}
@@ -460,7 +482,7 @@ export class Engine {
   if(![1,2].includes(s.version)||!this.data.rooms[s.room]||!s.global)throw new Error('Unsupported legacy checkpoint.');
   const isolated=new Engine(this.data,null,{getItem:()=>null,setItem(){},removeItem(){}},{seed:12345});isolated.audioEnabled=false;isolated.loadRoom(s.room,false);
   Object.assign(isolated.global,cloneState(s.global));
-  if(s.version===2&&Array.isArray(s.instances)){isolated.instances=cloneState(s.instances);isolated.rebuildIndexes();isolated.nextId=isolated.instances.reduce((max,i)=>Math.max(max,i.id+1),200000);isolated.frame=s.frame||0;for(const info of s.layers||[]){const l=isolated.getLayer(info.LayerId);if(l)Object.assign(l.info,info);}}
+  if(s.version===2&&Array.isArray(s.instances)){isolated.instances=cloneState(s.instances);for(const i of isolated.instances)isolated.alarms.register(i,true);isolated.rebuildIndexes();isolated.nextId=isolated.instances.reduce((max,i)=>Math.max(max,i.id+1),200000);isolated.frame=s.frame||0;for(const info of s.layers||[]){const l=isolated.getLayer(info.LayerId);if(l)Object.assign(l.info,info);}}
   const p=isolated.first(isolated.assets.Object1);if(p){p.x=s.x;p.y=s.y;const cam=isolated.first(isolated.assets.oCamera);if(cam){cam.follow=isolated.first(isolated.assets.oPDead)?.id??p.id;isolated.camera.x=cam.x-cam.view_w_half;isolated.camera.y=cam.y-cam.view_h_half;}}
   isolated.repairWeaponOwnership();isolated.repairPetrolMessages();isolated.reconcileWeapon(isolated.global.equippedweapon);const world=isolated.captureWorld();if(Number.isFinite(s.time))world.savedAt=s.time;return validateWorld(world,this.data);
  }

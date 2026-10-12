@@ -250,7 +250,14 @@ E.set("key_jump",0);
 E.declare("move",(E.get("key_right") - E.get("key_left")));
 E.set("hsp",((E.get("move") * E.get("walksp")) + E.get("gunkickx")));
 E.set("gunkickx",0);
+if(E.truthy(E.call("instance_exists",[E.get("oPDead")]))){
+E.set("hsp",0);
+E.set("vsp",0);
+}
+else {
 E.set("vsp",((E.get("vsp") + E.get("grv")) + E.get("gunkicky")));
+}
+
 E.set("gunkicky",0);
 if((E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])) || E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("oSign")])))){
 E.set("jumps",2);
@@ -273,27 +280,33 @@ E.call("game_set_speed",[60,E.get("gamespeed_fps")]);
 }
 
 if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
-while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
+E.declare("wall_move_left",E.call("abs",[E.get("hsp")]));
+while(((E.get("wall_move_left") >= 1) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
+E.set("wall_move_left",(E.get("wall_move_left") - 1));
 }
 }
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
 if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("Object1")]))){
-while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("Object1")])))){E.tick();
+E.declare("player_move_left",E.call("abs",[E.get("hsp")]));
+while(((E.get("player_move_left") >= 1) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("Object1")]))))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
+E.set("player_move_left",(E.get("player_move_left") - 1));
 }
 }
 E.set("hsp",0);
 }
 else {}
 if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
-while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
+E.declare("door_move_left",E.call("abs",[E.get("hsp")]));
+while(((E.get("door_move_left") >= 1) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
+E.set("door_move_left",(E.get("door_move_left") - 1));
 }
 }
 E.set("hsp",0);
@@ -305,9 +318,11 @@ E.call("player_move_vertical",[E.get("vsp")]);
 }
 else {
 if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
-while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
+E.declare("vertical_move_left",E.call("abs",[E.get("vsp")]));
+while(((E.get("vertical_move_left") >= 1) && (!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
+E.set("vertical_move_left",(E.get("vertical_move_left") - 1));
 }
 }
 E.set("vsp",0);
@@ -7351,12 +7366,19 @@ E.call("draw_set_valign",[E.get("arg3")]);
 }
 },
 "KillPlayer":function(E){
+E.declare("force",E.args[0] ?? 0);
 {
-if((E.truthy(E.call("cheat_enabled",["invincible"])) || E.truthy(E.call("instance_exists",[E.get("oPDead")])))){
+if((((!E.truthy(E.get("force"))) && E.truthy(E.call("cheat_enabled",["invincible"]))) || E.truthy(E.call("instance_exists",[E.get("oPDead")])))){
 return ;
 }
 else {}
+if(E.truthy(E.get("force"))){
+E.put(E.get("global"),"php",0);
+}
+else {
 E.put(E.get("global"),"php",E.call("max",[0,(E.member(E.get("global"),"php") - 1)]));
+}
+
 if((E.member(E.get("global"),"php") == 0)){
 E.put(E.get("global"),"respawnweapon",E.get("oGun"));
 if(E.truthy(E.call("instance_exists",[E.get("oGun59")]))){
