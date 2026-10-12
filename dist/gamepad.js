@@ -14,7 +14,7 @@ export function stickVector(rect,x,y){
 // Each finger owns its input source, so releasing one control cannot release another.
 export class GamepadInput{
  constructor({router,getGame,isReady=()=>true,onChange=()=>{}}){
-  Object.assign(this,{router,getGame,isReady,onChange});this.sticks={move:null,aim:null};this.buttons=new Map();this.pulses=new Map();this.holds=new Map();this.fireLocks=new Set();this.weaponMode='gun';this.aim=null;this.relativeAim=false;this.walkAim=false;this.context=null;this.repeatAt=0;
+  Object.assign(this,{router,getGame,isReady,onChange});this.sticks={move:null,aim:null};this.buttons=new Map();this.pulses=new Map();this.holds=new Map();this.fireLocks=new Set();this.weaponMode='gun';this.weaponRoom=null;this.weaponPlayer=null;this.grenadeShot=null;this.aim=null;this.relativeAim=false;this.walkAim=false;this.context=null;this.repeatAt=0;
  }
  active(){const g=this.getGame();return !!(g?.room&&this.isReady()&&!g.paused);}
  player(){const g=this.getGame();return g?.first(g.assets.Object1);}
@@ -27,13 +27,38 @@ export class GamepadInput{
  selectWeapon(){
   if(!this.canButton('weapon'))return false;
   this.weaponMode=this.selectedWeapon()==='grenade'?'gun':'grenade';
+  this.cancelGrenade();
   // Changing selection never fires. A firing finger must lift or re-center first.
   if(this.holds.has('gamepad:aim')){this.fireLocks.add('gamepad:aim');this.hold('gamepad:aim',null);}
   for(const b of this.buttons.values())if(b.action==='fire'){this.fireLocks.add(b.source);this.hold(b.source,null);}
   for(const [source,action] of this.pulses)if(action==='fire'){this.hold(source,null);this.pulses.delete(source);}
+  const g=this.getGame();this.weaponRoom=this.weaponMode==='grenade'?g.room:null;this.weaponPlayer=this.weaponMode==='grenade'?this.player():null;g.reconcileWeapon?.(this.weaponMode==='grenade'?g.assets.oGun59:g.assets.oGun);
   this.onChange();return true;
  }
- fire(source,enabled){if(!enabled)this.fireLocks.delete(source);this.hold(source,enabled&&!this.fireLocks.has(source)?this.fireAction():null);}
+ cancelGrenade(){
+  const shot=this.grenadeShot;if(!shot)return;
+  this.hold(shot.source,null);this.grenadeShot=null;
+  // Cancel an unconsumed virtual edge without releasing another input owner.
+  const input=this.getGame()?.input;if(shot.edge&&!this.router.keyOwners?.get(70)?.size)input?.pressed.delete(70);
+ }
+ queueGrenade(source){
+  const g=this.getGame();this.grenadeShot={source,room:g.room,player:this.player(),edge:!g.input.pressed.has(70)};this.hold(source,'weapon');
+ }
+ returnToGun(room,player){
+  const g=this.getGame();if(g?.room===room&&gameContext(g)==='game'&&player&&this.player()===player&&!this.dead()&&Number(g.global.hascontrol)>.5&&g.global.weapon1&&!g.input.keys.has(70))g.reconcileWeapon?.(g.assets.oGun);
+ }
+ throwAtPointer(source){
+  if(this.weaponMode!=='grenade'||!this.canButton('fire'))return false;
+  this.relativeAim=false;this.walkAim=false;
+  if(!this.grenadeShot)this.queueGrenade(source);
+  return true;
+ }
+ fire(source,enabled){
+  if(!enabled){this.fireLocks.delete(source);this.hold(source,null);return;}
+  if(this.grenadeShot){if(this.grenadeShot.source===source)this.hold(source,'weapon');else{this.fireLocks.add(source);this.hold(source,null);}return;}
+  if(this.fireLocks.has(source)){this.hold(source,null);return;}
+  if(this.weaponMode==='grenade')this.queueGrenade(source);else this.hold(source,this.fireAction());
+ }
  canButton(id){
   if(!this.active())return false;const g=this.getGame(),context=gameContext(g),dead=this.dead();
   if(id==='interact'&&context!=='game')return true;
@@ -87,7 +112,17 @@ export class GamepadInput{
   if(action==='fire'){this.relativeAim=true;this.updateAim();}
   this.pulses.set(source,action);if(action==='fire')this.fire(source,true);else this.hold(source,this.buttonAction(action));this.onChange();
  }
- afterStep(){for(const source of this.pulses.keys())this.hold(source,null);if(this.pulses.size){this.pulses.clear();this.onChange();}}
+ afterStep(){
+  let changed=!!this.pulses.size;for(const source of this.pulses.keys())this.hold(source,null);this.pulses.clear();
+  if(this.grenadeShot){
+   const shot=this.grenadeShot;this.hold(shot.source,null);this.grenadeShot=null;this.weaponMode='gun';this.weaponRoom=null;this.weaponPlayer=null;
+   if(this.sticks.aim&&Math.hypot(this.sticks.aim.vector.x,this.sticks.aim.vector.y)>DEAD_ZONE){this.fireLocks.add('gamepad:aim');this.hold('gamepad:aim',null);}
+   for(const b of this.buttons.values())if(b.action==='fire'){this.fireLocks.add(b.source);this.hold(b.source,null);}
+   this.returnToGun(shot.room,shot.player);
+   changed=true;
+  }
+  if(changed)this.onChange();
+ }
  release(id){
   let changed=false;
   for(const kind of ['move','aim'])if(this.sticks[kind]?.id===id){this.sticks[kind]=null;this.hold('gamepad:'+kind,null);this.fireLocks.delete('gamepad:'+kind);changed=true;}
@@ -95,9 +130,10 @@ export class GamepadInput{
   if(changed)this.onChange();
  }
  clear(){
-  const changed=this.sticks.move||this.sticks.aim||this.buttons.size||this.pulses.size||this.holds.size||this.weaponMode!=='gun';
+  const changed=this.sticks.move||this.sticks.aim||this.buttons.size||this.pulses.size||this.holds.size||this.weaponMode!=='gun',armedRoom=this.weaponRoom,armedPlayer=this.weaponPlayer;this.cancelGrenade();
   for(const source of [...this.holds.keys()])this.hold(source,null);
-  this.sticks.move=this.sticks.aim=null;this.buttons.clear();this.pulses.clear();this.fireLocks.clear();this.weaponMode='gun';this.relativeAim=false;this.walkAim=false;this.repeatAt=0;
+  this.sticks.move=this.sticks.aim=null;this.buttons.clear();this.pulses.clear();this.fireLocks.clear();this.weaponMode='gun';this.weaponRoom=null;this.weaponPlayer=null;this.relativeAim=false;this.walkAim=false;this.repeatAt=0;
+  if(armedRoom)this.returnToGun(armedRoom,armedPlayer);
   if(changed)this.onChange();
  }
  canvasAim(){
@@ -118,10 +154,10 @@ export class GamepadInput{
  }
  tick(time){
   const context=gameContext(this.getGame());
-  if(!this.active()||this.context!==null&&context!==this.context)this.clear();this.context=context;
+  if(!this.active()||this.context!==null&&context!==this.context||this.weaponRoom&&(this.weaponRoom!==this.getGame().room||this.weaponPlayer!==this.player()))this.clear();this.context=context;
   for(const kind of ['move','aim'])if(this.sticks[kind]&&!this.canStick(kind))this.release(this.sticks[kind].id);
   for(const [id,b] of this.buttons)if(!this.canButton(b.action))this.release(id);
-  if(context==='game'&&!this.controllable())this.weaponMode='gun';
+  if(context==='game'&&!this.controllable()){this.cancelGrenade();this.weaponMode='gun';this.weaponRoom=null;this.weaponPlayer=null;}
   this.movement();
   const movement=this.holds.get('gamepad:move');
   if(context==='menu'&&movement){
@@ -185,18 +221,18 @@ export class VirtualGamepad{
    if(el.style.getPropertyValue('--stick-x')!==x)el.style.setProperty('--stick-x',x);if(el.style.getPropertyValue('--stick-y')!==y)el.style.setProperty('--stick-y',y);
    if(el.classList.contains('active')!==!!vector)el.classList.toggle('active',!!vector);if(el.getAttribute('aria-disabled')!==disabled)el.setAttribute('aria-disabled',disabled);
   }
-  const aimLabel=grenade?'Aim and launch grenades stick. Drag in the direction you want to throw.':'Aim and fire stick. Drag in the direction you want to shoot.';
+  const aimLabel=grenade?'Grenade ready. Tap the game to aim and throw once, or use this stick.':'Aim and fire stick. Drag in the direction you want to shoot.';
   if(this.stickElements.aim.getAttribute('aria-label')!==aimLabel)this.stickElements.aim.setAttribute('aria-label',aimLabel);
   const aimText=document.getElementById('aimStickLabel'),aimTitle=grenade?'AIM + THROW':'AIM + FIRE';if(aimText.textContent!==aimTitle)aimText.textContent=aimTitle;
   const label=document.getElementById('moveStickLabel'),text=context==='menu'?'CHOOSE ↑ ↓':'MOVE ← →';if(label.textContent!==text)label.textContent=text;
   for(const button of this.buttons){
    const action=button.dataset.padAction,disabled=!this.input.canButton(action),active=action==='weapon'?grenade:this.input.buttonActive(action);if(button.disabled!==disabled)button.disabled=disabled;if(button.classList.contains('active')!==active)button.classList.toggle('active',active);
    if(action==='weapon'){
-    const pressed=String(grenade),description=grenade?'Grenade mode selected. Tap to select the gun.':'Gun mode selected. Tap to select grenades; then use the aim stick or Fire to launch.';
+    const pressed=String(grenade),description=grenade?'Grenade ready. The next tap throws one and returns to the gun. Tap to cancel.':'Ready one grenade for your next tap on the game; then automatically return to the gun.';
     if(button.getAttribute('aria-pressed')!==pressed)button.setAttribute('aria-pressed',pressed);if(button.getAttribute('aria-label')!==description)button.setAttribute('aria-label',description);
    }
-   if(action==='fire'){const description=grenade?'Launch a grenade in the last aimed direction':'Fire the gun in the last aimed direction';if(button.getAttribute('aria-label')!==description)button.setAttribute('aria-label',description);}
-   const label=action==='interact'?context==='menu'?'Select':context==='story'||context==='ending'?'Next':'Use':action==='jump'?dead?dead.done===1&&dead.vsp===0?'Revive':'Wait':'Jump':action==='weapon'?grenade?'Gun':'Grenade':action==='fire'?grenade?'Throw':'Fire':null;
+   if(action==='fire'){const description=grenade?'Throw one grenade in the last aimed direction, then return to the gun':'Fire the gun in the last aimed direction';if(button.getAttribute('aria-label')!==description)button.setAttribute('aria-label',description);}
+   const label=action==='interact'?context==='menu'?'Select':context==='story'||context==='ending'?'Next':'Use':action==='jump'?dead?dead.done===1&&dead.vsp===0?'Revive':'Wait':'Jump':action==='weapon'?grenade?'Cancel':'Grenade':action==='fire'?grenade?'Throw':'Fire':null;
    if(label&&button.textContent!==label)button.textContent=label;
   }
  }

@@ -87,7 +87,7 @@ function updateHints(){
   $('pauseButton').title=`Pause${profile.first('pause')?` (${keyLabel(profile.first('pause'))})`:''}`;
   $('saveButton').title='Save, load, import, or export a full world';
   if(started&&game?.paused)$('startHint').textContent=pauseHint();
-  canvas.setAttribute('aria-label',gamepad.visible?'HIMR game. Left stick moves, right stick aims and fires. Tap Grenade to select grenades, then aim and throw with the right stick. Jump double jumps or revives. Use opens doors and collects crates. Tap objects to interact.':`HIMR game. Move with ${keyLabel(profile.first('left'))} and ${keyLabel(profile.first('right'))}. Jump with ${keyLabel(profile.first('jump'))}. Mouse aims and interacts.`);
+  canvas.setAttribute('aria-label',gamepad.visible?'HIMR game. Left stick moves, right stick aims and fires. Tap Grenade, then tap a target to throw once and return to the gun. Jump double jumps or revives. Use opens doors and collects crates. Tap objects to interact.':`HIMR game. Move with ${keyLabel(profile.first('left'))} and ${keyLabel(profile.first('right'))}. Jump with ${keyLabel(profile.first('jump'))}. Mouse aims and interacts.`);
   if(!started)$('startHint').textContent=gamepad.visible?'Touch controls ready · Best in landscape':'Keyboard + mouse recommended';
   updateGameplayHelp();
 }
@@ -167,7 +167,9 @@ canvas.addEventListener('pointerdown',async e=>{
   game.input.mx=point.mx;game.input.my=point.my;
   const secret=e.button===0?game.faceEgg.menuClick(point.mx,point.my):{handled:false};
   if(secret.handled){e.preventDefault();clearInput();if(secret.triggered){try{toast('A familiar face is arriving…');const enabled=await game.faceEgg.toggle();if(enabled!==null)toast(enabled?'A familiar face.':'The original face returns.');}catch(error){toast(error.message);}}return;}
-  router.mouse(mouseNumber(e),`pointer:${e.pointerId}:${e.button}`);game.queuePointerPress();e.preventDefault();
+  const source=`pointer:${e.pointerId}:${e.button}`;
+  if(!(gamepad.visible&&e.button===0&&gamepad.input.throwAtPointer(source)))router.mouse(mouseNumber(e),source);
+  game.queuePointerPress();e.preventDefault();
 });
 canvas.addEventListener('pointerup',e=>router.up(`pointer:${e.pointerId}:${e.button}`));
 canvas.addEventListener('pointercancel',()=>clearInput());canvas.addEventListener('lostpointercapture',e=>{for(const source of [...router.sources.keys()])if(source.startsWith(`pointer:${e.pointerId}:`))router.up(source);});

@@ -76,3 +76,10 @@ test('a completed simulation step releases its frozen pointer for the next frame
  g.camera.x+=500;g.camera.y+=200;
  assert.deepEqual(g.pointerWorld(),{x:g.camera.x+g.input.mx*g.camera.w,y:g.camera.y+g.input.my*g.camera.h});
 });
+
+test('a one-shot mobile grenade retains the tapped world point without a primary mouse edge',()=>{
+ const g=make('room1'),p=g.first(g.assets.Object1),target={x:p.x+300,y:p.y-140};
+ aimAt(g,target.x,target.y);g.input.pressed.add(70);g.queuePointerPress();
+ g.camera.x+=300;g.camera.y-=200;assert.equal(g.input.bpressed.size,0);
+ g.freezePointer();assert.deepEqual(g.pointerWorld(),target);g.clearPointer();
+});

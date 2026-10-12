@@ -322,7 +322,7 @@ export class Engine {
  freezePointer(){
   const sample=this.pendingPointer;this.pendingPointer=null;
   // Camera scripts run during Step. A click must still hit the point that was displayed.
-  this.stepPointer=sample&&this.input.bpressed.size&&sample.mx===this.input.mx&&sample.my===this.input.my?{x:sample.x,y:sample.y}:this.pointerWorld();
+  this.stepPointer=sample&&(this.input.bpressed.size||this.input.pressed.has(70))&&sample.mx===this.input.mx&&sample.my===this.input.my?{x:sample.x,y:sample.y}:this.pointerWorld();
  }
  clearPointer(){this.stepPointer=null;this.pendingPointer=null;}
  updateFireEligibility(){

@@ -49,10 +49,10 @@ test('station entry and exit hints follow active and completed shift states',()=
  obj(g,'Object1').x=18500;g.global.quest3=0;assert.match(hint(g,{touch:true}),/^Use collects crates/);g.destroy(g.assets.oQuestObjectives3);assert.doesNotMatch(hint(g),/finish your shift|Serve all three/);assert.equal(g.errors.length,0);
 });
 
-test('mobile armed grenades explain selection and throwing independently from original desktop F',()=>{
+test('mobile armed grenades explain the next single tap independently from original desktop F',()=>{
  const g=make('room1');step(g,40);g.applyCheat('weapons');assert.match(hint(g),/Left click fires the gun · F fires grenades/);
- assert.match(hint(g,{touch:true,weaponMode:'gun'}),/Tap Grenade to select/);assert.match(hint(g,{touch:true,weaponMode:'grenade'}),/^Grenade selected — right stick aims and throws; tap Throw/);assert.match(hint(g,{touch:true,weaponMode:'grenade'}),/Tap Gun to switch/);
- const p=obj(g,'Object1');g.create(g.assets.oDoor,p.x+50,p.y,'floor');assert.match(hint(g,{touch:true,weaponMode:'grenade'}),/^Tap Use to open the door\. Grenade selected/);assert.equal(g.errors.length,0);
+ assert.match(hint(g,{touch:true,weaponMode:'gun'}),/Tap Grenade, then tap a target for one throw/);assert.match(hint(g,{touch:true,weaponMode:'grenade'}),/^Grenade ready — tap a target to throw once, then the gun returns/);assert.match(hint(g,{touch:true,weaponMode:'grenade'}),/Tap Cancel to disarm/);
+ const p=obj(g,'Object1');g.create(g.assets.oDoor,p.x+50,p.y,'floor');assert.match(hint(g,{touch:true,weaponMode:'grenade'}),/^Grenade ready/);assert.match(hint(g,{touch:true,weaponMode:'gun'}),/^Tap Use to open the door/);assert.equal(g.errors.length,0);
 });
 
 test('death, sleep, and dialogs retain priority over nearby interactions and weapons',()=>{

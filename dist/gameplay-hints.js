@@ -27,6 +27,7 @@ export function gameplayHint(game,{touch=false,key=()=>null,weaponMode='gun'}={}
  if(!truthy(game.global.hascontrol))return exists('oButtonOff')?`${tap} an option. The power button closes the computer.`:`${tap} an option to continue.`;
  const player=first('Object1');
  if(!player)return 'Choose an option to continue.';
+ if(touch&&weaponMode==='grenade'&&truthy(game.global.weapon1)&&truthy(game.global.weapon2))return 'Grenade ready — tap a target to throw once, then the gun returns. Tap Cancel to disarm.';
  const visible=s=>!s.dead&&s.visible!==false&&game.layerVisible(s.layer);
  const nearby=(name,radius)=>{
   const type=game.assets[name];if(type===undefined)return [];
@@ -57,14 +58,14 @@ export function gameplayHint(game,{touch=false,key=()=>null,weaponMode='gun'}={}
  candidates.sort((a,b)=>a.priority-b.priority||a.distance-b.distance);
  const gun=exists('oGun'),launcher=exists('oGun59'),hasGun=truthy(game.global.weapon1),hasGrenades=truthy(game.global.weapon2);
  const armedGrenade=weaponMode==='grenade'||!hasGun&&launcher;
- const shortCombat=touch?armedGrenade?'Grenade selected · right stick aims and throws.':'Right stick aims and fires.':'';
+ const shortCombat=touch?armedGrenade?'Right stick aims and throws.':'Right stick aims and fires.':'';
  if(candidates.length){
   const text=candidates[0].text;
   return touch&&(gun||launcher)&&text.length<90?`${text} ${shortCombat}`:text;
  }
  if(exists('oQuestObjectives3')&&(player.x>18000||game.room.info.Name==='petrolstationroom'))return game.global.quest3===1?`Shift complete — ${touch?'tap':'click'} the exit door to go home.`:label('interact')?`${label('interact')} collects crates. Serve all three customers, then use the exit door.`:'Bind Open / interact in Controls to collect crates and finish your shift.';
  if(gun||launcher){
-  if(touch)return armedGrenade?`Grenade selected — right stick aims and throws; tap Throw to fire.${hasGun?' Tap Gun to switch.':''}`:`Right stick aims and fires the gun.${hasGrenades?' Tap Grenade to select, then aim and throw.':''}`;
+  if(touch)return armedGrenade?'Right stick aims and throws grenades; tap Throw to fire.':`Right stick aims and fires the gun.${hasGrenades?' Tap Grenade, then tap a target for one throw.':''}`;
   const primary=hasGun||gun?'the gun':'grenades';
   return `Left click fires ${primary}${game.cheats?.infiniteAmmo?' · Unlimited ammunition':''}${hasGrenades&&label('weapon')?` · ${label('weapon')} fires grenades`:''}.`;
  }
