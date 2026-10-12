@@ -1,0 +1,10 @@
+{
+  "name": "himr-browser-port",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --max-old-space-size=128 test/game.test.mjs",
+    "check": "node --check dist/engine.js && node --check dist/code.js && node --check dist/app.js"
+  }
+}
