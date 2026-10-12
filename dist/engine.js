@@ -376,6 +376,7 @@ export class Engine {
   if(this.needsSweep){this.instances=this.instances.filter(s=>!s.dead);this.needsSweep=false;}
   this.input.pressed.clear();this.input.released.clear();this.input.bpressed.clear();this.input.breleased.clear();
   if(this.pendingRoom!==null)this.loadRoom(this.pendingRoom);
+  this.faceEgg.syncAudio();
  }
  runMouse(s){if(!this.objectMeta[s.object_index].mouse||!(this.input.buttons.size||this.input.bpressed.size||this.input.breleased.size))return;const b=this.bounds(s),x=this.camera.x+this.input.mx*this.camera.w,y=this.camera.y+this.input.my*this.camera.h,inside=x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom;for(const n of this.input.bpressed){this.runEvent(s,6,49+n);if(inside)this.runEvent(s,6,3+n);}for(const n of this.input.buttons)if(inside)this.runEvent(s,6,n-1);for(const n of this.input.breleased)if(inside)this.runEvent(s,6,6+n);}
  readFile(name){if(this.memoryFiles.has(name))return this.memoryFiles.get(name);try{return this.storage?.getItem('himr:file:'+name)??null;}catch{return null;}}
@@ -392,7 +393,7 @@ export class Engine {
  }
  restoreCheckpoint(){try{const text=this.readFile('checkpoint');if(!text)return false;return this.applyWorld(this.convertLegacyCheckpoint(text));}catch{return false;}}
  audioPlay(id,loop){if(!this.audioEnabled||typeof Audio==='undefined')return 0;const spec=this.data.sounds[id];if(!spec)return 0;let pool=this.audioPool.get(id);if(!pool){pool=[];this.audioPool.set(id,pool);}let a=pool.find(a=>a.paused||a.ended);if(!a&&pool.length<3){a=new Audio('assets/'+spec.path);a.preload='none';pool.push(a);}if(!a){if(loop)return 0;a=pool[0];a.pause();}a.loop=!!loop;a.volume=(spec.Volume??1)*.55;a.currentTime=0;a.play().catch(()=>{});const handle=this.nextSound++;this.soundsPlaying.set(handle,a);if(this.soundsPlaying.size>100)this.soundsPlaying.delete(this.soundsPlaying.keys().next().value);return handle;}
- audioStop(){for(const pool of this.audioPool.values())for(const a of pool)a.pause();this.soundsPlaying.clear();}
+ audioStop(){for(const pool of this.audioPool.values())for(const a of pool)a.pause();this.soundsPlaying.clear();this.faceEgg?.stopAudio();}
  makeBuiltins(){
   const g=this,r=this.renderer;
   const f={

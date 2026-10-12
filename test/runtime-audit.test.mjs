@@ -137,3 +137,43 @@ test('the moon stays within the menu while faces are active and clicking it deac
 test('standing, running, jumping, and miniature necks overlap the original collar instead of floating above it',()=>{
  for(const [name,frames] of Object.entries(FACE_LAYOUTS))if(name!=='playerDead')for(const face of frames)assert.equal(face.y+face.h/2,face.cut[1]+face.cut[3]+4,name+' neck reaches into the collar');
 });
+
+function mockAudio(t,play){
+ const original=globalThis.Audio,created=[];
+ globalThis.Audio=class {
+  constructor(src){this.src=src;this.paused=true;this.currentTime=0;this.plays=0;this.pauses=0;created.push(this);}
+  play(){this.plays++;this.paused=false;return play?play(this):Promise.resolve();}
+  pause(){this.pauses++;this.paused=true;}
+ };
+ t.after(()=>{if(original===undefined)delete globalThis.Audio;else globalThis.Audio=original;});return created;
+}
+const settleAudio=async()=>{await Promise.resolve();await Promise.resolve();await Promise.resolve();};
+test('the supplied menu clip loads once only for active faces, respects pause and mute, and stops on deactivation or leaving',async t=>{
+ const created=mockAudio(t),g=make();g.faceEgg.setEnabled(true);g.audioEnabled=true;g.faceEgg.syncAudio();assert.equal(created.length,0);
+ g.audioEnabled=false;g.loadRoom('rMenu');step(g,200);assert.equal(created.length,0);
+ g.audioEnabled=true;g.faceEgg.syncAudio(true);await settleAudio();const music=g.faceEgg.music;
+ assert.equal(music.src,'assets/easter-egg-menu.mp3');assert.equal(music.loop,true);assert.equal(music.preload,'none');assert.equal(music.paused,false);
+ step(g,600);assert.equal(music.plays,1);music.currentTime=12;
+ g.paused=true;g.audioStop();g.faceEgg.syncAudio();assert.equal(music.paused,true);assert.equal(music.currentTime,12);
+ g.paused=false;g.faceEgg.syncAudio(true);await settleAudio();assert.equal(music.paused,false);assert.equal(music.currentTime,12);
+ g.audioEnabled=false;g.audioStop();step(g,3);assert.equal(music.paused,true);assert.equal(music.currentTime,12);
+ g.audioEnabled=true;g.faceEgg.syncAudio(true);await settleAudio();assert.equal(music.paused,false);
+ g.loadRoom('room26');assert.equal(music.paused,true);assert.equal(music.currentTime,0);step(g,3);assert.equal(music.paused,true);
+ g.loadRoom('rMenu');g.step();await settleAudio();assert.equal(g.faceEgg.music,music);assert.equal(music.paused,false);music.currentTime=5;
+ g.faceEgg.setEnabled(false);assert.equal(music.paused,true);assert.equal(music.currentTime,0);step(g,3);assert.equal(music.paused,true);
+ assert.equal(created.filter(a=>a.src==='assets/easter-egg-menu.mp3').length,1);assert.equal(g.errors.length,0);
+});
+test('blocked menu playback waits for a user retry instead of creating a play request every frame',async t=>{
+ let rejected=false;mockAudio(t,a=>{if(!rejected){rejected=true;a.paused=true;return Promise.reject(new Error('Autoplay blocked'));}return Promise.resolve();});
+ const g=make('rMenu');g.faceEgg.setEnabled(true);g.audioEnabled=true;g.step();await settleAudio();const music=g.faceEgg.music;
+ assert.equal(g.faceEgg.musicBlocked,true);step(g,600);assert.equal(music.plays,1);
+ g.faceEgg.syncAudio(true);await settleAudio();assert.equal(music.plays,2);assert.equal(music.paused,false);assert.equal(g.faceEgg.musicBlocked,false);assert.equal(g.errors.length,0);
+});
+test('rapid pause and resume ignores an obsolete play rejection and muting cancels pending playback',async t=>{
+ const pending=[];mockAudio(t,()=>new Promise((resolve,reject)=>pending.push({resolve,reject})));
+ const g=make('rMenu');g.faceEgg.setEnabled(true);g.audioEnabled=true;g.faceEgg.syncAudio(true);const music=g.faceEgg.music;
+ g.paused=true;g.audioStop();g.paused=false;g.faceEgg.syncAudio(true);assert.equal(music.plays,2);
+ pending[0].reject(new Error('Playback interrupted'));await settleAudio();assert.equal(g.faceEgg.musicBlocked,false);assert.equal(music.paused,false);
+ g.audioEnabled=false;g.audioStop();pending[1].resolve();await settleAudio();step(g,30);assert.equal(music.paused,true);assert.equal(music.plays,2);
+ g.audioEnabled=true;g.faceEgg.syncAudio(true);pending[2].resolve();await settleAudio();assert.equal(music.paused,false);assert.equal(music.plays,3);assert.equal(g.errors.length,0);
+});

@@ -22,7 +22,7 @@ function paused(value){
   $('playerStatus').textContent=value?'PAUSED':'PLAYING';$('statusDot').classList.toggle('paused',value);
   if(value)game.audioStop();else{resumeAmbience();canvas.focus();}last=0;accumulator=0;
 }
-function resumeAmbience(){if(game.audioEnabled&&['room26','petrolstationroom'].includes(game.room.info.Name))game.audioPlay(game.assets.nightsounds,true);}
+function resumeAmbience(){if(game.audioEnabled&&['room26','petrolstationroom'].includes(game.room.info.Name))game.audioPlay(game.assets.nightsounds,true);game.faceEgg.syncAudio(true);}
 function start(){
   if(started){paused(false);return;}started=true;game.paused=false;
   game.audioEnabled=!$('soundButton').classList.contains('muted');

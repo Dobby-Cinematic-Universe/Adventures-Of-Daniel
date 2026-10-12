@@ -14,6 +14,7 @@ export const FACE_LAYOUTS={
 export class FaceEasterEgg {
  constructor(game){
   this.game=game;this.enabled=false;this.saved=true;this.menu=null;this.image=null;this.loading=null;this.busy=false;this.activating=false;this.whiteImage=null;this.moonImage=null;this.moonLoading=null;this.moonLoadFailed=false;this.flightStart=0;this.departure=null;this.lastMoon=null;this.pin={x:.82,y:.18};
+  this.music=null;this.musicAttempt=null;this.musicBlocked=false;
   try{this.enabled=game.storage?.getItem(STORAGE_KEY)==='1';}catch{}
  }
  layout(name,frame){const frames=FACE_LAYOUTS[name];if(!this.enabled||!this.image||!frames)return null;return frames[((Math.floor(frame)%frames.length)+frames.length)%frames.length];}
@@ -30,6 +31,22 @@ export class FaceEasterEgg {
   try{if(this.game.storage){this.game.storage.setItem(STORAGE_KEY,this.enabled?'1':'0');this.saved=true;}}catch{}
   this.applySampling();
   this.game.drawVersion++;
+  this.syncAudio(true);
+ }
+ musicActive(){const g=this.game;return this.enabled&&g.audioEnabled&&!g.paused&&g.room?.info.Name==='rMenu';}
+ syncAudio(retry=false){
+  if(!this.musicActive()){this.stopAudio(!this.enabled||this.game.room?.info.Name!=='rMenu');return;}
+  if(typeof Audio==='undefined')return;
+  if(!this.music){this.music=new Audio('assets/easter-egg-menu.mp3');this.music.preload='none';this.music.loop=true;this.music.volume=.55;}
+  if(this.musicAttempt||!this.music.paused||(this.musicBlocked&&!retry))return;
+  this.musicBlocked=false;const attempt={};this.musicAttempt=attempt;
+  try{
+   Promise.resolve(this.music.play()).catch(()=>{if(this.musicAttempt===attempt)this.musicBlocked=true;}).finally(()=>{if(this.musicAttempt===attempt)this.musicAttempt=null;});
+  }catch{this.musicBlocked=true;this.musicAttempt=null;}
+ }
+ stopAudio(reset=!this.enabled||this.game.room?.info.Name!=='rMenu'){
+  if(this.music){if(!this.music.paused||this.musicAttempt)this.music.pause();if(reset&&this.music.currentTime!==0)try{this.music.currentTime=0;}catch{}}
+  this.musicAttempt=null;this.musicBlocked=false;
  }
  applySampling(){const style=this.game.renderer?.canvas?.style;if(style){const sampling=this.enabled||(this.moonImage&&this.moonFrame())?'auto':'pixelated';if(style.imageRendering!==sampling)style.imageRendering=sampling;}}
  async toggle(){

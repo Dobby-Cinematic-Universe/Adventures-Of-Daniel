@@ -43,12 +43,15 @@ Open **Cheats** for invulnerability, unlimited ammunition, unlimited slow motion
 
 A realistic face moon occasionally drifts across the original **Menu**. Click it once to give Daniel and all four miniature runners the photographic face. The moon stays on-screen while this mode is active; click it again to restore the original faces. The selection persists across new adventures and reloads, separately from world saves. Head and neck anchors follow each idle, running, jumping, and death frame, and the photographic artwork uses smooth sampling.
 
+While the face easter egg is active on the original menu, the supplied 55-second MP3 loops as menu music. **Mute** and **Pause** suspend it without losing the playback position. Deactivating the easter egg or leaving the menu stops and rewinds it; returning with the easter egg still active starts it again. One audio element streams the clip on demand and is reused across visits.
+
 On touch devices, the movement, jump, weapon, and fire buttons appear below the canvas; tap objects to interact. Keyboard and mouse provide the full original control scheme.
 
 ## Files
 
 - `dist/index.html`, `style.css`, `app.js`, `bindings.js`, `player-menus.js`: browser player, contextual hints, control settings, and save/cheat interfaces.
 - `dist/easter-egg.js`, `assets/secret-face.png`, `assets/face-moon.png`: moon menu trigger, persistent cosmetic preference, and smoothly rendered photographic head. Artwork was created with the built-in image generator; the prompts are in `art/secret-face-prompt.md` and `art/moon-and-neck-prompts.md`.
+- `dist/assets/easter-egg-menu.mp3`: user-supplied menu clip, copied from `ScreenRecording_09-04-2026 09-14-41_1.mp3` without re-encoding.
 - `dist/world-state.js`, `world-saves.js`: validated world snapshots, three atomic save slots, import/export, and checkpoint migration.
 - `dist/engine.js`: GameMaker-compatible event, object, collision, animation, drawing, audio, and persistence services used by this game.
 - `dist/code.js`: generated translation of the recovered GML into JavaScript functions. No runtime `eval` or Windows executable is required.
@@ -67,9 +70,9 @@ npm test
 npm run benchmark
 ```
 
-Sixty-five checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quests and doors, weapons, arena waves, original menu/story/ending transitions, collision masks, grenade use, death/revival, repeated petrol shifts, sleep and the companion's bed interaction, shops and number formatting, controls, fullscreen pointer mapping, complete world round-trips, deterministic continuation, visited-room persistence, mid-shift/mid-sleep saves, original statistics separation, failed writes, invalid imports, cheats, bounded long sessions, and the moon trigger, persistent deactivation target, neck/collar connection, appearance preference, rendering scope, and smooth sampling. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
+Sixty-eight checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quests and doors, weapons, arena waves, original menu/story/ending transitions, collision masks, grenade use, death/revival, repeated petrol shifts, sleep and the companion's bed interaction, shops and number formatting, controls, fullscreen pointer mapping, complete world round-trips, deterministic continuation, visited-room persistence, mid-shift/mid-sleep saves, original statistics separation, failed writes, invalid imports, cheats, bounded long sessions, and the moon trigger, persistent deactivation target, neck/collar connection, appearance preference, rendering scope, smooth sampling, and menu music lifecycle. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
 
-Browser checks verified rendering, movement, computer screens, cheat controls, save/reload/Continue, file export/import, and independence from the statistics file. Audio loads on demand; rendering uses the fixed-size viewport rather than allocating room-sized canvases. Font/tint caches and sound pools are bounded. Paused games draw only when state changes. Collision and object indexes avoid scanning thousands of static instances each frame, and off-map projectiles expire.
+Browser checks verified rendering, movement, computer screens, cheat controls, save/reload/Continue, file export/import, independence from the statistics file, and easter egg music playback, mute, pause, deactivation, and menu exit/re-entry. Audio loads on demand; rendering uses the fixed-size viewport rather than allocating room-sized canvases. Font/tint caches and sound pools are bounded. Paused games draw only when state changes. Collision and object indexes avoid scanning thousands of static instances each frame, and off-map projectiles expire.
 
 The same seeded Node benchmark measured median simulation time dropping from 8.573 to 2.308 ms in Home and from 3.193 to 1.345 ms in the first level. The final benchmark used about 16 MB of managed heap and reported no runtime errors. These measurements cover simulation, not browser graphics or audio. See [BUG_AUDIT.md](BUG_AUDIT.md) for scope and results.
 
