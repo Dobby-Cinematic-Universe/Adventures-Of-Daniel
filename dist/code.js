@@ -106,14 +106,13 @@ E.call("audio_play_sound",[E.get("bedbounce"),1,false]);
 }
 ,
 "gml_Object_Object1_Collision_ogrenadepickup":function(E){
-E.set("flash",3);
-E.set("flash",3);
-E.set("flash",3);
-E.set("flash",3);
+E.call("instance_destroy",[E.get("oGun")]);
+E.call("instance_destroy",[E.get("oGun59")]);
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun59")]);
 E.call("instance_destroy",[E.get("ogrenadepickup")]);
 E.put(E.get("global"),"weapon2",true);
 E.put(E.get("global"),"bullets",(E.member(E.get("global"),"bullets") + 8));
+E.set("flash",3);
 E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
 }
 ,
@@ -142,13 +141,10 @@ E.set("jumps",0);
 E.put(E.get("global"),"clickedbed",false);
 E.put(E.get("global"),"tapes",0);
 E.put(E.get("global"),"bullets",0);
-E.put(E.get("global"),"weapon2",false);
 E.put(E.get("global"),"stocks",0);
 E.set("gunkickx",0);
 E.set("gunkicky",0);
 E.call("audio_play_sound",[E.get("nightsounds"),7,true]);
-E.put(E.get("global"),"weapon1",false);
-E.put(E.get("global"),"weapon2",false);
 if((E.member(E.get("global"),"stocksdown") == 0)){
 E.putIndex(E.ensureArray("alarm"),1,(-1));
 }
@@ -666,14 +662,14 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oBulletsLeft97_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
-E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
-E.call("DrawSetText",[0,1,2,0]);
-E.call("draw_set_colour",[E.get("c_black")]);
-E.call("draw_text_transformed",[868,155,("stocks " + E.call("string",[E.member(E.get("global"),"stocks")])),E.get("killtextscale"),E.get("killtextscale"),0]);
+if(E.call("instance_exists",[E.get("oshoppingstocks")])){
+E.declare("cam",E.index(E.get("view_camera"),0));
+E.declare("sx",(E.call("display_get_gui_width",[]) / E.call("camera_get_view_width",[E.get("cam")])));
+E.declare("sy",(E.call("display_get_gui_height",[]) / E.call("camera_get_view_height",[E.get("cam")])));
+E.call("DrawSetText",[E.get("c_black"),E.get("fsign"),E.get("fa_center"),E.get("fa_top")]);
+E.call("draw_text",[(((E.member(E.get("oshoppingstocks"),"x") + 277) - E.call("camera_get_view_x",[E.get("cam")])) * E.get("sx")),(((E.member(E.get("oshoppingstocks"),"y") + 335) - E.call("camera_get_view_y",[E.get("cam")])) * E.get("sy")),("Stocks: $ " + E.call("string",[E.member(E.get("global"),"stocks")]))]);
 }
 else {}
-E.set("x",(E.member(E.get("Object1"),"x") - 100));
 }
 ,
 "gml_Object_oBulletsLeft97_Other_4":function(E){
@@ -3020,12 +3016,8 @@ E.set("h",E.call("string_height",[E.get("text")]));
 }
 else {}
 E.set("w",E.call("string_width",[E.get("text_current")]));
-if(E.call("keyboard_check_pressed",[E.get("vk_space")])){
+if((!E.call("instance_exists",[E.get("oPDead")]))){
 E.call("instance_destroy",[]);
-for(const __target1 of E.targets(E.get("oCamera"))){const E2=E.withSelf(__target1);{const E=E2;{
-E.set("follow",136);
-}
-}}
 }
 else {}
 }
@@ -4305,42 +4297,26 @@ E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") - 53),(E.member(
 E.call("instance_create_layer",[(E.member(E.get("oGirl16364"),"x") - 53),(E.member(E.get("oGirl16364"),"y") - 190),E.get("layer"),E.get("oGirl16378")]);
 }
 else {}
-if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),111]) && E.call("keyboard_check",[E.call("ord",["E"])])) && (E.member(E.get("Object1"),"x") < E.member(E.get("oGirl16364"),"x"))) && E.call("instance_exists",[E.get("Object1")]))){
-E.set("x",(E.member(E.get("Object1"),"x") + 67));
-E.set("y",E.member(E.get("Object1"),"y"));
-E.set("image_xscale",(-1));
-E.declare("aimside",E.call("sign",[(E.get("mouse_x") - E.get("x"))]));
-if((E.get("aimside") != 0)){
-E.set("image_xscale",E.get("aimside"));
-}
-else {}
-if(E.call("keyboard_check_pressed",[E.get("vk_space")])){
-E.set("vsp",(-9));
-E.set("sprite_index",E.get("girljump2"));
-}
-else {}
+E.set("hspeed",0);
+if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),111]) && E.call("keyboard_check",[E.call("ord",["E"])])) && E.call("instance_exists",[E.get("Object1")])) && E.member(E.get("global"),"hascontrol"))){
 if(E.call("keyboard_check",[E.call("ord",["D"])])){
-E.set("hspeed",(-0.1));
-}
-else {}
-if(E.call("keyboard_check",[E.call("ord",["D"])])){
-E.set("sprite_index",E.get("girlrunning"));
-}
-else {}
-if(E.call("keyboard_check",[E.call("ord",["A"])])){
-E.set("sprite_index",E.get("girlrunning"));
-}
-else {}
-if(E.call("keyboard_check",[E.call("ord",["D"])])){
-E.put(E.get("oGirl16364"),"x",(E.member(E.get("Object1"),"x") - 67));
-}
-else {}
-}
-else {}
-if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),111]) && E.call("keyboard_check",[E.call("ord",["E"])])) && (E.member(E.get("Object1"),"x") > E.member(E.get("oGirl16364"),"x"))) && E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",(E.member(E.get("Object1"),"x") - 67));
+E.set("sprite_index",E.get("girlrunning"));
+}
+else if(E.call("keyboard_check",[E.call("ord",["A"])])){
+E.set("x",(E.member(E.get("Object1"),"x") + 67));
+E.set("sprite_index",E.get("girlrunning"));
+}
+else if((E.member(E.get("Object1"),"x") < E.get("x"))){
+E.set("x",(E.member(E.get("Object1"),"x") + 67));
+}
+else {
+E.set("x",(E.member(E.get("Object1"),"x") - 67));
+}
+
+
+
 E.set("y",E.member(E.get("Object1"),"y"));
-E.set("image_xscale",1);
 E.declare("aimside",E.call("sign",[(E.get("mouse_x") - E.get("x"))]));
 if((E.get("aimside") != 0)){
 E.set("image_xscale",E.get("aimside"));
@@ -4349,22 +4325,6 @@ else {}
 if(E.call("keyboard_check_pressed",[E.get("vk_space")])){
 E.set("vsp",(-9));
 E.set("sprite_index",E.get("girljump2"));
-}
-else {}
-if(E.call("keyboard_check",[E.call("ord",["D"])])){
-E.set("hspeed",(-0.1));
-}
-else {}
-if(E.call("keyboard_check",[E.call("ord",["D"])])){
-E.set("sprite_index",E.get("girlrunning"));
-}
-else {}
-if(E.call("keyboard_check",[E.call("ord",["A"])])){
-E.set("sprite_index",E.get("girlrunning"));
-}
-else {}
-if(E.call("keyboard_check",[E.call("ord",["A"])])){
-E.put(E.get("oGirl16364"),"x",(E.member(E.get("Object1"),"x") + 67));
 }
 else {}
 }
@@ -4453,6 +4413,10 @@ E.set("y",(E.member(E.get("oGirl16364"),"y") - 190));
 E.set("image_alpha",(E.get("image_alpha") - 0.008));
 }
 else {}
+if((E.get("image_alpha") <= 0)){
+E.call("instance_destroy",[]);
+}
+else {}
 }
 ,
 "gml_Object_oGirl163_Collision_Object1":function(E){
@@ -4467,6 +4431,10 @@ if(E.call("instance_exists",[E.get("Object1")])){
 E.set("x",(E.member(E.get("Object1"),"x") - 53));
 E.set("y",(E.member(E.get("Object1"),"y") - 190));
 E.set("image_alpha",(E.get("image_alpha") - 0.008));
+}
+else {}
+if((E.get("image_alpha") <= 0)){
+E.call("instance_destroy",[]);
 }
 else {}
 }
@@ -4649,6 +4617,8 @@ else {}
 "gml_Object_oGun59_Create_0":function(E){
 E.set("firingdelay",0);
 E.set("recoil",0);
+E.put(E.get("global"),"weapon2",true);
+E.put(E.get("global"),"dontshoot",true);
 }
 ,
 "gml_Object_oGun59_KeyPress_70":function(E){
@@ -4687,15 +4657,23 @@ E.set("y",(E.member(E.get("Object1"),"y") + 10));
 E.set("image_angle",E.call("point_direction",[E.get("x"),E.get("y"),E.get("mouse_x"),E.get("mouse_y")]));
 E.set("firingdelay",(E.get("firingdelay") - 1));
 E.set("recoil",E.call("max",[0,(E.get("recoil") - 1)]));
-if((E.call("keyboard_check_pressed",[E.call("ord",["F"])]) && (E.member(E.get("global"),"bullets") == 0))){
-E.call("audio_play_sound",[E.get("gunempty"),5,false]);
+if((E.call("keyboard_check_pressed",[E.call("ord",["F"])]) && E.member(E.get("global"),"hascontrol"))){
+if(E.member(E.get("global"),"weapon1")){
+E.call("instance_change",[E.get("oGun"),true]);
+E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
+return ;
+}
+else {
+E.call("audio_play_sound",[E.get("gunempty"),2,false]);
+}
+
 }
 else {}
-if(((E.call("keyboard_check",[E.call("ord",["F"])]) && (E.get("firingdelay") < 0)) && (E.member(E.get("global"),"bullets") > 0))){
+if(((((E.call("mouse_check_button",[E.get("mb_left")]) && (E.get("firingdelay") < 0)) && (E.member(E.get("global"),"bullets") > 0)) && E.member(E.get("global"),"hascontrol")) && E.member(E.get("global"),"dontshoot"))){
+E.put(E.get("global"),"bullets",(E.member(E.get("global"),"bullets") - 1));
 E.set("recoil",15);
 E.set("firingdelay",3);
-E.put(E.get("global"),"bullets",(E.member(E.get("global"),"bullets") - 1));
-E.call("audio_play_sound",[E.get("gunshot"),5,false]);
+E.call("audio_play_sound",[E.get("grenadeshot"),5,false]);
 for(const __target1 of E.targets(E.call("instance_create_layer",[(E.get("x") + 5),E.get("y"),"bullets",E.get("oBulletBomb")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("spd",25);
 E.set("direction",(E.member(E.get("other"),"image_angle") + E.call("random_range",[(-3),3])));
@@ -4709,43 +4687,8 @@ E.set("gunkicky",E.call("lengthdir_y",[1,(E.member(E.get("other"),"image_angle")
 }}
 }
 else {}
-E.set("x",(E.get("x") - E.call("lengthdir_x",[E.get("recoil"),E.get("image_angle")])));
-E.set("y",(E.get("y") - E.call("lengthdir_y",[E.get("recoil"),E.get("image_angle")])));
-if(((E.get("image_angle") > 90) && (E.get("image_angle") < 270))){
-E.set("image_yscale",(-1));
-E.set("x",(E.get("x") + 25));
-}
-else {
-E.set("image_yscale",1);
-}
-
-if(((E.call("mouse_check_button",[E.get("mb_left")]) && (!E.call("instance_exists",[E.get("oGunPickup")]))) && (E.member(E.get("global"),"ammo") == 0))){
-E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oGun")]);
-E.call("instance_destroy",[E.get("oGun59")]);
-}
-else {}
-if(((E.call("mouse_check_button",[E.get("mb_left")]) && (!E.call("instance_exists",[E.get("oGunPickup")]))) && (E.member(E.get("global"),"ammo") > 0))){
-E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oGun")]);
-E.call("instance_destroy",[E.get("oGun59")]);
-}
-else {}
-if((((E.call("mouse_check_button",[E.get("mb_left")]) && (E.get("firingdelay") < 0)) && (!E.call("instance_exists",[E.get("oGunPickup")]))) && (E.member(E.get("global"),"weapon1") == true))){
-E.set("recoil",15);
-E.set("firingdelay",3);
-E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oGun")]);
-E.call("instance_destroy",[E.get("oGun59")]);
-E.call("audio_play_sound",[E.get("gunshot"),5,false]);
-for(const __target3 of E.targets(E.call("instance_create_layer",[(E.get("x") + 5),E.get("y"),"bullets",E.get("oBullet")]))){const E2=E.withSelf(__target3);{const E=E2;{
-E.set("spd",25);
-E.set("direction",(E.member(E.get("other"),"image_angle") + E.call("random_range",[(-3),3])));
-E.set("image_angle",E.get("direction"));
-}
-}}
-for(const __target4 of E.targets(E.get("Object1"))){const E2=E.withSelf(__target4);{const E=E2;{
-E.set("gunkickx",E.call("lengthdir_x",[1.5,(E.member(E.get("other"),"image_angle") - 180)]));
-E.set("gunkicky",E.call("lengthdir_y",[1,(E.member(E.get("other"),"image_angle") - 180)]));
-}
-}}
+if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && (E.member(E.get("global"),"bullets") == 0)) && E.member(E.get("global"),"hascontrol"))){
+E.call("audio_play_sound",[E.get("gunempty"),2,false]);
 }
 else {}
 E.set("x",(E.get("x") - E.call("lengthdir_x",[E.get("recoil"),E.get("image_angle")])));
@@ -4761,11 +4704,12 @@ E.set("image_yscale",1);
 }
 ,
 "gml_Object_oGunPickup_Collision_Object1":function(E){
+E.call("instance_destroy",[E.get("oGun")]);
+E.call("instance_destroy",[E.get("oGun59")]);
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun")]);
 E.call("instance_destroy",[E.get("oGunPickup")]);
 E.put(E.get("global"),"weapon1",true);
 E.set("flash",3);
-E.call("instance_destroy",[E.get("oGun59")]);
 E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
 E.put(E.get("global"),"ammo",(E.member(E.get("global"),"ammo") + 100));
 }
@@ -4781,8 +4725,7 @@ E.set("y",(E.get("ystart") + (E.call("sin",[(E.call("get_timer",[]) / 200000)]) 
 "gml_Object_oGun_Create_0":function(E){
 E.set("firingdelay",0);
 E.set("recoil",0);
-E.put(E.get("global"),"weapon1",false);
-E.put(E.get("global"),"weapon2",false);
+E.put(E.get("global"),"weapon1",true);
 E.put(E.get("global"),"dontshoot",true);
 }
 ,
@@ -4805,22 +4748,22 @@ E.call("event_inherited",[]);
 "gml_Object_oGun_Step_1":function(E){
 E.set("x",(E.member(E.get("Object1"),"x") - 20));
 E.set("y",(E.member(E.get("Object1"),"y") + 10));
-if(((E.call("keyboard_check",[E.call("ord",["F"])]) && (E.member(E.get("global"),"bullets") != 0)) && (!E.call("instance_exists",[E.get("ogrenadepickup")])))){
-E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("layer"),E.get("oGun59")]);
-E.call("instance_destroy",[E.get("oGun")]);
-E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
-}
-else {}
-if(((E.call("keyboard_check_pressed",[E.call("ord",["F"])]) && (!E.call("instance_exists",[E.get("ogrenadepickup")]))) && (E.member(E.get("global"),"bullets") == 0))){
-E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oGun59")]);
-E.call("instance_destroy",[E.get("oGun")]);
-E.call("audio_play_sound",[E.get("gunempty"),5,false]);
-}
-else {}
 E.set("image_angle",E.call("point_direction",[E.get("x"),E.get("y"),E.get("mouse_x"),E.get("mouse_y")]));
 E.set("firingdelay",(E.get("firingdelay") - 1));
 E.set("recoil",E.call("max",[0,(E.get("recoil") - 1)]));
-if(((((E.call("mouse_check_button",[E.get("mb_left")]) && (E.get("firingdelay") < 0)) && (E.member(E.get("global"),"ammo") > 0)) && (E.member(E.get("global"),"hascontrol") != 0)) && (E.member(E.get("global"),"dontshoot") == true))){
+if((E.call("keyboard_check_pressed",[E.call("ord",["F"])]) && E.member(E.get("global"),"hascontrol"))){
+if(E.member(E.get("global"),"weapon2")){
+E.call("instance_change",[E.get("oGun59"),true]);
+E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
+return ;
+}
+else {
+E.call("audio_play_sound",[E.get("gunempty"),2,false]);
+}
+
+}
+else {}
+if(((((E.call("mouse_check_button",[E.get("mb_left")]) && (E.get("firingdelay") < 0)) && (E.member(E.get("global"),"ammo") > 0)) && E.member(E.get("global"),"hascontrol")) && E.member(E.get("global"),"dontshoot"))){
 E.put(E.get("global"),"ammo",(E.member(E.get("global"),"ammo") - 1));
 E.set("recoil",15);
 E.set("firingdelay",3);
@@ -4838,6 +4781,10 @@ E.set("gunkicky",E.call("lengthdir_y",[1,(E.member(E.get("other"),"image_angle")
 }}
 }
 else {}
+if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && (E.member(E.get("global"),"ammo") == 0)) && E.member(E.get("global"),"hascontrol"))){
+E.call("audio_play_sound",[E.get("gunempty"),2,false]);
+}
+else {}
 E.set("x",(E.get("x") - E.call("lengthdir_x",[E.get("recoil"),E.get("image_angle")])));
 E.set("y",(E.get("y") - E.call("lengthdir_y",[E.get("recoil"),E.get("image_angle")])));
 if(((E.get("image_angle") > 90) && (E.get("image_angle") < 270))){
@@ -4848,10 +4795,6 @@ else {
 E.set("image_yscale",1);
 }
 
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && (E.member(E.get("global"),"ammo") == 0)) && (E.member(E.get("global"),"hascontrol") == 1))){
-E.call("audio_play_sound",[E.get("gunempty"),2,false]);
-}
-else {}
 }
 ,
 "gml_Object_oHealthBar_Create_0":function(E){
@@ -5543,8 +5486,12 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oNepalGuy_Step_0":function(E){
-if((((!E.call("instance_exists",[E.get("oCustoemrs")])) && (!E.call("instance_exists",[E.get("oCustoemrs2")]))) && (!E.call("instance_exists",[E.get("oCustoemrs3")])))){
+if(((((!E.call("instance_exists",[E.get("oCustoemrs")])) && (!E.call("instance_exists",[E.get("oCustoemrs2")]))) && (!E.call("instance_exists",[E.get("oCustoemrs3")]))) && E.call("instance_exists",[E.get("oQuestObjectives3")]))){
+E.put(E.get("global"),"quest3",1);
+if((!E.call("instance_exists",[E.get("oNepalguytext")]))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oNepalguytext")]);
+}
+else {}
 }
 else {}
 }
@@ -5554,13 +5501,18 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oNepalguysound_Step_0":function(E){
-if((((!E.call("instance_exists",[E.get("oCustoemrs")])) && (!E.call("instance_exists",[E.get("oCustoemrs2")]))) && (!E.call("instance_exists",[E.get("oCustoemrs3")])))){
-E.call("audio_play_sound",[E.get("powerup"),4,false]);
+if(((((!E.call("instance_exists",[E.get("oCustoemrs")])) && (!E.call("instance_exists",[E.get("oCustoemrs2")]))) && (!E.call("instance_exists",[E.get("oCustoemrs3")]))) && E.call("instance_exists",[E.get("oQuestObjectives3")]))){
 E.call("instance_destroy",[]);
+if((!E.member(E.get("global"),"petrolpaid"))){
+E.put(E.get("global"),"petrolpaid",true);
+E.put(E.get("global"),"quest3",1);
+E.call("audio_play_sound",[E.get("powerup"),4,false]);
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oBulletsLeftGreen")]);
-E.put(E.get("global"),"kills",300);
+E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + 300));
 E.put(E.get("global"),"killsgreen",300);
 E.call("greentext",[]);
+}
+else {}
 }
 else {}
 }
@@ -5687,22 +5639,45 @@ if((E.get("hspeed") == 0)){
 E.call("instance_create_layer",[E.member(E.get("oPDead"),"x"),(E.member(E.get("oPDead"),"y") + 500),"player",E.get("oDanielText6")]);
 }
 else {}
-if((E.call("keyboard_check_pressed",[E.get("vk_space")]) && (E.get("vsp") == 0))){
+if(((E.call("keyboard_check_pressed",[E.get("vk_space")]) && (E.get("vsp") == 0)) && (E.get("done") == 1))){
 E.call("instance_destroy",[]);
 E.put(E.get("global"),"hascontrol",1);
-E.call("layer_set_visible",["player",E.get("visible")]);
+E.call("layer_set_visible",["player",true]);
+E.call("layer_set_visible",["Gun",true]);
+if(E.call("instance_exists",[E.get("oBedSleep")])){
 E.put(E.get("Object1"),"x",E.member(E.get("oBedSleep"),"x"));
 E.put(E.get("Object1"),"y",(E.member(E.get("oBedSleep"),"y") - 90));
+}
+else {
+E.put(E.get("Object1"),"x",E.member(E.get("Object1"),"xstart"));
+E.put(E.get("Object1"),"y",E.member(E.get("Object1"),"ystart"));
+}
+
+E.put(E.get("Object1"),"vsp",0);
+E.put(E.get("Object1"),"hsp",0);
+E.put(E.get("Object1"),"jumps",2);
 E.put(E.get("global"),"php",8);
+E.call("game_set_speed",[60,E.get("gamespeed_fps")]);
+for(const __target1 of E.targets(E.get("oCamera"))){const E2=E.withSelf(__target1);{const E=E2;{
+E.set("follow",E.member(E.get("Object1"),"id"));
+}
+}}
 E.call("instance_destroy",[E.get("oBulletsLeftRed")]);
-if((!E.call("instance_exists",[E.get("oGunPickup")]))){
+E.call("instance_destroy",[E.get("oDanielText6")]);
+E.call("instance_destroy",[E.get("oGun")]);
+E.call("instance_destroy",[E.get("oGun59")]);
+if(((E.member(E.get("global"),"respawnweapon") == E.get("oGun59")) && E.member(E.get("global"),"weapon2"))){
+E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun59")]);
+}
+else if(E.member(E.get("global"),"weapon1")){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun")]);
 }
-else {}
-if((!E.call("instance_exists",[E.get("ogrenadepickup")]))){
+else if(E.member(E.get("global"),"weapon2")){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun59")]);
 }
 else {}
+
+
 }
 else {}
 if((E.member(E.get("global"),"greentimer") == (-5))){
@@ -5730,16 +5705,19 @@ if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mous
 E.call("audio_play_sound",[E.get("doorclosesound"),4,false]);
 E.put(E.get("Object1"),"x",E.member(E.get("oJobSign"),"x"));
 E.put(E.get("Object1"),"y",(E.member(E.get("oJobSign"),"y") - 100));
-if((E.member(E.get("global"),"quest3") == 1)){
 E.call("instance_destroy",[E.get("oQuestObjectives3")]);
-}
-else {}
-if((E.member(E.get("global"),"hasquest2") == 1)){
-E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oQuestObjectives3")]);
-}
-else {}
+E.put(E.get("global"),"hasquest3",0);
 E.put(E.get("global"),"hasslept",false);
-E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oGun")]);
+E.call("instance_destroy",[E.get("oGun")]);
+E.call("instance_destroy",[E.get("oGun59")]);
+if(((E.member(E.get("global"),"petrolweapon") == E.get("oGun59")) && E.member(E.get("global"),"weapon2"))){
+E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun59")]);
+}
+else {
+E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun")]);
+}
+
+E.call("layer_set_visible",["Gun",true]);
 }
 else {}
 }
@@ -5768,7 +5746,13 @@ E.call("audio_play_sound",[E.get("dooropensound"),3,false]);
 E.put(E.get("global"),"customer1spd",(-2));
 E.put(E.get("global"),"customer2spd",(-2));
 E.put(E.get("global"),"customer3spd",(-2));
+E.put(E.get("global"),"petrolweapon",E.get("oGun"));
+if(E.call("instance_exists",[E.get("oGun59")])){
+E.put(E.get("global"),"petrolweapon",E.get("oGun59"));
+}
+else {}
 E.call("instance_destroy",[E.get("oGun")]);
+E.call("instance_destroy",[E.get("oGun59")]);
 }
 else {}
 }
@@ -6035,10 +6019,6 @@ E.call("draw_set_colour",[E.get("c_white")]);
 E.call("draw_text_transformed",[1013,190,(("Complete 1 shift at petrol station " + E.call("string",[E.member(E.get("global"),"quest3")])) + " /1"),E.get("killtextscale"),E.get("killtextscale"),0]);
 }
 else {}
-if(E.call("instance_exists",[E.get("oNepalguytext")])){
-E.put(E.get("global"),"quest3",1);
-}
-else {}
 }
 ,
 "gml_Object_oQuestObjectives3_Other_4":function(E){
@@ -6163,6 +6143,9 @@ else {}
 }
 ,
 "gml_Object_oSleepBlck119_Create_0":function(E){
+E.set("image_alpha",1);
+E.set("woken",false);
+E.set("messagecleared",false);
 }
 ,
 "gml_Object_oSleepBlck119_PreCreate_0":function(E){
@@ -6170,23 +6153,31 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oSleepBlck119_Step_0":function(E){
-E.set("image_alpha",(E.get("image_alpha") - 0.005));
-if((E.get("image_alpha") == 0.5)){
+E.set("image_alpha",E.call("max",[0,(E.get("image_alpha") - 0.005)]));
+if(((!E.get("woken")) && (E.get("image_alpha") <= 0.5))){
+E.set("woken",true);
 E.put(E.get("global"),"hascontrol",1);
 }
 else {}
-if((E.get("image_alpha") == 0)){
-E.put(E.get("global"),"clickedbed",false);
-}
-else {}
-if((E.get("image_alpha") == 0.3)){
+if(((!E.get("messagecleared")) && (E.get("image_alpha") <= 0.3))){
+E.set("messagecleared",true);
 E.call("instance_destroy",[E.get("oText5")]);
 }
 else {}
-if((E.get("image_alpha") == 0.3)){
-E.put(E.get("global"),"gosleep",3);
+if((E.get("image_alpha") <= 0)){
+E.put(E.get("global"),"hascontrol",1);
+E.put(E.get("global"),"clickedbed",false);
+E.put(E.get("global"),"gosleep",0);
+E.call("instance_destroy",[E.get("oText5")]);
+for(const __target1 of E.targets(E.get("oBedSleep"))){const E2=E.withSelf(__target1);{const E=E2;{
+E.putIndex(E.ensureArray("alarm"),1,(-1));
+}
+}}
+E.call("instance_destroy",[]);
 }
 else {}
+E.set("x",E.member(E.get("Object1"),"x"));
+E.set("y",E.member(E.get("Object1"),"y"));
 }
 ,
 "gml_Object_oSleepBlck_Alarm_0":function(E){
@@ -6729,6 +6720,7 @@ E.call("instance_destroy",[E.get("ojobbutton1")]);
 E.call("instance_destroy",[E.get("ojobbutton2")]);
 E.call("instance_destroy",[E.get("ojobmenu")]);
 E.put(E.get("global"),"hascontrol",1);
+E.call("petrol_shift_start",[]);
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"quests",E.get("oQuestObjectives3")]);
 E.call("instance_destroy",[E.get("oQuestMarker2")]);
 for(const __target1 of E.targets(E.get("oQuestObjectives3"))){const E2=E.withSelf(__target1);{const E=E2;{
@@ -7286,8 +7278,17 @@ E.call("draw_set_valign",[E.get("arg3")]);
 },
 "KillPlayer":function(E){
 {
-E.put(E.get("global"),"php",(E.member(E.get("global"),"php") - 1));
+if(E.call("instance_exists",[E.get("oPDead")])){
+return ;
+}
+else {}
+E.put(E.get("global"),"php",E.call("max",[0,(E.member(E.get("global"),"php") - 1)]));
 if((E.member(E.get("global"),"php") == 0)){
+E.put(E.get("global"),"respawnweapon",E.get("oGun"));
+if(E.call("instance_exists",[E.get("oGun59")])){
+E.put(E.get("global"),"respawnweapon",E.get("oGun59"));
+}
+else {}
 for(const __target1 of E.targets(E.get("oGun"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.call("instance_destroy",[]);
 }

@@ -1,0 +1,40 @@
+friction = 1;
+hsp = 0;
+vsp = 0;
+grv = 0.4;
+walksp = 4;
+hitfrom = 0;
+vspeed = 0;
+global.hascontrol = true;
+canjump = 0;
+flash = 0;
+global.gosleep = 0;
+global.ammo = 110;
+global.stocksdown = 0;
+global.kills = global.kills;
+global.messageread = 0;
+global.php = 4;
+global.takenallowance = 0;
+jumps = 0;
+global.clickedbed = false;
+global.tapes = 0;
+global.bullets = 0;
+global.stocks = 0;
+gunkickx = 0;
+gunkicky = 0;
+audio_play_sound(nightsounds, 7, true);
+if (global.stocksdown == 0)
+{
+    alarm[1] = -1;
+}
+global.acceptedquest = false;
+global.greentimer = 0;
+alarm[0] += 30;
+global.hasquest1 = 0;
+global.hasquest2 = 0;
+global.hasquest3 = 0;
+global.quest1 = 0;
+global.quest2 = 0;
+global.quest3 = 0;
+instance_destroy(oBulletsLeftGreen);
+global.hasslept = true;
