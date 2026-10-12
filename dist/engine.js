@@ -161,7 +161,7 @@ export class Engine {
   data.fonts.forEach((f,i)=>{this.assets[f.info.Name]=i;f.glyphMap=new Map(f.glyphs.map(g=>[g.Character,g]));f.lineHeight=Math.max(...f.glyphs.filter(g=>g.Character<127).map(g=>g.SourceHeight));});
   data.sounds.forEach((s,i)=>this.assets[s.Name]=i);this.assets.shWhite=1;this.assets.shBlend=0;
   this.objects=data.objects.map(o=>({...o,events:new Map(o.events.flatMap(t=>t.events.map(e=>[`${t.type}:${e.subtype}`,e.code])))}));
-  this.eventCache=new Map();this.nullInstance={};this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.instances=[];this.byId=new Map();this.byObject=new Map();this.dynamicByObject=new Map();this.gridDirty=true;this.nextId=200000;this.roomIndex=0;this.fps=60;this.frame=0;this.timeMs=0;this.drawVersion=0;this.camera={x:0,y:0,w:1366,h:768};this.gui={w:1024,h:768};
+  this.eventCache=new Map();this.boundsCache=new WeakMap();this.nullInstance={};this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.instances=[];this.byId=new Map();this.byObject=new Map();this.dynamicByObject=new Map();this.gridDirty=true;this.nextId=200000;this.roomIndex=0;this.fps=60;this.frame=0;this.timeMs=0;this.drawVersion=0;this.camera={x:0,y:0,w:1366,h:768};this.gui={w:1024,h:768};
   this.randomState=(options.seed??Math.floor(Math.random()*4294967296))>>>0||12345;
   this.roomStates=new Map();this.worldInitialized=false;this.cheats={...DEFAULT_CHEATS};
   this.input={keys:new Set(),pressed:new Set(),released:new Set(),buttons:new Set(),bpressed:new Set(),breleased:new Set(),mx:0.5,my:0.5};
@@ -171,7 +171,8 @@ export class Engine {
    const ancestors=[];for(let n=index;n>=0;){ancestors.push(n);const p=this.objects[n].info.ParentId;n=p?this.assets[p]:-1;}
    const collisions=new Set();for(const n of ancestors)for(const key of this.objects[n].events.keys())if(key.startsWith('4:'))collisions.add(Number(key.slice(2)));
    const active=(type,sub)=>this.eventFor(index,type,sub)?.active;
-   return {ancestors,dynamic:[0,1,2].some(sub=>active(3,sub)),collisions:[...collisions].filter(sub=>active(4,sub)),mouse:ancestors.some(n=>[...this.objects[n].events.keys()].some(k=>k.startsWith('6:')&&this.eventFor(index,6,Number(k.slice(2)))?.active)),animationEnd:active(7,7),gui:active(8,64)};
+   const hasType=type=>ancestors.some(n=>[...this.objects[n].events.keys()].some(k=>k.startsWith(type+':')&&active(type,Number(k.split(':')[1]))));
+   return {ancestors,dynamic:[0,1,2].some(sub=>active(3,sub)),beginStep:active(3,1),step:active(3,0),endStep:active(3,2),keysPressed:hasType(9),keysReleased:hasType(10),keysHeld:hasType(5),collisions:[...collisions].filter(sub=>active(4,sub)),mouse:hasType(6),animationEnd:active(7,7),gui:active(8,64)};
   });
   this.projectileTypes=new Set(['oBullet','oBulletBomb','eEbullet'].map(n=>this.assets[n]));
  }
@@ -314,9 +315,12 @@ export class Engine {
  }
  bounds(s,x=s.x,y=s.y){
   const spr=this.sprites[s.mask_index>=0?s.mask_index:s.sprite_index];if(!spr)return {left:x,right:x,top:y,bottom:y,valid:false};
+  const current=x===s.x&&y===s.y,cached=current&&this.boundsCache.get(s);
+  if(cached&&cached.sprite===spr&&cached.sx===s.image_xscale&&cached.sy===s.image_yscale&&cached.angle===s.image_angle&&cached.bounds.x===x&&cached.bounds.y===y)return cached.bounds;
   const i=spr.info;let left=(i.MarginLeft-i.OriginX)*s.image_xscale,right=(i.MarginRight+1-i.OriginX)*s.image_xscale,top=(i.MarginTop-i.OriginY)*s.image_yscale,bottom=(i.MarginBottom+1-i.OriginY)*s.image_yscale;
   if(s.image_angle){const points=[[left,top],[right,top],[right,bottom],[left,bottom]].map(([a,b])=>[a*Math.cos(rad(s.image_angle))+b*Math.sin(rad(s.image_angle)),-a*Math.sin(rad(s.image_angle))+b*Math.cos(rad(s.image_angle))]);left=Math.min(...points.map(p=>p[0]));right=Math.max(...points.map(p=>p[0]));top=Math.min(...points.map(p=>p[1]));bottom=Math.max(...points.map(p=>p[1]));}
-  return {left:x+Math.min(left,right),right:x+Math.max(left,right),top:y+Math.min(top,bottom),bottom:y+Math.max(top,bottom),valid:true,instance:s,x,y};
+  const bounds={left:x+Math.min(left,right),right:x+Math.max(left,right),top:y+Math.min(top,bottom),bottom:y+Math.max(top,bottom),valid:true,instance:s,x,y};
+  if(current)this.boundsCache.set(s,{sprite:spr,sx:s.image_xscale,sy:s.image_yscale,angle:s.image_angle,bounds});return bounds;
  }
  overlaps(a,b){return a.valid&&b.valid&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;}
  spriteMask(b){const s=b.instance;return s?this.sprites[s.mask_index>=0?s.mask_index:s.sprite_index]:null;}
@@ -396,14 +400,49 @@ export class Engine {
   }
   s.y+=move;if(move!==amount)s.vsp=0;
  }
+ safeLanding(s,references){
+  const walls=this.resolve(this.assets.wall),offset=this.bounds(s,0,0);
+  for(const [x,y] of references){
+   if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+   let best=null;
+   for(const wall of walls){const w=this.bounds(wall);if(!w.valid||x+offset.left>=w.right||x+offset.right<=w.left)continue;
+    const ground=w.top-offset.bottom-1e-6,distance=Math.abs(ground-y);
+    if(best&&distance>=best.distance)continue;
+    if(!this.place(s,x,ground,this.assets.wall)&&this.place(s,x,ground+1,this.assets.wall)&&!this.place(s,x,ground,this.assets.oKillTrigger))best={x,y:ground,distance};
+   }
+   if(best)return best;
+  }
+  return null;
+ }
+ guardMapFall(){
+  if(this.pendingRoom!==null)return;
+  const player=this.first(this.assets.Object1),body=this.first(this.assets.oPDead),s=body||player;
+  if(!s||!body&&!gmlBoolean(this.global.hascontrol))return;
+  const b=this.bounds(s);
+  // Remember solid ground in the serialized player state, never an airborne or embedded position.
+  if(!body&&s.vsp===0&&!this.place(s,s.x,s.y,this.assets.wall)&&this.place(s,s.x,s.y+1,this.assets.wall)&&!this.place(s,s.x,s.y,this.assets.oKillTrigger)){
+   s.fallSafeX=s.x;s.fallSafeY=s.y;return;
+  }
+  if(!b.valid||b.top<=this.room.info.Height+256)return;
+  // Some original floors extend below the nominal room height. Recovery starts below all terrain.
+  const bottom=this.resolve(this.assets.wall).reduce((y,wall)=>Math.max(y,this.bounds(wall).bottom),this.room.info.Height);
+  if(b.top<=bottom+256)return;
+  const bed=this.first(this.assets.oBedSleep),spawn=this.room.instances.find(i=>i.ObjectDefinition==='Object1');
+  const target=this.safeLanding(s,[[player?.fallSafeX,player?.fallSafeY],[bed?.x,bed?.y-90],[spawn?.X,spawn?.Y]]);
+  if(!target)return;
+  Object.assign(s,{x:target.x,y:target.y,xprevious:target.x,yprevious:target.y,hsp:0,vsp:0,hspeed:0,vspeed:0,speed:0,gunkickx:0,gunkicky:0});
+  if(body){body.done=0;if(player){player.hsp=0;player.vsp=0;player.gunkickx=0;player.gunkicky=0;}}
+  else {player.fallSafeX=target.x;player.fallSafeY=target.y;player.jumps=2;}
+  this.onFallRecovery?.(!!body);
+ }
  step(){
-  if(this.paused||!this.room)return;const wasDead=!!this.first(this.assets.oPDead);this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
-  for(const s of before){if(s.dead)continue;s.xprevious=s.x;s.yprevious=s.y;this.runEvent(s,3,1);}
+  if(this.paused||!this.room)return;this.guardMapFall();const wasDead=!!this.first(this.assets.oPDead);this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
+  for(const s of before){if(s.dead)continue;s.xprevious=s.x;s.yprevious=s.y;if(this.objectMeta[s.object_index].beginStep)this.runEvent(s,3,1);}
   for(const s of before){if(s.dead)continue;for(let i=0;i<12;i++)if(s.alarm[i]>0){if(--s.alarm[i]===0){s.alarm[i]=-1;this.runEvent(s,2,i);}}}
-  for(const s of before){if(s.dead)continue;for(const k of this.input.pressed)this.runEvent(s,9,k);for(const k of this.input.released)this.runEvent(s,10,k);for(const k of this.input.keys)this.runEvent(s,5,k);if(this.input.pressed.size)this.runEvent(s,9,1);this.runMouse(s);this.runEvent(s,3,0);}
-  for(const s of before){if(s.dead)continue;if(s.hspeed||s.vspeed){s.x+=s.hspeed;s.y+=s.vspeed;}if(s.gravity){s.hspeed+=lx(s.gravity,s.gravity_direction);s.vspeed+=ly(s.gravity,s.gravity_direction);}const speed=Math.hypot(s.hspeed,s.vspeed);if(speed&&s.friction>0){const ratio=Math.max(0,speed-s.friction)/speed;s.hspeed*=ratio;s.vspeed*=ratio;}s.speed=Math.hypot(s.hspeed,s.vspeed);if(s.speed)s.direction=direction(0,0,s.hspeed,s.vspeed);}
+  for(const s of before){if(s.dead)continue;if(this.objectMeta[s.object_index].keysPressed)for(const k of this.input.pressed)this.runEvent(s,9,k);if(this.objectMeta[s.object_index].keysReleased)for(const k of this.input.released)this.runEvent(s,10,k);if(this.objectMeta[s.object_index].keysHeld)for(const k of this.input.keys)this.runEvent(s,5,k);if(this.input.pressed.size&&this.objectMeta[s.object_index].keysPressed)this.runEvent(s,9,1);this.runMouse(s);if(this.objectMeta[s.object_index].step)this.runEvent(s,3,0);}
+  for(const s of before){if(s.dead||!(s.hspeed||s.vspeed||s.gravity||s.speed))continue;if(s.hspeed||s.vspeed){s.x+=s.hspeed;s.y+=s.vspeed;}if(s.gravity){s.hspeed+=lx(s.gravity,s.gravity_direction);s.vspeed+=ly(s.gravity,s.gravity_direction);}const speed=Math.hypot(s.hspeed,s.vspeed);if(speed&&s.friction>0){const ratio=Math.max(0,speed-s.friction)/speed;s.hspeed*=ratio;s.vspeed*=ratio;}s.speed=Math.hypot(s.hspeed,s.vspeed);if(s.speed)s.direction=direction(0,0,s.hspeed,s.vspeed);}
   for(const s of before){if(s.dead)continue;for(const sub of this.objectMeta[s.object_index].collisions)for(const t of this.query(this.bounds(s),sub,s)){this.runEvent(s,4,sub,t);if(s.dead)break;}}
-  for(const s of before){if(s.dead)continue;this.runEvent(s,3,2);const spr=this.sprites[s.sprite_index];if(spr){const rate=spr.info.GMS2PlaybackSpeedType?spr.info.GMS2PlaybackSpeed:spr.info.GMS2PlaybackSpeed/this.fps;const frames=spr.textures.length;s.image_index+=s.image_speed*rate;if(frames&&s.image_index>=frames){s.image_index%=frames;this.runEvent(s,7,7);}if(s.image_index<0&&frames)s.image_index=(s.image_index%frames+frames)%frames;}}
+  for(const s of before){if(s.dead)continue;if(this.objectMeta[s.object_index].endStep)this.runEvent(s,3,2);const spr=this.sprites[s.sprite_index];if(spr){const rate=spr.info.GMS2PlaybackSpeedType?spr.info.GMS2PlaybackSpeed:spr.info.GMS2PlaybackSpeed/this.fps;const frames=spr.textures.length;s.image_index+=s.image_speed*rate;if(frames&&s.image_index>=frames){s.image_index%=frames;if(this.objectMeta[s.object_index].animationEnd)this.runEvent(s,7,7);}if(s.image_index<0&&frames)s.image_index=(s.image_index%frames+frames)%frames;}}
   for(const l of this.layers){l.info.XOffset+=l.info.HSpeed;l.info.YOffset+=l.info.VSpeed;}
   for(const s of before)if(!s.dead&&this.projectileTypes.has(s.object_index)&&(s.x < -256||s.y < -256||s.x>this.room.info.Width+256||s.y>this.room.info.Height+256))this.destroy(s);
   if(this.needsSweep){this.instances=this.instances.filter(s=>!s.dead);this.needsSweep=false;}
@@ -441,7 +480,7 @@ export class Engine {
    keyboard_check:(_,k)=>k===1?g.input.keys.size>0:g.input.keys.has(k),keyboard_check_pressed:(_,k)=>k===1?g.input.pressed.size>0:g.input.pressed.has(k),mouse_check_button:(_,n)=>g.input.buttons.has(n),mouse_check_button_pressed:(_,n)=>g.input.bpressed.has(n),ord:(_,s)=>String(s).toUpperCase().charCodeAt(0),device_mouse_y_to_gui:()=>g.input.my*g.gui.h,
    instance_exists:(e,o)=>!!g.first(o,e.self,e.other),instance_create_layer:(e,x,y,l,o)=>g.create(o,x,y,l).id,instance_destroy:(e,o)=>g.destroy(o,e.self),instnce_destroy:(e,o)=>g.destroy(o,e.self),instance_change:(e,o,v)=>g.change(e.self,o,v),place_meeting:(e,x,y,o)=>!!g.place(e.self,x,y,o),instance_place:(e,x,y,o)=>g.place(e.self,x,y,o)?.id??-4,player_unstick:e=>g.recoverPlayer(e.self),player_move_vertical:(e,amount)=>g.movePlayerVertical(e.self,amount),petrol_shift_start:()=>g.resetPetrolShift(),cheat_enabled:(_,name)=>g.cheats[name]===true,new_adventure:()=>g.beginNewAdventure(),
    collision_line:(e,x1,y1,x2,y2,o,precise,notme)=>{const b={left:Math.min(x1,x2),right:Math.max(x1,x2)+1,top:Math.min(y1,y2),bottom:Math.max(y1,y2)+1,valid:true};for(const s of g.query(b,o,notme?e.self:null)){const a=g.bounds(s);let lo=0,hi=1;for(const [p,q] of [[-(x2-x1),x1-a.left],[x2-x1,a.right-x1],[-(y2-y1),y1-a.top],[y2-y1,a.bottom-y1]]){if(p===0&&q<0){lo=2;break;}if(p<0)lo=Math.max(lo,q/p);else if(p>0)hi=Math.min(hi,q/p);}if(lo<=hi){if(!precise)return s.id;const count=Math.max(1,Math.ceil(Math.hypot(x2-x1,y2-y1)*(hi-lo)*2));for(let k=0;k<=count;k++){const t=lo+(hi-lo)*k/count;if(g.maskContains(a,x1+(x2-x1)*t,y1+(y2-y1)*t))return s.id;}}}return -4;},
-   event_inherited:(e)=>{if(!e.event)return;const p=g.objects[e.event.owner]?.info.ParentId;if(p)g.runEvent(e.self,e.event.type,e.event.sub,e.other,g.assets[p]);},alarm_set:(e,n,v)=>e.self.alarm[n]=v,
+   event_perform:(e,type,sub)=>g.runEvent(e.self,type,sub,e.other),event_inherited:(e)=>{if(!e.event)return;const p=g.objects[e.event.owner]?.info.ParentId;if(p)g.runEvent(e.self,e.event.type,e.event.sub,e.other,g.assets[p]);},alarm_set:(e,n,v)=>e.self.alarm[n]=v,
    layer_set_visible:(_,l,v)=>{const layer=g.getLayer(l);if(layer)layer.info.IsVisible=!!v;},layer_exists:(_,l)=>!!g.getLayer(l),layer_x:(_,l,v)=>{const layer=g.getLayer(l);if(layer)layer.info.XOffset=v;},layer_add_instance:(_,l,id)=>{const s=g.resolve(id)[0],layer=g.getLayer(l);if(s&&layer){s.layer=layer.info.LayerId;s.depth=layer.info.LayerDepth;}},
    room_goto:(_,i)=>g.pendingRoom=i,room_goto_next:()=>{const order=g.data.roomOrder;g.pendingRoom=g.assets[order[(order.indexOf(g.room.info.Name)+1)%order.length]];},game_restart:()=>{g.beginNewAdventure();g.instances=[];g.rebuildIndexes();g.pendingRoom=g.assets[g.data.roomOrder[0]];},game_end:()=>{g.paused=true;g.onExit?.();},game_set_speed:(_,fps)=>g.fps=fps,
    camera_get_view_width:()=>g.camera.w,camera_get_view_height:()=>g.camera.h,camera_get_view_x:()=>g.camera.x,camera_get_view_y:()=>g.camera.y,camera_set_view_pos:(_,id,x,y)=>{if(Number.isFinite(x+y)){g.camera.x=x;g.camera.y=y;}},display_set_gui_size:(_,w,h)=>g.gui={w,h},display_get_gui_width:()=>g.gui.w,display_get_gui_height:()=>g.gui.h,font_get_size:(_,i)=>g.fonts[i]?.info.EmSize||24,

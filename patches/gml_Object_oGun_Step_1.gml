@@ -3,20 +3,21 @@ y = Object1.y + 10;
 image_angle = point_direction(x, y, mouse_x, mouse_y);
 firingdelay -= 1;
 recoil = max(0, recoil - 1);
-if (keyboard_check_pressed(ord("F")) && global.hascontrol)
+if ((keyboard_check(ord("F")) || keyboard_check_pressed(ord("F"))) && global.hascontrol)
 {
     if (global.weapon2)
     {
         instance_change(oGun59, true);
         audio_play_sound(reloadSound, 1, false);
+        event_perform(3, 1);
         return;
     }
-    else
+    else if (keyboard_check_pressed(ord("F")))
     {
         audio_play_sound(gunempty, 2, false);
     }
 }
-if (mouse_check_button(mb_left) && firingdelay < 0 && (global.ammo > 0 || cheat_enabled("infiniteAmmo")) && global.hascontrol && global.dontshoot)
+if ((mouse_check_button(mb_left) || mouse_check_button_pressed(mb_left)) && firingdelay < 0 && (global.ammo > 0 || cheat_enabled("infiniteAmmo")) && global.hascontrol && global.dontshoot)
 {
     if (!cheat_enabled("infiniteAmmo"))
     {

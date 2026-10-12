@@ -38,6 +38,7 @@
   "ds_list_size",
   "ds_map_find_value",
   "event_inherited",
+  "event_perform",
   "file_delete",
   "file_exists",
   "file_text_close",

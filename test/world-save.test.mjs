@@ -102,6 +102,8 @@ test('malformed physics and statistics cannot poison the current world through a
   w=>w.rooms.room26.instances[0].image_blend='white',
   w=>w.rooms.room26.instances[0].layer=.5,
   w=>w.rooms.room26.instances.find(s=>s.object_index===g.assets.Object1).hsp='bad',
+  w=>w.rooms.room26.instances.find(s=>s.object_index===g.assets.Object1).fallSafeX='bad',
+  w=>w.rooms.room26.instances.find(s=>s.object_index===g.assets.Object1).fallSafeY=1e8,
   w=>w.global.kills='bad',w=>w.global.slowmo={},
   w=>w.rooms.room26.locals.customer1spd='bad',
   w=>w.rooms.room26.locals.php=-50,

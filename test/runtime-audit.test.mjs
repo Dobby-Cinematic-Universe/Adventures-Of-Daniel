@@ -8,8 +8,9 @@ const make=(room='room26')=>{const g=new Engine(data,null,null,{seed:12345});g.a
 const obj=(g,name)=>g.first(g.assets[name]);
 const step=(g,n=1)=>{for(let i=0;i<n;i++)g.step();};
 
-test('actual mouse clicks fire consecutive grenades without switching away or creating duplicate guns',()=>{
- const g=make();step(g,40);const p=obj(g,'Object1');g.runEvent(obj(g,'oGunPickup'),4,g.assets.Object1,p);g.runEvent(p,4,g.assets.ogrenadepickup,obj(g,'ogrenadepickup'));g.input.mx=.8;g.input.my=.1;
+test('primary fire still works when only the launcher is owned, without granting a gun or duplicate controllers',()=>{
+ const g=make();step(g,40);const p=obj(g,'Object1');g.runEvent(p,4,g.assets.ogrenadepickup,obj(g,'ogrenadepickup'));g.input.mx=.8;g.input.my=.1;
+ assert.equal(gmlBoolean(g.global.weapon1),false);
  const grenades=g.global.bullets;
  for(let i=0;i<2;i++){g.input.buttons.add(1);g.input.bpressed.add(1);g.step();g.input.buttons.clear();step(g,5);assert.ok(obj(g,'oGun59'));assert.equal(obj(g,'oGun'),undefined);}
  assert.equal(g.global.bullets,grenades-2);assert.equal(g.resolve(g.assets.oGun59).length,1);assert.equal(g.errors.length,0);
@@ -24,6 +25,14 @@ test('static collision indexes reflect creation, destruction, and GML object cha
  const g=make('room1'),wall=g.create(g.assets.wall,6000,10,'floor'),probe=g.create(g.assets.oBullet,6008,18,'bullets');probe.spd=0;
  assert.equal(g.place(probe,probe.x,probe.y,g.assets.wall).id,wall.id);g.destroy(wall);assert.equal(g.place(probe,probe.x,probe.y,g.assets.wall),null);
  const door=g.create(g.assets.oDoor,7000,100,'floor');g.change(door,g.assets.oDoorOpen,true);assert.equal(g.resolve(g.assets.oDoor).some(s=>s.id===door.id),false);assert.equal(obj(g,'oDoorOpen').id,door.id);assert.equal(g.byId.get(door.id),door);
+});
+test('reused collision bounds still follow position, scale, rotation, masks, and hypothetical probes',()=>{
+ const g=make('room1'),wall=g.create(g.assets.wall,6000,100,'floor'),first=g.bounds(wall);
+ wall.x+=100;wall.y+=60;const moved=g.bounds(wall);assert.equal(moved.left-first.left,100);assert.equal(moved.top-first.top,60);
+ wall.image_xscale=2;const scaled=g.bounds(wall);assert.equal(scaled.right-scaled.left,2*(first.right-first.left));
+ wall.image_angle=90;const rotated=g.bounds(wall);assert.ok(Math.abs((rotated.bottom-rotated.top)-(scaled.right-scaled.left))<1e-9);
+ wall.mask_index=obj(g,'Object1').mask_index;const masked=g.bounds(wall);assert.notEqual(masked.bottom-masked.top,rotated.bottom-rotated.top);
+ const probe=g.bounds(wall,wall.x+500,wall.y+500);assert.equal(probe.left-masked.left,500);assert.deepEqual(g.bounds(wall),masked);
 });
 test('explicit collision masks rotate and negative animation frames keep valid precise masks',()=>{
  const g=make('room1'),enemy=obj(g,'oEnemy'),a=g.bounds(enemy);enemy.image_angle=90;const b=g.bounds(enemy);
@@ -44,7 +53,7 @@ test('cheats prevent damage and preserve zero ammunition while firing both weapo
  const g=make('room1');step(g,30);g.setCheat('invincible',true);const p=obj(g,'Object1'),health=g.global.php,money=g.global.kills;
  const shot=g.create(g.assets.eEbullet,p.x,p.y,'bullets');g.runEvent(p,4,g.assets.eEbullet,shot);assert.equal(g.global.php,health);assert.equal(g.global.kills,money);assert.equal(obj(g,'oPDead'),undefined);
  g.applyCheat('weapons');g.setCheat('infiniteAmmo',true);g.global.ammo=0;g.global.bullets=0;g.input.mx=.8;g.input.my=.1;g.input.buttons.add(1);g.input.bpressed.add(1);step(g,6);assert.ok(obj(g,'oBullet'));assert.equal(g.global.ammo,0);
- g.input.buttons.clear();g.input.pressed.add(70);g.step();g.input.buttons.add(1);g.input.bpressed.add(1);step(g,6);assert.ok(obj(g,'oBulletBomb'));assert.equal(g.global.bullets,0);assert.ok(obj(g,'oGun59'));
+ g.input.buttons.clear();g.input.pressed.add(70);g.input.keys.add(70);step(g,6);g.input.keys.clear();assert.ok(obj(g,'oBulletBomb'));assert.equal(g.global.bullets,0);assert.ok(obj(g,'oGun59'));
  g.input.buttons.clear();g.global.slowmo=0;g.setCheat('infiniteSlowmo',true);g.input.buttons.add(2);g.step();assert.equal(g.fps,30);assert.equal(g.global.slowmo,0);g.input.buttons.clear();g.step();assert.equal(g.fps,60);
  g.applyCheat('ammo');g.applyCheat('grenades');g.applyCheat('money');g.applyCheat('slowmo');assert.equal(g.global.ammo,1000);assert.equal(g.global.bullets,50);assert.equal(g.global.kills,money+1000);assert.equal(g.global.slowmo,100);assert.equal(g.errors.length,0);
 });
@@ -64,6 +73,42 @@ test('extreme launch falls and upward impulses cannot tunnel through a thin plat
   g.runEvent(p,3,0);assert.equal(p.vsp,0);assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);
   const b=g.bounds(p);assert.equal(velocity>0?b.bottom:b.top,velocity>0?w.top:w.bottom);assert.equal(g.errors.length,0);
  }
+});
+test('a living player who falls below all terrain returns to safe ground without losing progress',()=>{
+ for(const room of ['room26','room1','room3','petrolstationroom']){
+  const g=make(room);g.setCheat('invincible',true);step(g,60);g.global.kills=725;g.global.stocks=120;g.global.acceptedquest=true;g.applyCheat('weapons');
+  const p=obj(g,'Object1'),safe=[p.fallSafeX,p.fallSafeY],gun=obj(g,'oGun'),stats=[g.global.php,g.global.kills,g.global.ammo,g.global.stocks,g.global.acceptedquest];
+  let recovered=0;g.onFallRecovery=()=>recovered++;p.x=-200;p.y=6000;p.vsp=400;g.step();
+  assert.equal(p.x,safe[0]);assert.ok(Math.abs(p.y-safe[1])<1);assert.equal(p.vsp,0);assert.ok(g.place(p,p.x,p.y+1,g.assets.wall));assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);
+  assert.deepEqual([g.global.php,g.global.kills,g.global.ammo,g.global.stocks,g.global.acceptedquest],stats);assert.equal(obj(g,'oGun').id,gun.id);assert.equal(g.room.info.Name,room);assert.equal(obj(g,'oPDead'),undefined);
+  step(g,10);assert.equal(recovered,1);assert.equal(g.errors.length,0);
+ }
+ const g=make('room1');step(g,40);const p=obj(g,'Object1');p.x=3600;p.y=800;p.vsp=10;let recovered=0;g.onFallRecovery=()=>recovered++;
+ step(g,80);assert.equal(recovered,1);assert.ok(p.y<g.room.info.Height);assert.equal(obj(g,'oPDead'),undefined);assert.equal(g.cheats.invincible,false);assert.equal(g.errors.length,0);
+});
+test('a fallen death body lands once and remains revivable with the original death penalty',()=>{
+ for(const room of ['room26','room1','room3','petrolstationroom']){
+  const g=make(room);g.setCheat('invincible',true);step(g,60);g.applyCheat('weapons');g.global.kills=700;g.setCheat('invincible',false);const p=obj(g,'Object1');
+  g.global.php=1;g.runEvent(p,4,g.assets.eEbullet,g.create(g.assets.eEbullet,p.x,p.y,'bullets'));const body=obj(g,'oPDead');assert.ok(body);const money=g.global.kills;
+  body.x=-400;body.y=6000;body.vsp=400;let recovered=0;g.onFallRecovery=()=>recovered++;g.step();
+  assert.equal(body.done,1);assert.equal(body.vsp,0);assert.equal(g.global.php,0);assert.equal(g.global.hascontrol,0);assert.equal(g.global.kills,money);
+  step(g,5);assert.equal(recovered,1);assert.ok(g.resolve(g.assets.oDanielText6).length<=1);g.input.pressed.add(32);g.step();
+  assert.equal(obj(g,'oPDead'),undefined);assert.equal(g.global.hascontrol,1);assert.equal(g.global.php,8);assert.equal(g.global.kills,money);assert.equal(g.resolve(g.assets.oGun).length,1);assert.equal(g.errors.length,0);
+ }
+});
+test('void recovery accepts old saves without a safe point and resumes new mid-fall saves deterministically',()=>{
+ const g=make('room1');step(g,40);const p=obj(g,'Object1');p.x=3600;p.y=900;p.vsp=10;const snapshot=g.captureWorld();
+ const restored=new Engine(data,null,null,{seed:12345});restored.audioEnabled=false;restored.applyWorld(snapshot);step(g,90);step(restored,90);
+ const a=g.captureWorld(),b=restored.captureWorld();delete a.savedAt;delete b.savedAt;assert.deepEqual(a,b);
+ const legacy=structuredClone(snapshot),old=legacy.rooms.room1.instances.find(s=>s.object_index===g.assets.Object1);delete old.fallSafeX;delete old.fallSafeY;old.x=-500;old.y=6000;old.vsp=200;
+ restored.applyWorld(legacy);restored.step();const recovered=obj(restored,'Object1');assert.equal(recovered.x,96);assert.ok(restored.place(recovered,recovered.x,recovered.y+1,restored.assets.wall));assert.equal(restored.errors.length,0);
+});
+test('the fall guard leaves high launches, below-height terrain, sleep, and room transitions intact',()=>{
+ const g=make();step(g,40);const p=obj(g,'Object1');let recovered=0;g.onFallRecovery=()=>recovered++;
+ p.x=7200;p.y=-6000;p.vsp=-100;g.step();assert.ok(p.y<-6000);assert.equal(recovered,0);
+ p.x=20150;p.y=4000;p.vsp=10;step(g,100);assert.ok(p.y>g.room.info.Height);assert.ok(g.place(p,p.x,p.y+1,g.assets.wall));assert.equal(recovered,0);
+ g.global.hascontrol=0;p.x=-300;p.y=6000;p.vsp=10;g.guardMapFall();assert.equal(p.y,6000);assert.equal(recovered,0);
+ g.global.hascontrol=1;g.pendingRoom=g.assets.room1;g.guardMapFall();assert.equal(p.y,6000);assert.equal(recovered,0);g.step();assert.equal(g.room.info.Name,'room1');assert.equal(recovered,0);assert.equal(g.errors.length,0);
 });
 test('an embedded player recovers from adjoining stair tiles and can walk again',()=>{
  const g=make(),p=obj(g,'Object1');p.x=11100;p.y=2140;p.vsp=0;

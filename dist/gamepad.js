@@ -14,7 +14,7 @@ export function stickVector(rect,x,y){
 // Each finger owns its input source, so releasing one control cannot release another.
 export class GamepadInput{
  constructor({router,getGame,isReady=()=>true,onChange=()=>{}}){
-  Object.assign(this,{router,getGame,isReady,onChange});this.sticks={move:null,aim:null};this.buttons=new Map();this.pulses=new Map();this.holds=new Map();this.aim=null;this.relativeAim=false;this.context=null;this.repeatAt=0;
+  Object.assign(this,{router,getGame,isReady,onChange});this.sticks={move:null,aim:null};this.buttons=new Map();this.pulses=new Map();this.holds=new Map();this.aim=null;this.relativeAim=false;this.walkAim=false;this.context=null;this.repeatAt=0;
  }
  active(){const g=this.getGame();return !!(g?.room&&this.isReady()&&!g.paused);}
  player(){const g=this.getGame();return g?.first(g.assets.Object1);}
@@ -29,7 +29,7 @@ export class GamepadInput{
   if(id==='jump'&&dead)return dead.done===1&&dead.vsp===0;
   if(!this.controllable())return false;
   if(id==='fire')return !!(g.first(g.assets.oGun)||g.first(g.assets.oGun59));
-  if(id==='weapon')return !!(g.global.weapon1&&g.global.weapon2);
+  if(id==='weapon')return !!g.global.weapon2;
   return ['jump','interact','secondary','slowmo'].includes(id);
  }
  hasPointer(id){return this.sticks.move?.id===id||this.sticks.aim?.id===id||this.buttons.has(id);}
@@ -53,7 +53,7 @@ export class GamepadInput{
  moveStick(kind,id,vector){
   if(this.sticks[kind]?.id!==id)return;
   this.sticks[kind].vector=vector;
-  if(kind==='move')this.movement();
+  if(kind==='move'){this.walkAim=true;this.movement();this.updateAim();}
   else{
    const length=Math.hypot(vector.x,vector.y),aiming=length>DEAD_ZONE&&this.canStick('aim');
    if(aiming){this.aim={x:vector.x/length,y:vector.y/length};this.relativeAim=true;this.updateAim();}
@@ -64,13 +64,13 @@ export class GamepadInput{
  pressButton(action,id){
   if(!this.canButton(action)||this.hasPointer(id)||this.buttons.size>=12)return false;
   const source='gamepad:button:'+id;
-  if(action==='fire'){this.relativeAim=true;this.updateAim();}
+  if(action==='fire'||action==='weapon'){this.relativeAim=true;this.updateAim();}
   this.buttons.set(id,{action,source});this.hold(source,this.buttonAction(action));this.onChange();return true;
  }
  pulse(action){
   if(!this.canButton(action))return;
   const source='gamepad:pulse:'+action;
-  if(action==='fire'){this.relativeAim=true;this.updateAim();}
+  if(action==='fire'||action==='weapon'){this.relativeAim=true;this.updateAim();}
   this.pulses.set(source,action);this.hold(source,this.buttonAction(action));this.onChange();
  }
  afterStep(){for(const source of this.pulses.keys())this.hold(source,null);if(this.pulses.size){this.pulses.clear();this.onChange();}}
@@ -83,16 +83,20 @@ export class GamepadInput{
  clear(){
   const changed=this.sticks.move||this.sticks.aim||this.buttons.size||this.pulses.size||this.holds.size;
   for(const source of [...this.holds.keys()])this.hold(source,null);
-  this.sticks.move=this.sticks.aim=null;this.buttons.clear();this.pulses.clear();this.relativeAim=false;this.repeatAt=0;
+  this.sticks.move=this.sticks.aim=null;this.buttons.clear();this.pulses.clear();this.relativeAim=false;this.walkAim=false;this.repeatAt=0;
   if(changed)this.onChange();
  }
  canvasAim(){
   if(this.sticks.aim)this.release(this.sticks.aim.id);
   for(const [id,b] of this.buttons)if(b.action==='fire')this.release(id);
   for(const [source,action] of this.pulses)if(action==='fire'){this.hold(source,null);this.pulses.delete(source);}
-  this.relativeAim=false;
+  this.relativeAim=false;this.walkAim=false;
  }
  updateAim(){
+  const movement=this.holds.get('gamepad:move'),v=this.sticks.aim?.vector,aiming=v&&Math.hypot(v.x,v.y)>DEAD_ZONE;
+  if(this.walkAim&&['left','right'].includes(movement)&&this.controllable()&&!aiming&&!this.buttonActive('fire')&&!this.buttonActive('weapon')&&!this.getGame().input.buttons.has(1)){
+   const x=movement==='left'?-1:1;if(this.aim?.x!==x||this.aim?.y!==0)this.aim={x,y:0};this.relativeAim=true;
+  }
   if(!this.relativeAim||!this.controllable())return;
   const g=this.getGame(),p=this.player(),direction=this.aim||{x:p.image_xscale<0?-1:1,y:0};
   g.input.mx=(p.x+direction.x*650-g.camera.x)/g.camera.w;

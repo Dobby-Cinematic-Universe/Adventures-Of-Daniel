@@ -52,6 +52,14 @@ test('audio allocation is capped globally and respects active sound priorities',
  assert.ok(g.audioPlay(ids[0],false,11)>0);assert.equal(created.length,MAX_AUDIO_ELEMENTS);
  for(const a of created)a.end();g.audioPlay(ids.at(-1),false,1);assert.equal(created.length,MAX_AUDIO_ELEMENTS);
 });
+test('different completed effects reuse an idle media element while the ambient loop remains reserved',async t=>{
+ const created=media(t),g=make();g.audioEnabled=true;g.resumeAudio();await settle();const ambient=created[0];ambient.currentTime=19;
+ for(let id=0;id<data.sounds.length;id++){
+  if(id===g.assets.nightsounds)continue;
+  const handle=g.audioPlay(id,false,5);await settle();const effect=g.soundsPlaying.get(handle);assert.ok(effect);assert.notEqual(effect,ambient);effect.end();
+ }
+ assert.equal(created.length,2);assert.equal(ambient.paused,false);assert.equal(ambient.currentTime,19);assert.equal(g.soundsPlaying.size,1);
+});
 test('late playback completion cannot restart audio after stop or mute',async t=>{
  const pending=[];const created=media(t,{play:a=>new Promise(resolve=>pending.push(()=>{a.paused=false;resolve();}))}),g=make();g.audioEnabled=true;
  g.audioPlay(g.assets.gunshot,false);g.audioStop();pending[0]();await settle();assert.equal(created[0].paused,true);assert.equal(g.soundsPlaying.size,0);

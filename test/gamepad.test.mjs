@@ -28,6 +28,22 @@ test('movement uses a dead zone and works independently of keyboard rebinding',(
  pad.moveStick('move',1,vector(1));step(g,5);assert.equal(p.x,x+20);
  pad.moveStick('move',1,vector(-1));step(g,5);assert.equal(p.x,x);pad.release(1);assert.equal(g.input.keys.size,0);
 });
+test('the movement stick turns Daniel in his walking direction even after aiming the other way',()=>{
+ const {g,pad}=make(),p=g.first(g.assets.Object1);p.image_xscale=-1;g.input.mx=0;
+ pad.startStick('move',1,vector(1));for(let i=0;i<12;i++){pad.tick(i*16);g.step();assert.equal(p.image_xscale,1);}
+ pad.moveStick('move',1,vector(-1));for(let i=0;i<12;i++){pad.tick(200+i*16);g.step();assert.equal(p.image_xscale,-1);}
+ pad.release(1);g.applyCheat('weapons');pad.startStick('aim',2,vector(-1));g.step();pad.release(2);pad.startStick('move',3,vector(1));pad.tick(500);g.step();assert.equal(p.image_xscale,1);
+});
+test('independent aiming and held Fire can face behind a walking player until released',()=>{
+ const {g,pad}=make('room1'),p=g.first(g.assets.Object1);pad.startStick('move',1,vector(1));pad.startStick('aim',2,vector(-1));pad.pressButton('fire',3);
+ pad.tick(10);g.step();assert.equal(p.image_xscale,-1);assert.ok(p.hsp>0);pad.release(2);pad.tick(20);g.step();assert.equal(p.image_xscale,-1);
+ pad.release(3);pad.tick(30);g.step();assert.equal(p.image_xscale,1);pad.clear();
+});
+test('a direct canvas aim overrides walking facing until a new movement-stick gesture',()=>{
+ const {g,pad}=make('room1'),p=g.first(g.assets.Object1);pad.startStick('move',1,vector(1));pad.canvasAim();g.input.mx=0;
+ pad.tick(10);g.step();assert.equal(p.image_xscale,-1);assert.equal(pad.relativeAim,false);
+ pad.moveStick('move',1,vector(1));pad.tick(20);g.step();assert.equal(p.image_xscale,1);
+});
 test('two fingers can move and jump together without releasing keyboard or each other',()=>{
  const {g,router,pad}=make();router.down('KeyD');pad.startStick('move',1,vector(1));assert.equal(pad.pressButton('jump',2),true);
  assert.ok(g.input.keys.has(68));assert.ok(g.input.pressed.has(32));g.step();assert.equal(g.first(g.assets.Object1).jumps,1);
@@ -40,11 +56,12 @@ test('aim stays relative to the player as the camera follows, and either firing 
  const p=g.first(g.assets.Object1);pad.updateAim();assert.ok(Math.abs(g.camera.x+g.input.mx*g.camera.w-p.x)<1e-9);assert.ok(Math.abs(g.camera.y+g.input.my*g.camera.h-(p.y-678))<1e-9);
  assert.ok(g.first(g.assets.oBullet));pad.release(2);assert.ok(g.input.buttons.has(1));pad.release(3);assert.equal(g.input.buttons.has(1),false);assert.ok(g.input.keys.has(68));pad.clear();
 });
-test('held fire consumes grenades and a weapon button switches once while held',()=>{
- const {g,pad}=make();g.applyCheat('weapons');g.applyCheat('grenades');
- pad.pressButton('weapon',1);g.step();assert.ok(g.first(g.assets.oGun59));step(g,10);assert.ok(g.first(g.assets.oGun59));pad.release(1);
- const before=g.global.bullets;pad.startStick('aim',2,vector(1,-.3));step(g,10);pad.release(2);
- assert.ok(g.global.bullets<before);assert.ok(g.first(g.assets.oBulletBomb));assert.equal(g.errors.length,0);
+test('the Grenade button fires once on a tap, repeats while held, and the aim stick returns to gun fire',()=>{
+ const {g,pad}=make();g.applyCheat('weapons');g.applyCheat('grenades');const before=g.global.bullets;
+ pad.pressButton('weapon',1);g.step();pad.release(1);assert.ok(g.first(g.assets.oGun59));assert.equal(g.global.bullets,before-1);
+ step(g,10);assert.equal(g.global.bullets,before-1);pad.pressButton('weapon',2);step(g,10);pad.release(2);assert.ok(g.global.bullets<before-1);assert.ok(g.first(g.assets.oBulletBomb));
+ const bombs=g.global.bullets,ammo=g.global.ammo;pad.startStick('aim',3,vector(1,-.3));step(g,10);pad.release(3);
+ assert.ok(g.first(g.assets.oGun));assert.ok(g.global.ammo<ammo);assert.equal(g.global.bullets,bombs);assert.equal(g.errors.length,0);
 });
 test('menu stick repeats selections while Select activates the original new game route',()=>{
  const {g,pad}=make('rMenu');step(g,100);const menu=g.first(g.assets.oMenu),start=menu.menu_cursor;
@@ -77,6 +94,12 @@ test('direct canvas aiming releases only virtual fire and retains movement and p
 test('accessible button clicks remain pressed for exactly one simulation step',()=>{
  const {g,pad}=make();pad.pulse('jump');assert.ok(g.input.pressed.has(32));pad.tick(100);g.step();pad.afterStep();
  assert.equal(g.first(g.assets.Object1).jumps,1);assert.equal(g.input.keys.size,0);step(g,4);assert.equal(g.first(g.assets.Object1).jumps,1);
+});
+test('quick Fire and Grenade taps released before a frame still fire once and preserve their distinct actions',()=>{
+ const {g,pad}=make('room1');g.applyCheat('weapons');g.applyCheat('grenades');g.input.mx=.9;g.input.my=.1;
+ const ammo=g.global.ammo,bombs=g.global.bullets;pad.pressButton('weapon',1);pad.release(1);g.step();assert.equal(g.global.bullets,bombs-1);assert.equal(g.global.ammo,ammo);assert.ok(g.first(g.assets.oGun59));
+ pad.pressButton('fire',2);pad.release(2);g.step();assert.equal(g.global.ammo,ammo-1);assert.equal(g.global.bullets,bombs-1);assert.ok(g.first(g.assets.oGun));
+ step(g,3);assert.equal(g.global.ammo,ammo-1);assert.equal(g.global.bullets,bombs-1);assert.equal(g.errors.length,0);
 });
 test('overlapping ground below the house never sends gamepad movement to a distant wall edge',()=>{
  for(const direction of [-1,1]){

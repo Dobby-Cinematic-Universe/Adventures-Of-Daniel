@@ -1,3 +1,11 @@
+// Keep the stock-price alarms alive without leaking the parked button into the world.
+visible = instance_exists(oshoppingstocks);
+if (!visible)
+{
+    return;
+}
+x = oshoppingstocks.x + 120;
+y = oshoppingstocks.y + 450;
 if (mouse_x >= bbox_left && mouse_x <= bbox_right && mouse_y >= bbox_top && mouse_y <= bbox_bottom)
 {
     image_index = 1;

@@ -893,6 +893,13 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oButton1Stock_Step_0":function(E){
+E.set("visible",E.call("instance_exists",[E.get("oshoppingstocks")]));
+if((!E.truthy(E.get("visible")))){
+return ;
+}
+else {}
+E.set("x",(E.member(E.get("oshoppingstocks"),"x") + 120));
+E.set("y",(E.member(E.get("oshoppingstocks"),"y") + 450));
 if(((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))){
 E.set("image_index",1);
 }
@@ -1116,7 +1123,15 @@ E.set("image_index",0);
 
 if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
+if((!E.truthy(E.call("instance_exists",[E.get("oButton1Stock")])))){
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 200),(E.member(E.get("Object1"),"y") - 100),"buttons",E.get("oButton1Stock")]);
+}
+else {
+E.put(E.get("oButton1Stock"),"x",(E.member(E.get("Object1"),"x") + 200));
+E.put(E.get("oButton1Stock"),"y",(E.member(E.get("Object1"),"y") - 100));
+E.put(E.get("oButton1Stock"),"visible",true);
+}
+
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 300),(E.member(E.get("Object1"),"y") - 100),"buttons",E.get("oButton2Stock")]);
 E.call("instance_destroy",[E.get("oButton4th")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"computerbackgrounds",E.get("oshoppingstocks")]);
@@ -1285,6 +1300,7 @@ E.call("instance_destroy",[E.get("oshoppingyoutube")]);
 E.call("instance_destroy",[E.get("oButtonYoutube")]);
 if(E.truthy(E.call("instance_exists",[E.get("oButton1Stock")]))){
 E.put(E.get("oButton1Stock"),"y",(E.member(E.get("Object1"),"y") - 1000));
+E.put(E.get("oButton1Stock"),"visible",false);
 }
 else {}
 E.put(E.get("oBulletsLeft97"),"y",(E.member(E.get("Object1"),"y") - 1000));
@@ -1444,6 +1460,7 @@ E.call("instance_destroy",[E.get("oText4")]);
 E.call("instance_destroy",[E.get("oDanielText2")]);
 if(E.truthy(E.call("instance_exists",[E.get("oButton1Stock")]))){
 E.put(E.get("oButton1Stock"),"y",(E.member(E.get("Object1"),"y") - 1000));
+E.put(E.get("oButton1Stock"),"visible",false);
 }
 else {}
 E.call("layer_set_visible",["specialbutton",(!E.truthy(E.get("visible")))]);
@@ -4706,19 +4723,13 @@ E.set("y",(E.member(E.get("Object1"),"y") + 10));
 E.set("image_angle",E.call("point_direction",[E.get("x"),E.get("y"),E.get("mouse_x"),E.get("mouse_y")]));
 E.set("firingdelay",(E.get("firingdelay") - 1));
 E.set("recoil",E.call("max",[0,(E.get("recoil") - 1)]));
-if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])])) && E.truthy(E.member(E.get("global"),"hascontrol")))){
-if(E.truthy(E.member(E.get("global"),"weapon1"))){
+if(((((((E.truthy(E.call("mouse_check_button",[E.get("mb_left")])) || E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))) && (!E.truthy(E.call("keyboard_check",[E.call("ord",["F"])])))) && (!E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])])))) && E.truthy(E.member(E.get("global"),"hascontrol"))) && E.truthy(E.member(E.get("global"),"dontshoot"))) && E.truthy(E.member(E.get("global"),"weapon1")))){
 E.call("instance_change",[E.get("oGun"),true]);
-E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
+E.call("event_perform",[3,1]);
 return ;
 }
-else {
-E.call("audio_play_sound",[E.get("gunempty"),2,false]);
-}
-
-}
 else {}
-if(((((E.truthy(E.call("mouse_check_button",[E.get("mb_left")])) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"bullets") > 0) || E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol"))) && E.truthy(E.member(E.get("global"),"dontshoot")))){
+if(((((((E.truthy(E.call("keyboard_check",[E.call("ord",["F"])])) || E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])]))) || ((E.truthy(E.call("mouse_check_button",[E.get("mb_left")])) || E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))) && (!E.truthy(E.member(E.get("global"),"weapon1"))))) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"bullets") > 0) || E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol"))) && E.truthy(E.member(E.get("global"),"dontshoot")))){
 if((!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))){
 E.put(E.get("global"),"bullets",(E.member(E.get("global"),"bullets") - 1));
 }
@@ -4739,7 +4750,7 @@ E.set("gunkicky",E.call("lengthdir_y",[1,(E.member(E.get("other"),"image_angle")
 }}
 }
 else {}
-if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && (E.member(E.get("global"),"bullets") == 0)) && (!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol")))){
+if(((((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])])) || E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))) && (E.member(E.get("global"),"bullets") == 0)) && (!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol")))){
 E.call("audio_play_sound",[E.get("gunempty"),2,false]);
 }
 else {}
@@ -4804,19 +4815,21 @@ E.set("y",(E.member(E.get("Object1"),"y") + 10));
 E.set("image_angle",E.call("point_direction",[E.get("x"),E.get("y"),E.get("mouse_x"),E.get("mouse_y")]));
 E.set("firingdelay",(E.get("firingdelay") - 1));
 E.set("recoil",E.call("max",[0,(E.get("recoil") - 1)]));
-if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])])) && E.truthy(E.member(E.get("global"),"hascontrol")))){
+if(((E.truthy(E.call("keyboard_check",[E.call("ord",["F"])])) || E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])]))) && E.truthy(E.member(E.get("global"),"hascontrol")))){
 if(E.truthy(E.member(E.get("global"),"weapon2"))){
 E.call("instance_change",[E.get("oGun59"),true]);
 E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
+E.call("event_perform",[3,1]);
 return ;
 }
-else {
+else if(E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])]))){
 E.call("audio_play_sound",[E.get("gunempty"),2,false]);
 }
+else {}
 
 }
 else {}
-if(((((E.truthy(E.call("mouse_check_button",[E.get("mb_left")])) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"ammo") > 0) || E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol"))) && E.truthy(E.member(E.get("global"),"dontshoot")))){
+if((((((E.truthy(E.call("mouse_check_button",[E.get("mb_left")])) || E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"ammo") > 0) || E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol"))) && E.truthy(E.member(E.get("global"),"dontshoot")))){
 if((!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))){
 E.put(E.get("global"),"ammo",(E.member(E.get("global"),"ammo") - 1));
 }

@@ -1,1 +1,1 @@
-// Left click fires the equipped launcher. F alone switches weapons.
+// Primary fire returns to the gun in Begin Step, keeping one controller and weapon ownership.

@@ -8,7 +8,7 @@ export const ACTIONS = [
   {id:'jump',label:'Jump / revive',group:'game',keys:[32],defaults:['Space','KeyW','ArrowUp'],contexts:['game'],help:'Press again for a double jump. Revive after landing when defeated.'},
   {id:'interact',label:'Open / interact',group:'game',keys:[69],defaults:['KeyE'],contexts:['game'],help:'Open doors and collect crates. Hold while moving to guide the companion; bring her onto the bed to restore hearts.'},
   {id:'secondary',label:'Close door / kiss',group:'game',keys:[81],defaults:['KeyQ'],contexts:['game'],help:'Close a nearby door; kiss the companion when standing to her left.'},
-  {id:'weapon',label:'Switch weapon / story',group:'game',keys:[70],defaults:['KeyF'],contexts:['game','story'],help:'Toggle acquired weapons. Also continues the original story screens.'},
+  {id:'weapon',label:'Grenades / story',group:'game',keys:[70],defaults:['KeyF'],contexts:['game','story'],help:'Original F selects and fires grenades; hold to keep firing. Primary fire returns to the acquired gun. Also continues story screens.'},
   {id:'fire',label:'Fire / click',group:'game',buttons:[1],defaults:[],contexts:['game'],mouse:'Left click',help:'Fire the equipped weapon or click an object. Optional keyboard shortcut.'},
   {id:'slowmo',label:'Slow motion',group:'game',buttons:[2],defaults:[],contexts:['game'],mouse:'Right click',help:'Hold while slow-motion energy remains. Optional keyboard shortcut.'},
   {id:'heal',label:'Restore hearts',group:'game',keys:[16],defaults:['ShiftLeft','ShiftRight'],contexts:['game'],help:'Original shortcut: restores hearts, up to eight.'},

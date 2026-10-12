@@ -6,7 +6,7 @@ const data=JSON.parse(fs.readFileSync(new URL('../dist/data.json',import.meta.ur
 let seed=12345;
 Math.random=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296;};
 const results=[];
-for(const room of ['room26','room1']){
+for(const room of ['room26','room1','room3']){
  const game=new Engine(data,null,null,{seed:12345});game.audioEnabled=false;game.loadRoom(room,false);
  game.global.php=10000;
  if(room==='room1'){game.input.buttons.add(1);game.input.mx=.8;game.input.my=.2;}

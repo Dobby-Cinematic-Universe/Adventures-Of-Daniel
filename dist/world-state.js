@@ -80,7 +80,7 @@ export function validateWorld(source,data){
    integer(s.sprite_index,'sprite',-1,data.sprites.length-1);integer(s.mask_index,'collision mask',-1,data.sprites.length-1);
    const mask=data.sprites[s.mask_index>=0?s.mask_index:s.sprite_index];if(mask&&[1,2].includes(mask.info.SepMasks)&&(Math.abs(s.image_xscale)>8||Math.abs(s.image_yscale)>8))throw new Error('A precise collision mask is too large.');
    for(const key of ['image_index','image_speed','image_angle','image_alpha','hspeed','vspeed','gravity','gravity_direction','friction','speed','direction','depth'])number(s[key],'object value',-1e7,1e7);
-   for(const key of ['hsp','vsp','spd','hp'])if(own(s,key))number(s[key],'object '+key,-1e7,1e7);
+   for(const key of ['hsp','vsp','spd','hp','fallSafeX','fallSafeY'])if(own(s,key))number(s[key],'object '+key,-1e7,1e7);
    integer(s.image_blend,'object colour',0,0xffffff);integer(s.layer,'object layer',-1,2147483647);
    if(s.dead||s.destroying)throw new Error('A world save cannot contain destroyed objects.');
    if(typeof s.visible!=='boolean'||typeof s.persistent!=='boolean')throw new Error('Invalid object visibility in the world save.');

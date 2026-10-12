@@ -52,7 +52,7 @@ function updateGameplayHelp(){
   const moon=game.room?.info.Name==='rMenu'?game.faceEgg.moonFrame():null;
   const moonAvailable=moon&&game.faceEgg.moonImage&&moon.x-moon.r>=game.camera.x&&moon.x+moon.r<=game.camera.x+game.camera.w;
   const touch=gamepad.visible,tap=touch?'tap':'click';
-  const touchLabels={jump:'Jump',interact:'Use',secondary:'Close',weapon:'Weapon'};
+  const touchLabels={jump:'Jump',interact:'Use',secondary:'Close',weapon:'Grenade'};
   const key=id=>touch&&touchLabels[id]?touchLabels[id]:profile.first(id)?keyLabel(profile.first(id)):null;
   const revive=key('jump')?`press ${key('jump')} or click Revive`:'click Revive';
   let text=`Walk up to people and objects, then ${tap} them. `+(key('interact')?`${key('interact')} opens doors and collects crates.`:'Use Controls to choose an interaction key.');
@@ -66,7 +66,7 @@ function updateGameplayHelp(){
   else if(p&&p.x>18000&&game.resolve(game.assets.oQuestObjectives3).length)text=game.global.quest3===1?`Shift complete — ${tap} the door on the right to go home.`:`${key('interact')||'Your interaction key'} collects each crate. Serve all three customers, then use the exit door.`;
   else if(p&&girl&&Math.hypot(p.x-girl.x,p.y-girl.y)<=111)text=`Hold ${key('interact')||'your interaction key'} while moving to guide her. From her left, ${key('secondary')||'your secondary key'} kisses. Bring her onto the bed to restore hearts.`;
   else if(p&&bed&&Math.hypot(p.x-bed.x,p.y-bed.y)<=130)text=`${tap} the bed to sleep. Bring the companion onto the bed to restore hearts.`;
-  else if(gun||launcher){const weapon=launcher?'Grenade launcher':'Gun',other=launcher?'gun':'grenades',unlocked=launcher?game.global.weapon1:game.global.weapon2;text=`${weapon} equipped · ${touch?'Right stick aims and fires':'Left click to fire'}${game.cheats.infiniteAmmo?' · Unlimited ammunition':''}${unlocked&&key('weapon')?` · ${key('weapon')} switches to ${other}`:''}.`;}
+  else if(gun||launcher){const primary=game.global.weapon1?'the gun':'grenades';text=`${touch?'Right stick aims and fires':'Left click fires'} ${primary}${game.cheats.infiniteAmmo?' · Unlimited ammunition':''}${game.global.weapon2&&key('weapon')?` · ${key('weapon')} fires grenades`:''}.`;}
   if(started&&!game.paused)$('playerStatus').textContent=Object.values(game.cheats).some(Boolean)?'PLAYING · CHEATS':'PLAYING';
   if($('gameHelpText').textContent!==text)$('gameHelpText').textContent=text;
 }
@@ -98,7 +98,7 @@ document.addEventListener('fullscreenchange',updateFullscreen);
 function setBindingStatus(text,error=false){$('bindingStatus').textContent=text;$('bindingStatus').classList.toggle('binding-error',error);}
 function updateHints(){
   const hint=(id,actions,text)=>{const el=$(id);el.replaceChildren();for(const action of actions){const code=profile.first(action);if(code){const k=document.createElement('kbd');k.textContent=keyLabel(code);el.append(k);}}el.append(document.createTextNode(text));};
-  hint('moveHint',['left','right'],' Move');hint('jumpHint',['jump'],' Jump');hint('weaponHint',['weapon'],' Switch weapon');
+  hint('moveHint',['left','right'],' Move');hint('jumpHint',['jump'],' Jump');hint('weaponHint',['weapon'],' Grenades');
   $('pauseButton').title=`Pause${profile.first('pause')?` (${keyLabel(profile.first('pause'))})`:''}`;
   $('saveButton').title='Save, load, import, or export a full world';
   if(started&&game?.paused)$('startHint').textContent=pauseHint();
@@ -196,6 +196,7 @@ async function init(){
     for(let i=0;i<2;i++)game.step();game.paused=true;
     game.onRoomChange=name=>{clearInput();$('location').textContent=roomNames[name]||'Exploring';};
     game.onStatsSave=persisted=>toast(persisted?'Original statistics saved':'Statistics saved for this session; browser storage is unavailable');game.onExit=()=>paused(true);
+    game.onFallRecovery=dead=>toast(dead?'Daniel reached solid ground. Revival is available.':'Daniel returned to solid ground.');
     $('playButton').disabled=false;$('playLabel').textContent='Play the game';$('continueButton').hidden=true;
     window.himr=game;requestAnimationFrame(frame);await menus.initialize(game);
   }catch(error){console.error(error);$('panelTitle').textContent='The adventure is loading.';$('panelDescription').textContent='Reload the page to try again.';$('playLabel').textContent='Unable to load';}

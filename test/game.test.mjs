@@ -21,24 +21,21 @@ test('every referenced GameMaker function is implemented',()=>{const calls=JSON.
 test('precise car masks reject transparent pixels within their bounding box',()=>{const g=make();const car=object(g,'oCar');assert.ok(car);const b=g.bounds(car),sp=g.spriteMask(b);assert.equal(sp.info.SepMasks,1);let solid=null,empty=null;for(let y=Math.ceil(b.top);y<b.bottom;y++)for(let x=Math.ceil(b.left);x<b.right;x++){if(g.maskContains(b,x+.5,y+.5))solid??=[x,y];else empty??=[x,y];}assert.ok(solid);assert.ok(empty);assert.equal(g.collides({left:solid[0],right:solid[0]+1,top:solid[1],bottom:solid[1]+1,valid:true},b),true);assert.equal(g.collides({left:empty[0],right:empty[0]+1,top:empty[1],bottom:empty[1]+1,valid:true},b),false);});
 test('grenades, slow motion, death, and restart retain original behavior with bounded prompts',()=>{const g=make();settle(g);const p=player(g);g.runEvent(p,4,g.assets.ogrenadepickup,object(g,'ogrenadepickup'));g.global.bullets=4;g.input.buttons.add(1);settle(g,5);g.input.buttons.clear();assert.ok(g.global.bullets<4);assert.ok(object(g,'oBulletBomb'));g.input.buttons.add(2);const slow=g.global.slowmo;g.step();assert.equal(g.fps,30);assert.equal(g.global.slowmo,slow-1);g.input.buttons.clear();g.step();assert.equal(g.fps,60);g.global.php=1;const enemyShot=g.create(g.assets.eEbullet,p.x,p.y,'bullets');g.runEvent(p,4,g.assets.eEbullet,enemyShot);assert.ok(object(g,'oPDead'));assert.equal(g.global.hascontrol,0);settle(g,100);assert.ok(g.resolve(g.assets.oDanielText6).length<=1);g.input.pressed.add(32);g.step();assert.equal(object(g,'oPDead'),undefined);assert.equal(g.global.hascontrol,1);assert.equal(g.errors.length,0);});
 
-test('F toggles acquired weapons once, keeps ownership, and fires only the equipped weapon',()=>{
+test('original F fires one grenade on a tap, repeats while held, and primary fire returns to the owned gun',()=>{
  const g=make();settle(g);const p=player(g);
- g.runEvent(object(g,'oGunPickup'),4,g.assets.Object1,p);
- g.runEvent(p,4,g.assets.ogrenadepickup,object(g,'ogrenadepickup'));
- const equipped=object(g,'oGun59'),id=equipped.id;
- assert.ok(g.global.weapon1&&g.global.weapon2);
- g.input.pressed.add(70);g.input.keys.add(70);g.step();settle(g,12);g.input.keys.clear();
- assert.equal(object(g,'oGun').id,id);assert.equal(object(g,'oGun59'),undefined);
- assert.ok(g.global.weapon1&&g.global.weapon2);assert.ok(g.layerVisible(object(g,'oGun').layer));
- const ammo=g.global.ammo,bombs=g.global.bullets;g.input.buttons.add(1);settle(g,4);g.input.buttons.clear();
- assert.ok(g.global.ammo<ammo);assert.equal(g.global.bullets,bombs);
- g.input.pressed.add(70);g.step();assert.equal(object(g,'oGun59').id,id);
- g.input.buttons.add(1);settle(g,4);g.input.buttons.clear();assert.ok(g.global.bullets<bombs);
- assert.equal(g.resolve(g.assets.oGun).length+g.resolve(g.assets.oGun59).length,1);assert.equal(g.errors.length,0);
+ g.runEvent(object(g,'oGunPickup'),4,g.assets.Object1,p);g.runEvent(p,4,g.assets.ogrenadepickup,object(g,'ogrenadepickup'));
+ const id=object(g,'oGun59').id;g.global.bullets=10;g.input.mx=.8;g.input.my=.1;
+ g.input.buttons.add(1);g.step();g.input.buttons.clear();assert.equal(object(g,'oGun').id,id);
+ const ammo=g.global.ammo,bombs=g.global.bullets;g.input.pressed.add(70);g.input.keys.add(70);g.step();g.input.keys.clear();
+ assert.equal(object(g,'oGun59').id,id);assert.equal(g.global.bullets,bombs-1);assert.equal(g.global.ammo,ammo);assert.ok(object(g,'oBulletBomb'));
+ settle(g,10);assert.equal(g.global.bullets,bombs-1);g.input.keys.add(70);settle(g,12);g.input.keys.clear();assert.equal(g.global.bullets,bombs-4);
+ const after=g.global.bullets;g.input.buttons.add(1);g.step();g.input.buttons.clear();assert.equal(object(g,'oGun').id,id);assert.ok(g.global.ammo<ammo);assert.equal(g.global.bullets,after);
+ assert.ok(g.global.weapon1&&g.global.weapon2);assert.ok(g.layerVisible(object(g,'oGun').layer));assert.equal(g.resolve(g.assets.oGun).length+g.resolve(g.assets.oGun59).length,1);assert.equal(g.errors.length,0);
 });
 test('switching with an unowned weapon keeps the existing gun, even when empty',()=>{
  const g=make('room1');settle(g,40);const gun=object(g,'oGun');g.global.weapon2=false;g.global.ammo=0;
- g.input.pressed.add(70);g.step();assert.equal(object(g,'oGun').id,gun.id);assert.equal(object(g,'oGun59'),undefined);assert.equal(g.errors.length,0);
+ let empty=0;const play=g.audioPlay.bind(g);g.audioPlay=(id,...args)=>{if(id===g.assets.gunempty)empty++;return play(id,...args);};
+ g.input.pressed.add(70);g.input.keys.add(70);settle(g,12);g.input.keys.clear();assert.equal(empty,1);assert.equal(object(g,'oGun').id,gun.id);assert.equal(object(g,'oGun59'),undefined);assert.equal(g.errors.length,0);
 });
 test('closing the computer restores the gun layer and stocks render inside the stock screen only',()=>{
  const g=make();settle(g);const p=player(g);p.x=7280;settle(g,5);g.create(g.assets.oGun,p.x,p.y,'Gun');
@@ -57,6 +54,14 @@ test('game numbers display two decimal places at most without changing inventory
   assert.equal(formatGameNumber(v),expected);assert.equal(g.builtins.string(null,v),expected);
  }
  g.global.stocks=123.456789;g.builtins.string(null,g.global.stocks);assert.equal(g.global.stocks,123.456789);
+});
+test('the parked buy-stocks control is hidden and inactive outside its screen while price alarms continue',()=>{
+ const g=make();settle(g);player(g).x=7280;settle(g,2);g.global.kills=500;click(g,'oSign');click(g,'oButton3rd');settle(g,1);click(g,'oButton1Stock');
+ const buy=object(g,'oButton1Stock'),id=buy.id;assert.equal(buy.visible,true);assert.equal(g.global.kills,400);click(g,'oButtongoback');assert.equal(buy.visible,false);
+ click(g,'oButtonOff');assert.equal(buy.visible,false);const money=g.global.kills;click(g,'oButton1Stock');assert.equal(g.global.kills,money);
+ settle(g,65);assert.notEqual(g.global.stocks,100);assert.equal(object(g,'oButton1Stock').id,id);
+ click(g,'oSign');click(g,'oButton3rd');settle(g,1);assert.equal(object(g,'oButton1Stock').id,id);assert.equal(g.resolve(g.assets.oButton1Stock).length,1);assert.equal(buy.visible,true);
+ click(g,'oButton1Stock');assert.equal(g.global.kills,money-100);assert.equal(g.errors.length,0);
 });
 
 test('aiming away from an interactive object clears its firing block without moving Daniel',()=>{

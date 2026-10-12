@@ -9,6 +9,7 @@ export class GameAudio{
  forget(a){const s=this.states.get(a);if(!s)return;this.playing.delete(s.handle);s.busy=false;s.pending=false;s.token=null;}
  allocate(id,priority){
   const pool=this.pool.get(id)||[];this.pool.set(id,pool);let a=pool.find(a=>this.available(a));
+  if(!a&&pool.length<PER_SOUND_LIMIT)for(const idle of this.elements)if(this.available(idle)){a=idle;break;}
   if(!a&&pool.length<PER_SOUND_LIMIT&&this.elements.size<MAX_AUDIO_ELEMENTS){
    a=new Audio();a.preload='none';this.elements.add(a);
    a.addEventListener?.('ended',()=>{if(a.ended)this.forget(a);});

@@ -3,20 +3,14 @@ y = Object1.y + 10;
 image_angle = point_direction(x, y, mouse_x, mouse_y);
 firingdelay -= 1;
 recoil = max(0, recoil - 1);
-if (keyboard_check_pressed(ord("F")) && global.hascontrol)
+// Original controls: F fires grenades; primary fire returns to the acquired gun.
+if ((mouse_check_button(mb_left) || mouse_check_button_pressed(mb_left)) && !keyboard_check(ord("F")) && !keyboard_check_pressed(ord("F")) && global.hascontrol && global.dontshoot && global.weapon1)
 {
-    if (global.weapon1)
-    {
-        instance_change(oGun, true);
-        audio_play_sound(reloadSound, 1, false);
-        return;
-    }
-    else
-    {
-        audio_play_sound(gunempty, 2, false);
-    }
+    instance_change(oGun, true);
+    event_perform(3, 1);
+    return;
 }
-if (mouse_check_button(mb_left) && firingdelay < 0 && (global.bullets > 0 || cheat_enabled("infiniteAmmo")) && global.hascontrol && global.dontshoot)
+if ((keyboard_check(ord("F")) || keyboard_check_pressed(ord("F")) || ((mouse_check_button(mb_left) || mouse_check_button_pressed(mb_left)) && !global.weapon1)) && firingdelay < 0 && (global.bullets > 0 || cheat_enabled("infiniteAmmo")) && global.hascontrol && global.dontshoot)
 {
     if (!cheat_enabled("infiniteAmmo"))
     {
@@ -37,7 +31,7 @@ if (mouse_check_button(mb_left) && firingdelay < 0 && (global.bullets > 0 || che
         gunkicky = lengthdir_y(1, other.image_angle - 180);
     }
 }
-if (mouse_check_button_pressed(mb_left) && global.bullets == 0 && !cheat_enabled("infiniteAmmo") && global.hascontrol)
+if ((keyboard_check_pressed(ord("F")) || mouse_check_button_pressed(mb_left)) && global.bullets == 0 && !cheat_enabled("infiniteAmmo") && global.hascontrol)
 {
     audio_play_sound(gunempty, 2, false);
 }
