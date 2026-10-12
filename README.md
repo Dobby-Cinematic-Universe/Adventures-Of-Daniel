@@ -37,19 +37,22 @@ Open **Controls** to assign keys, add alternatives, clear individual bindings, o
 
 The hint below the game explains the current weapon, sleeping, customer service, companion interactions, and revival using your chosen keys. When defeated, wait for Daniel to land, then use your jump key or the **Revive** button. Walk close to the bed and click it to sleep; the fade finishes automatically. Guide the companion onto the bed to restore hearts. At the petrol station, accept a shift, enter, collect all three customers' crates with E, and click the exit door after completion. A completed shift adds $300 to existing money. Sleeping makes a new shift available.
 
-The player bar adds pause, mute, fullscreen, the original menu, and a full checkpoint save. Saves stay in this browser's local storage. Continue restores room, position, inventory, quests, objects, and layer visibility. The original menu and cutscenes remain available through Menu. Press F to continue a story screen.
+Open **World saves** for three named slots that preserve the entire adventure: visited rooms, surviving and defeated enemies, collected items, doors, quests, inventory, active effects, camera, layers, timing, and random state. Slots persist in IndexedDB independently of the original **S / L** statistics file. Save explicitly; opening the original menu and saving statistics do not overwrite a world slot. **Continue saved world** resumes the latest slot after a reload. Each slot can be exported or imported as a JSON file, and **Export current world** also works if browser storage is unavailable. Previous browser checkpoints migrate into slot 1 when all slots are empty.
+
+Open **Cheats** for invulnerability, unlimited ammunition, unlimited slow motion, healing/revival, money, ammunition, grenades, a slow-motion refill, and both weapons. Cheat toggles are included in world saves; starting a new adventure resets them. World-save and cheat menus can have keyboard shortcuts assigned in Controls. The original menu and cutscenes remain available through Menu. Press F to continue a story screen.
 
 On touch devices, the movement, jump, weapon, and fire buttons appear below the canvas; tap objects to interact. Keyboard and mouse provide the full original control scheme.
 
 ## Files
 
-- `dist/index.html`, `style.css`, `app.js`, `bindings.js`: browser player, contextual hints, and persistent control settings.
+- `dist/index.html`, `style.css`, `app.js`, `bindings.js`, `player-menus.js`: browser player, contextual hints, control settings, and save/cheat interfaces.
+- `dist/world-state.js`, `world-saves.js`: validated world snapshots, three atomic save slots, import/export, and checkpoint migration.
 - `dist/engine.js`: GameMaker-compatible event, object, collision, animation, drawing, audio, and persistence services used by this game.
 - `dist/code.js`: generated translation of the recovered GML into JavaScript functions. No runtime `eval` or Windows executable is required.
 - `dist/data.json`: all eight original rooms, their instances and decorative layers, object/event definitions, sprites, font glyphs, and sound metadata.
 - `dist/assets/`: seven original texture atlases and 33 audio assets, converted to Ogg where needed.
-- `patches/*.gml`: browser corrections applied over the recovered scripts, preserving the original decompilation.
-- `test/game.test.mjs`, `test/bindings.test.mjs`: gameplay and input regression checks.
+- `patches/*.gml`, `patches/rooms.json`: browser script and room-layer corrections, preserving original recovery output.
+- `test/*.test.mjs`: gameplay, input, save, and runtime regression checks; `test/performance.mjs` profiles simulation time.
 
 The adjacent `../recovered/code/` directory contains the recovered GML. `../tools/transpile.py` regenerates `dist/code.js`, using matching files in `patches/` in preference to recovered events. `../tools/package-data.py` regenerates `dist/data.json` from `../recovered/manifest.json`. Run these tools from the parent `Game` directory.
 
@@ -58,12 +61,15 @@ The adjacent `../recovered/code/` directory contains the recovered GML. `../tool
 ```sh
 npm run check
 npm test
+npm run benchmark
 ```
 
-Twenty-nine checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quest acceptance and doors, weapon damage and switching, full checkpoint restoration, original menu/story/ending transitions, precise collision masks, grenades/slow motion/death/revival, repeated petrol shifts, payment and message bounds, sleep and mid-sleep saves, the companion's bed interaction, number formatting, and key rebinding, conflicts, persistence, and held-input release. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
+Fifty-nine checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quests and doors, weapons, arena waves, original menu/story/ending transitions, collision masks, grenade use, death/revival, repeated petrol shifts, sleep and the companion's bed interaction, shops and number formatting, controls, fullscreen pointer mapping, complete world round-trips, deterministic continuation, visited-room persistence, mid-shift/mid-sleep saves, original statistics separation, failed writes, invalid imports, cheats, and bounded long sessions. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
 
-Browser checks verified the rendered home scene, movement, computer interface, saving, and Continue. Audio is loaded on demand; rendering uses the fixed-size viewport rather than allocating room-sized canvases. Font and flash caches and sound pools are bounded. The original executable was inspected and extracted rather than executed.
+Browser checks verified rendering, movement, computer screens, cheat controls, save/reload/Continue, file export/import, and independence from the statistics file. Audio loads on demand; rendering uses the fixed-size viewport rather than allocating room-sized canvases. Font/tint caches and sound pools are bounded. Paused games draw only when state changes. Collision and object indexes avoid scanning thousands of static instances each frame, and off-map projectiles expire.
 
-The corrections preserve weapon ownership when switching, entering or leaving work, and reviving; use one equipped weapon; restore the gun layer after computer use; keep stocks inside their screen; and round displayed numbers to at most two decimals without changing inventory precision. Station completion creates one message and pays once; older checkpoints with duplicated messages are compacted on load. Sleep fades use thresholds and remove temporary objects. Companion heart effects expire after fading.
+The same seeded Node benchmark measured median simulation time dropping from 8.573 to 2.308 ms in Home and from 3.193 to 1.345 ms in the first level. The final benchmark used about 16 MB of managed heap and reported no runtime errors. These measurements cover simulation, not browser graphics or audio. See [BUG_AUDIT.md](BUG_AUDIT.md) for scope and results.
+
+Corrections preserve weapon ownership, restore the gun layer after computer use, keep stock balances inside their screen, and round displayed numbers without changing inventory precision. Station completion creates one message and pays once. Sleep fades finish and remove temporary objects; companion heart effects expire. Other fixes cover menu re-entry, Quit/Resume, a misplaced stretched menu background, grenade clicks, shop charges, repeat ticket purchases, breakable doors, corpse movement, native friction, rotated masks, sprite tinting, malformed statistics, and bounded income indicators. The recovered GML remains unchanged; browser fixes live in `patches/`.
 
 This is a reconstruction of the game's runtime behavior, not an exported GameMaker project. Editor-only organization and the original authors' comments are not recoverable from the executable. Collision uses recovered bounding boxes, rotation, and the original precise masks for both sprites that require them. The standalone Windows runner was unavailable for frame-by-frame comparison.

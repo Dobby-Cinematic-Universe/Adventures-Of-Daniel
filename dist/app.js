@@ -1,13 +1,15 @@
 import {Engine} from './engine.js';
-import {ACTIONS,BindingProfile,InputRouter,gameContext,keyLabel} from './bindings.js';
+import {ACTIONS,BindingProfile,InputRouter,gameContext,keyLabel,canvasPoint} from './bindings.js';
+import {PlayerMenus} from './player-menus.js';
 
 const $=id=>document.getElementById(id);
 const canvas=$('game'),overlay=$('overlay'),dialog=$('controlsDialog');
-let game,started=false,toastTimer,wasPaused=false,last=0,accumulator=0,capture=null,lastHelpTime=0;
+let game,started=false,toastTimer,wasPaused=false,last=0,accumulator=0,capture=null,lastHelpTime=0,lastDrawKey='';
 let storage=null;try{storage=localStorage;}catch{}
 const profile=new BindingProfile(storage);
 const router=new InputRouter(profile,()=>game?.input,()=>gameContext(game));
 const roomNames={room26:'Home',rMenu:'Original menu',introroom2:'The story begins',introroom:'A new day',room1:'Into the world',room3:'The adventure continues',rEnding:'The end',petrolstationroom:'Petrol station'};
+const menus=new PlayerMenus({getGame:()=>game,isStarted:()=>started,pause:paused,clearInput,loaded:snapshot=>{game.applyWorld(snapshot);clearInput();started=true;game.audioEnabled=!$('soundButton').classList.contains('muted');for(const id of ['pauseButton','menuButton'])$(id).disabled=false;paused(false);lastDrawKey='';updateGameplayHelp();},notify:toast});
 
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2200);}
 function clearInput(){router.clear();for(const b of document.querySelectorAll('.touch-controls button'))b.classList.remove('active');}
@@ -21,19 +23,20 @@ function paused(value){
   if(value)game.audioStop();else{resumeAmbience();canvas.focus();}last=0;accumulator=0;
 }
 function resumeAmbience(){if(game.audioEnabled&&['room26','petrolstationroom'].includes(game.room.info.Name))game.audioPlay(game.assets.nightsounds,true);}
-function start(restore=false){
+function start(){
   if(started){paused(false);return;}started=true;game.paused=false;
   game.audioEnabled=!$('soundButton').classList.contains('muted');
-  if(restore&&!game.restoreCheckpoint())toast('No saved adventure yet.');
   overlay.hidden=true;for(const id of ['pauseButton','saveButton','menuButton'])$(id).disabled=false;
   $('playerStatus').textContent='PLAYING';resumeAmbience();canvas.focus();last=0;
 }
-function openMenu(){game.saveCheckpoint();game.fps=60;clearInput();game.loadRoom(game.assets.rMenu);paused(false);canvas.focus();}
+function openMenu(){game.fps=60;clearInput();game.loadRoom(game.assets.rMenu);paused(false);canvas.focus();}
 function frame(time){
   requestAnimationFrame(frame);if(!game)return;if(!last)last=time;
   const dt=Math.min(100,time-last);last=time;
-  if(started&&!game.paused){accumulator+=dt;const step=1000/game.fps;let n=0;while(accumulator>=step&&n++<5){game.step();accumulator-=step;}}
-  else accumulator=0;game.renderer.draw();if(time-lastHelpTime>200){updateGameplayHelp();lastHelpTime=time;}
+  if(started&&!game.paused){accumulator+=dt;let n=0;while(accumulator>=1000/game.fps&&n++<5){const step=1000/game.fps;game.step();accumulator-=step;}if(n>5)accumulator=Math.min(accumulator,1000/game.fps);}
+  else accumulator=0;
+  const drawKey=`${game.roomIndex}:${game.frame}:${game.drawVersion}`;if(drawKey!==lastDrawKey){game.renderer.draw();lastDrawKey=drawKey;}
+  if(time-lastHelpTime>200){updateGameplayHelp();lastHelpTime=time;}
 }
 function updateGameplayHelp(){
   if(!game)return;
@@ -52,7 +55,8 @@ function updateGameplayHelp(){
   else if(p&&p.x>18000&&game.resolve(game.assets.oQuestObjectives3).length)text=game.global.quest3===1?'Shift complete — click the door on the right to go home.':`${key('interact')||'Your interaction key'} collects each crate. Serve all three customers, then use the exit door.`;
   else if(p&&girl&&Math.hypot(p.x-girl.x,p.y-girl.y)<=111)text=`Hold ${key('interact')||'your interaction key'} while moving to guide her. From her left, ${key('secondary')||'your secondary key'} kisses. Bring her onto the bed to restore hearts.`;
   else if(p&&bed&&Math.hypot(p.x-bed.x,p.y-bed.y)<=130)text='Click the bed to sleep. Bring the companion onto the bed to restore hearts.';
-  else if(gun||launcher){const weapon=launcher?'Grenade launcher':'Gun',other=launcher?'gun':'grenades',unlocked=launcher?game.global.weapon1:game.global.weapon2;text=`${weapon} equipped · Left click to fire${unlocked&&key('weapon')?` · ${key('weapon')} switches to ${other}`:''}.`;}
+  else if(gun||launcher){const weapon=launcher?'Grenade launcher':'Gun',other=launcher?'gun':'grenades',unlocked=launcher?game.global.weapon1:game.global.weapon2;text=`${weapon} equipped · Left click to fire${game.cheats.infiniteAmmo?' · Unlimited ammunition':''}${unlocked&&key('weapon')?` · ${key('weapon')} switches to ${other}`:''}.`;}
+  if(started&&!game.paused)$('playerStatus').textContent=Object.values(game.cheats).some(Boolean)?'PLAYING · CHEATS':'PLAYING';
   if($('gameHelpText').textContent!==text)$('gameHelpText').textContent=text;
 }
 $('reviveButton').onclick=()=>{
@@ -60,9 +64,8 @@ $('reviveButton').onclick=()=>{
   if(game.paused)paused(false);
   router.action('jump','revive-button');game.step();router.up('revive-button');updateGameplayHelp();canvas.focus();
 };
-$('playButton').onclick=()=>start();$('continueButton').onclick=()=>start(true);
+$('playButton').onclick=()=>start();$('continueButton').onclick=()=>menus.continueWorld();
 $('pauseButton').onclick=()=>paused(!game.paused);
-$('saveButton').onclick=()=>{if(!game.saveCheckpoint())toast('Save when Daniel is in the world.');canvas.focus();};
 $('menuButton').onclick=openMenu;
 $('soundButton').onclick=()=>{
   const muted=$('soundButton').classList.toggle('muted');$('soundButton').setAttribute('aria-pressed',String(muted));
@@ -77,7 +80,7 @@ function updateHints(){
   const hint=(id,actions,text)=>{const el=$(id);el.replaceChildren();for(const action of actions){const code=profile.first(action);if(code){const k=document.createElement('kbd');k.textContent=keyLabel(code);el.append(k);}}el.append(document.createTextNode(text));};
   hint('moveHint',['left','right'],' Move');hint('jumpHint',['jump'],' Jump');hint('weaponHint',['weapon'],' Switch weapon');
   $('pauseButton').title=`Pause${profile.first('pause')?` (${keyLabel(profile.first('pause'))})`:''}`;
-  $('saveButton').title=`Save${profile.first('save')?` (${keyLabel(profile.first('save'))})`:''}`;
+  $('saveButton').title='Save, load, import, or export a full world';
   if(started&&game?.paused)$('startHint').textContent=pauseHint();
   canvas.setAttribute('aria-label',`HIMR game. Move with ${keyLabel(profile.first('left'))} and ${keyLabel(profile.first('right'))}. Jump with ${keyLabel(profile.first('jump'))}. Mouse aims and interacts.`);
   updateGameplayHelp();
@@ -123,8 +126,9 @@ $('controlsButton').onclick=()=>{wasPaused=game?.paused??true;if(started)paused(
 dialog.addEventListener('close',()=>{capture=null;$('cancelBinding').hidden=true;clearInput();if(started&&!wasPaused)paused(false);});
 dialog.addEventListener('cancel',e=>{if(capture){e.preventDefault();cancelCapture();}});
 
-function handleCommands(commands){for(const command of commands){if(command==='pause')paused(!game.paused);if(command==='menu')openMenu();}}
+function handleCommands(commands){for(const command of commands){if(command==='pause')paused(!game.paused);if(command==='menu')openMenu();if(command==='worldSaves')menus.openWorld();if(command==='cheats')menus.openCheats();}}
 document.addEventListener('keydown',e=>{
+  if(menus.isOpen())return;
   if(dialog.open){
     if(!capture)return;
     if(e.code==='Escape'){e.preventDefault();e.stopPropagation();cancelCapture();return;}
@@ -144,11 +148,11 @@ document.addEventListener('keydown',e=>{
   const result=router.down(e.code);if(result.handled)e.preventDefault();
 });
 document.addEventListener('keyup',e=>router.up(e.code));
-canvas.addEventListener('pointermove',e=>{if(!game)return;const b=canvas.getBoundingClientRect();game.input.mx=(e.clientX-b.left)/b.width;game.input.my=(e.clientY-b.top)/b.height;});
+canvas.addEventListener('pointermove',e=>{if(!game)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);game.input.mx=point.mx;game.input.my=point.my;});
 const mouseNumber=e=>e.button===2?2:e.button===1?3:1;
 canvas.addEventListener('pointerdown',e=>{
-  if(!game||game.paused||!started)return;canvas.focus();canvas.setPointerCapture(e.pointerId);
-  const b=canvas.getBoundingClientRect();game.input.mx=(e.clientX-b.left)/b.width;game.input.my=(e.clientY-b.top)/b.height;
+  if(!game||game.paused||!started)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);if(!point.inside)return;canvas.focus();canvas.setPointerCapture(e.pointerId);
+  game.input.mx=point.mx;game.input.my=point.my;
   router.mouse(mouseNumber(e),`pointer:${e.pointerId}:${e.button}`);e.preventDefault();
 });
 canvas.addEventListener('pointerup',e=>router.up(`pointer:${e.pointerId}:${e.button}`));
@@ -167,9 +171,9 @@ async function init(){
     game=new Engine(await response.json(),canvas);game.audioEnabled=false;await game.renderer.load();game.loadRoom(game.assets.room26,false);
     for(let i=0;i<2;i++)game.step();game.paused=true;
     game.onRoomChange=name=>{clearInput();$('location').textContent=roomNames[name]||'Exploring';};
-    game.onSave=()=>toast('Adventure saved');game.onExit=()=>paused(true);
-    $('playButton').disabled=false;$('playLabel').textContent='Play the game';$('continueButton').hidden=!game.readFile('checkpoint');
-    window.himr=game;requestAnimationFrame(frame);
+    game.onStatsSave=persisted=>toast(persisted?'Original statistics saved':'Statistics saved for this session; browser storage is unavailable');game.onExit=()=>paused(true);
+    $('playButton').disabled=false;$('playLabel').textContent='Play the game';$('continueButton').hidden=true;
+    window.himr=game;requestAnimationFrame(frame);await menus.initialize(game);
   }catch(error){console.error(error);$('panelTitle').textContent='The adventure is loading.';$('panelDescription').textContent='Reload the page to try again.';$('playLabel').textContent='Unable to load';}
 }
 renderBindings();updateHints();init();

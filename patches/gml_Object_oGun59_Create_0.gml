@@ -3,3 +3,4 @@ recoil = 0;
 global.weapon2 = true;
 
 global.dontshoot = true;
+global.equippedweapon = oGun59;

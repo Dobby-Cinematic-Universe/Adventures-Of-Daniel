@@ -1,0 +1,42 @@
+if (hp <= 0)
+{
+    var remains = instance_create_layer(x, y, layer, oDead);
+    instance_create_layer(x, y, layer, oEnemyBloodspatter);
+    with (remains)
+    {
+        direction = other.hitfrom;
+        hsp = lengthdir_x(6, direction);
+        vsp = lengthdir_y(4, direction) - 2;
+        if (sign(global.customer2spd) != 0)
+        {
+            image_xscale = sign(global.customer2spd);
+        }
+    }
+    with (mygun)
+    {
+        instance_destroy();
+    }
+    if (instance_exists(Object1))
+    {
+        instance_create_layer(x, y, layer, oBulletsLeftGreen);
+        global.kills += 0.2;
+        global.killsgreen += 0.2;
+        global.killsthisroom += 0.2;
+        global.greentimer = 0;
+        with (oBulletsLeftGreen)
+        {
+            killtextscale = 3;
+        }
+        alarm[0] = 30;
+        if (global.greentimer == -2)
+        {
+            instance_destroy(oBulletsLeftGreen);
+        }
+        if (global.greentimer == -1)
+        {
+            global.greentimer = 0;
+            alarm[0] = -1;
+        }
+    }
+    instance_destroy();
+}

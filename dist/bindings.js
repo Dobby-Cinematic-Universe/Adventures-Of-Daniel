@@ -13,10 +13,12 @@ export const ACTIONS = [
   {id:'slowmo',label:'Slow motion',group:'game',buttons:[2],defaults:[],contexts:['game'],mouse:'Right click',help:'Hold while slow-motion energy remains. Optional keyboard shortcut.'},
   {id:'heal',label:'Restore hearts',group:'game',keys:[16],defaults:['ShiftLeft','ShiftRight'],contexts:['game'],help:'Original shortcut: restores hearts, up to eight.'},
   {id:'reset',label:'Reset money & inventory',group:'game',keys:[82],defaults:['KeyR'],contexts:['game'],help:'Clears money, ammunition, grenades, tapes, stocks, and the allowance flag.'},
-  {id:'save',label:'Save adventure',group:'player',keys:[83],defaults:['KeyS'],contexts:['game'],help:'Save statistics and a full checkpoint in this browser.'},
-  {id:'load',label:'Load saved statistics',group:'player',keys:[76],defaults:['KeyL'],contexts:['game'],help:'Reload original saved statistics. Continue restores the full checkpoint.'},
+  {id:'save',label:'Save statistics',group:'player',keys:[83],defaults:['KeyS'],contexts:['game'],help:'Original money, health, and inventory statistics. World saves keep the full adventure separately.'},
+  {id:'load',label:'Load saved statistics',group:'player',keys:[76],defaults:['KeyL'],contexts:['game'],help:'Reload original saved statistics. World saves restores the full adventure.'},
   {id:'pause',label:'Pause / resume',group:'player',command:'pause',defaults:['Escape'],contexts:['all']},
   {id:'menu',label:'Original menu',group:'player',command:'menu',defaults:[],contexts:['game','story','ending'],help:'Return to the original title menu. Optional keyboard shortcut.'},
+  {id:'worldSaves',label:'World saves',group:'player',command:'worldSaves',defaults:[],contexts:['all'],help:'Open the independent full-world save slots. Optional keyboard shortcut.'},
+  {id:'cheats',label:'Cheat menu',group:'player',command:'cheats',defaults:[],contexts:['all'],help:'Open health, inventory, weapon, and invulnerability options. Optional keyboard shortcut.'},
   {id:'menuUp',label:'Menu up',group:'player',keys:[38],defaults:['ArrowUp'],contexts:['menu']},
   {id:'menuDown',label:'Menu down',group:'player',keys:[40],defaults:['ArrowDown'],contexts:['menu']},
   {id:'confirm',label:'Confirm menu selection',group:'player',keys:[13],defaults:['Enter'],contexts:['menu']},
@@ -40,6 +42,10 @@ export function gameContext(game){
   if(room==='rEnding')return 'ending';
   if(room==='introroom'||room==='introroom2')return 'story';
   return 'game';
+}
+export function canvasPoint(rect,width,height,x,y){
+ const scale=Math.min(rect.width/width,rect.height/height),w=width*scale,h=height*scale,left=rect.left+(rect.width-w)/2,top=rect.top+(rect.height-h)/2;
+ return {mx:Math.max(0,Math.min(1,(x-left)/w)),my:Math.max(0,Math.min(1,(y-top)/h)),inside:x>=left&&x<=left+w&&y>=top&&y<=top+h};
 }
 
 export class BindingProfile {

@@ -1,11 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {BindingProfile,InputRouter,CONTROL_STORAGE_KEY,gameContext} from '../dist/bindings.js';
+import {BindingProfile,InputRouter,CONTROL_STORAGE_KEY,gameContext,canvasPoint} from '../dist/bindings.js';
 import {Engine} from '../dist/engine.js';
 const input=()=>({keys:new Set(),pressed:new Set(),released:new Set(),buttons:new Set(),bpressed:new Set(),breleased:new Set()});
 const memory=()=>{const data=new Map();return {getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)};};
 const fixture=()=>{const profile=new BindingProfile(memory()),i=input();let context='game';const router=new InputRouter(profile,()=>i,()=>context);return {profile,i,router,context:c=>context=c};};
+
+test('aiming maps the rendered canvas rather than fullscreen letterbox margins',()=>{
+ const rect={left:10,top:20,width:400,height:1000};
+ const middle=canvasPoint(rect,1000,500,210,520);assert.equal(middle.mx,.5);assert.equal(middle.my,.5);assert.equal(middle.inside,true);
+ assert.equal(canvasPoint(rect,1000,500,210,420).my,0);assert.equal(canvasPoint(rect,1000,500,210,620).my,1);assert.equal(canvasPoint(rect,1000,500,210,20).inside,false);
+});
 
 test('custom movement replaces the old key and preserves held input until every source is released',()=>{
  const f=fixture();assert.ok(f.profile.bind('right',0,'KeyJ').ok);assert.equal(f.router.down('KeyD').handled,false);

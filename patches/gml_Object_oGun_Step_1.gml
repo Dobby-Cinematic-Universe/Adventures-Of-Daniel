@@ -16,9 +16,12 @@ if (keyboard_check_pressed(ord("F")) && global.hascontrol)
         audio_play_sound(gunempty, 2, false);
     }
 }
-if (mouse_check_button(mb_left) && firingdelay < 0 && global.ammo > 0 && global.hascontrol && global.dontshoot)
+if (mouse_check_button(mb_left) && firingdelay < 0 && (global.ammo > 0 || cheat_enabled("infiniteAmmo")) && global.hascontrol && global.dontshoot)
 {
-    global.ammo--;
+    if (!cheat_enabled("infiniteAmmo"))
+    {
+        global.ammo--;
+    }
     recoil = 15;
     firingdelay = 3;
     audio_play_sound(gunshot, 5, false);
@@ -34,7 +37,7 @@ if (mouse_check_button(mb_left) && firingdelay < 0 && global.ammo > 0 && global.
         gunkicky = lengthdir_y(1, other.image_angle - 180);
     }
 }
-if (mouse_check_button_pressed(mb_left) && global.ammo == 0 && global.hascontrol)
+if (mouse_check_button_pressed(mb_left) && global.ammo == 0 && !cheat_enabled("infiniteAmmo") && global.hascontrol)
 {
     audio_play_sound(gunempty, 2, false);
 }

@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --max-old-space-size=128 test/game.test.mjs && node --max-old-space-size=128 test/bindings.test.mjs",
-    "check": "node --check dist/engine.js && node --check dist/code.js && node --check dist/app.js && node --check dist/bindings.js"
+    "test": "node --max-old-space-size=128 test/game.test.mjs && node --max-old-space-size=128 test/bindings.test.mjs && node --max-old-space-size=128 test/world-save.test.mjs && node --max-old-space-size=128 test/runtime-audit.test.mjs",
+    "check": "node --check dist/engine.js && node --check dist/code.js && node --check dist/app.js && node --check dist/bindings.js && node --check dist/world-state.js && node --check dist/world-saves.js && node --check dist/player-menus.js",
+    "benchmark": "node --max-old-space-size=128 test/performance.mjs"
   }
 }

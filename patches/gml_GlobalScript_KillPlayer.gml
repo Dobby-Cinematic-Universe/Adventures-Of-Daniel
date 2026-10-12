@@ -1,6 +1,6 @@
 function KillPlayer()
 {
-    if (instance_exists(oPDead))
+    if (cheat_enabled("invincible") || instance_exists(oPDead))
     {
         return;
     }
