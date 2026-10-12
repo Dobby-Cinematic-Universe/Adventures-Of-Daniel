@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {Engine} from '../dist/engine.js';
+import {FACE_LAYOUTS} from '../dist/easter-egg.js';
 const data=JSON.parse(fs.readFileSync(new URL('../dist/data.json',import.meta.url)));
 const make=(room='room26')=>{const g=new Engine(data,null,null,{seed:12345});g.audioEnabled=false;g.loadRoom(room,false);return g;};
 const obj=(g,name)=>g.first(g.assets[name]);
@@ -93,4 +94,46 @@ test('menu renders star, rain, and grass scenery without the misplaced stretched
  assert.equal(rendered.some(s=>s.si===g.assets.chihiro),false);
  for(const name of ['mountains','raining','movinggras','grassMud'])assert.ok(rendered.some(s=>s.si===g.assets[name]),name+' scenery remains');
  assert.equal(rendered.filter(s=>s.si===g.assets.runningSprite73).length,4);assert.equal(obj(g,'oMenu').menu_control,true);assert.equal(g.errors.length,0);
+});
+function moonPoint(g){const moon=g.faceEgg.moonFrame();return [(moon.x-g.camera.x)/g.camera.w,(moon.y-g.camera.y)/g.camera.h];}
+test('one moon click reveals the secret without selecting a menu item, with circular and room guards',()=>{
+ const g=make('rMenu');step(g,100);g.faceEgg.moonImage={};assert.equal(g.faceEgg.moonFrame(),null);g.frame+=540;const point=moonPoint(g);
+ assert.deepEqual(g.faceEgg.menuClick(...point),{handled:true,triggered:true});g.step();assert.equal(obj(g,'oMenu').menu_control,true);
+ const moon=g.faceEgg.moonFrame(),current=moonPoint(g);assert.equal(g.faceEgg.menuClick(current[0]+(moon.r+1)/g.camera.w,current[1]).handled,false);
+ g.paused=true;assert.equal(g.faceEgg.menuClick(...point).handled,false);g.paused=false;
+ g.loadRoom('room26');assert.equal(g.faceEgg.menuClick(...point).handled,false);g.loadRoom('rMenu');assert.equal(g.faceEgg.moonFrame(),null);assert.equal(g.errors.length,0);
+});
+test('secret face persists across new adventures and reloads while leaving full world state and collisions unchanged',async()=>{
+ const values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)},g=new Engine(data,null,storage,{seed:12345});g.loadRoom('room26',false);step(g,40);
+ const before=g.captureWorld(),bounds=g.bounds(obj(g,'Object1'));g.renderer.canvas={style:{imageRendering:'pixelated'}};let loads=0;g.faceEgg.load=async()=>{loads++;g.faceEgg.image={};};
+ const results=await Promise.all([g.faceEgg.toggle(),g.faceEgg.toggle()]);assert.deepEqual(results,[true,null]);assert.equal(loads,1);
+ const after=g.captureWorld();delete before.savedAt;delete after.savedAt;assert.deepEqual(after,before);assert.deepEqual(g.bounds(obj(g,'Object1')),bounds);assert.equal(g.renderer.canvas.style.imageRendering,'auto');
+ g.beginNewAdventure();assert.equal(g.faceEgg.enabled,true);const restored=new Engine(data,null,storage);assert.equal(restored.faceEgg.enabled,true);
+ await g.faceEgg.toggle();assert.equal(g.faceEgg.enabled,false);assert.equal(new Engine(data,null,storage).faceEgg.enabled,false);assert.equal(g.renderer.canvas.style.imageRendering,'pixelated');
+ g.storage={setItem(){throw new Error('Full');}};await g.faceEgg.toggle();assert.equal(g.faceEgg.enabled,true);assert.equal(g.faceEgg.saved,false);
+});
+test('renderer replaces Daniel and all four menu faces without changing other characters',()=>{
+ const g=make();g.faceEgg.enabled=true;g.faceEgg.image={};const replaced=[];g.faceEgg.draw=(ctx,face)=>replaced.push(face);
+ g.renderer.ctx=new Proxy({}, {get:(o,k)=>o[k]??(()=>{})});g.renderer.images=Array.from({length:7},()=>({}));g.renderer.canvas={width:1366,height:768};g.renderer.text=()=>{};
+ const p=obj(g,'Object1');g.renderer.self(p);assert.equal(replaced.length,1);g.renderer.self({...p,object_index:g.assets.oMum});assert.equal(replaced.length,1);
+ g.loadRoom('rMenu');step(g,100);replaced.length=0;g.renderer.draw();assert.equal(replaced.length,4);
+ for(const [name,frames] of Object.entries(FACE_LAYOUTS)){assert.equal(frames.length,g.sprites[g.assets[name]].textures.length);for(let n=0;n<frames.length;n++)assert.ok(g.faceEgg.layout(name,n));assert.ok(g.faceEgg.layout(name,-1));}
+ assert.equal(g.errors.length,0);
+});
+test('realistic heads use smooth photographic sampling and preserve the canvas drawing state',()=>{
+ const g=make();g.faceEgg.enabled=true;g.faceEgg.image={};const calls=[],states=[];
+ const ctx={imageSmoothingEnabled:false,imageSmoothingQuality:'low',save(){states.push([this.imageSmoothingEnabled,this.imageSmoothingQuality]);},restore(){[this.imageSmoothingEnabled,this.imageSmoothingQuality]=states.pop();},translate(){},rotate(){},drawImage(...args){calls.push({smooth:this.imageSmoothingEnabled,quality:this.imageSmoothingQuality,args});}};
+ for(const layout of [...FACE_LAYOUTS.danielJump,...FACE_LAYOUTS.playerDead])g.faceEgg.draw(ctx,layout,64,64);
+ assert.equal(calls.length,4);for(const call of calls){assert.equal(call.smooth,true);assert.equal(call.quality,'high');assert.deepEqual(call.args.slice(1,5),[173,12,931,1257]);}
+ assert.equal(ctx.imageSmoothingEnabled,false);assert.equal(ctx.imageSmoothingQuality,'low');
+});
+test('the moon stays within the menu while faces are active and clicking it deactivates before its next visit',async()=>{
+ const g=make('rMenu');g.faceEgg.moonImage={};g.faceEgg.load=async()=>{g.faceEgg.image={};};g.faceEgg.moonFrame();g.frame=540;
+ assert.equal(g.faceEgg.menuClick(...moonPoint(g)).triggered,true);await g.faceEgg.toggle();const pinned=g.faceEgg.moonFrame();
+ for(const frame of [900,4000,40000]){g.frame=frame;assert.deepEqual(g.faceEgg.moonFrame(),pinned);assert.ok(pinned.x-pinned.r>g.camera.x&&pinned.x+pinned.r<g.camera.x+g.camera.w);}
+ assert.equal(g.faceEgg.menuClick(...moonPoint(g)).triggered,true);await g.faceEgg.toggle();assert.equal(g.faceEgg.enabled,false);assert.equal(g.faceEgg.moonFrame().pinned,false);
+ g.frame+=180;assert.equal(g.faceEgg.moonFrame(),null);g.frame=g.faceEgg.flightStart+360;assert.equal(g.faceEgg.moonFrame().pinned,false);assert.equal(g.faceEgg.menuClick(...moonPoint(g)).triggered,true);
+});
+test('standing, running, jumping, and miniature necks overlap the original collar instead of floating above it',()=>{
+ for(const [name,frames] of Object.entries(FACE_LAYOUTS))if(name!=='playerDead')for(const face of frames)assert.equal(face.y+face.h/2,face.cut[1]+face.cut[3]+4,name+' neck reaches into the collar');
 });

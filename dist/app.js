@@ -41,6 +41,8 @@ function frame(time){
 function updateGameplayHelp(){
   if(!game)return;
   const dead=game.resolve(game.assets.oPDead)[0],gun=game.resolve(game.assets.oGun)[0],launcher=game.resolve(game.assets.oGun59)[0],p=game.resolve(game.assets.Object1)[0],girl=game.resolve(game.assets.oGirl16364)[0],bed=game.resolve(game.assets.oBedSleep)[0];
+  const moon=game.room?.info.Name==='rMenu'?game.faceEgg.moonFrame():null;
+  const moonAvailable=moon&&game.faceEgg.moonImage&&moon.x-moon.r>=game.camera.x&&moon.x+moon.r<=game.camera.x+game.camera.w;
   const key=id=>profile.first(id)?keyLabel(profile.first(id)):null;
   const revive=key('jump')?`press ${key('jump')} or click Revive`:'click Revive';
   let text='Walk up to people and objects, then click them. '+(key('interact')?`${key('interact')} opens doors and collects crates.`:'Use Controls to choose an interaction key.');
@@ -48,7 +50,7 @@ function updateGameplayHelp(){
   const touchJump=document.querySelector('[data-action="jump"]');touchJump.textContent=dead?'Revive':'Jump';
   if(dead)text=dead.done===1&&dead.vsp===0?`Defeated — ${revive} to return.`:`Wait for Daniel to land, then ${revive}.`;
   else if(gameContext(game)==='story')text=key('weapon')?`Press ${key('weapon')} to continue the story.`:'Set a story key in Controls to continue.';
-  else if(gameContext(game)==='menu')text=`Choose with ${key('menuUp')||'a menu key'} / ${key('menuDown')||'a menu key'}, then ${key('confirm')||'your confirm key'}.`;
+  else if(gameContext(game)==='menu')text=`Choose with ${key('menuUp')||'a menu key'} / ${key('menuDown')||'a menu key'}, then ${key('confirm')||'your confirm key'}.${moonAvailable?game.faceEgg.enabled?' Click the moon to restore the original faces.':' Click the moon to reveal a familiar face.':''}`;
   else if(gameContext(game)==='ending')text='Press any key to advance the ending text.';
   else if(game.global.clickedbed)text='Sleeping — wait for the fade to clear. Health and slow motion recover.';
   else if(!game.global.hascontrol)text=game.resolve(game.assets.oButtonOff).length?'Click an option. The power button closes the computer.':'Click an option to continue.';
@@ -148,11 +150,13 @@ document.addEventListener('keydown',e=>{
   const result=router.down(e.code);if(result.handled)e.preventDefault();
 });
 document.addEventListener('keyup',e=>router.up(e.code));
-canvas.addEventListener('pointermove',e=>{if(!game)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);game.input.mx=point.mx;game.input.my=point.my;});
+canvas.addEventListener('pointermove',e=>{if(!game)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);game.input.mx=point.mx;game.input.my=point.my;canvas.style.cursor=point.inside&&game.faceEgg.moonHit(point.mx,point.my)?'pointer':'';});
 const mouseNumber=e=>e.button===2?2:e.button===1?3:1;
-canvas.addEventListener('pointerdown',e=>{
+canvas.addEventListener('pointerdown',async e=>{
   if(!game||game.paused||!started)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);if(!point.inside)return;canvas.focus();canvas.setPointerCapture(e.pointerId);
   game.input.mx=point.mx;game.input.my=point.my;
+  const secret=e.button===0?game.faceEgg.menuClick(point.mx,point.my):{handled:false};
+  if(secret.handled){e.preventDefault();clearInput();if(secret.triggered){try{toast('A familiar face is arriving…');const enabled=await game.faceEgg.toggle();if(enabled!==null)toast(enabled?'A familiar face.':'The original face returns.');}catch(error){toast(error.message);}}return;}
   router.mouse(mouseNumber(e),`pointer:${e.pointerId}:${e.button}`);e.preventDefault();
 });
 canvas.addEventListener('pointerup',e=>router.up(`pointer:${e.pointerId}:${e.button}`));

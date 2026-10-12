@@ -41,11 +41,14 @@ Open **World saves** for three named slots that preserve the entire adventure: v
 
 Open **Cheats** for invulnerability, unlimited ammunition, unlimited slow motion, healing/revival, money, ammunition, grenades, a slow-motion refill, and both weapons. Cheat toggles are included in world saves; starting a new adventure resets them. World-save and cheat menus can have keyboard shortcuts assigned in Controls. The original menu and cutscenes remain available through Menu. Press F to continue a story screen.
 
+A realistic face moon occasionally drifts across the original **Menu**. Click it once to give Daniel and all four miniature runners the photographic face. The moon stays on-screen while this mode is active; click it again to restore the original faces. The selection persists across new adventures and reloads, separately from world saves. Head and neck anchors follow each idle, running, jumping, and death frame, and the photographic artwork uses smooth sampling.
+
 On touch devices, the movement, jump, weapon, and fire buttons appear below the canvas; tap objects to interact. Keyboard and mouse provide the full original control scheme.
 
 ## Files
 
 - `dist/index.html`, `style.css`, `app.js`, `bindings.js`, `player-menus.js`: browser player, contextual hints, control settings, and save/cheat interfaces.
+- `dist/easter-egg.js`, `assets/secret-face.png`, `assets/face-moon.png`: moon menu trigger, persistent cosmetic preference, and smoothly rendered photographic head. Artwork was created with the built-in image generator; the prompts are in `art/secret-face-prompt.md` and `art/moon-and-neck-prompts.md`.
 - `dist/world-state.js`, `world-saves.js`: validated world snapshots, three atomic save slots, import/export, and checkpoint migration.
 - `dist/engine.js`: GameMaker-compatible event, object, collision, animation, drawing, audio, and persistence services used by this game.
 - `dist/code.js`: generated translation of the recovered GML into JavaScript functions. No runtime `eval` or Windows executable is required.
@@ -64,7 +67,7 @@ npm test
 npm run benchmark
 ```
 
-Fifty-nine checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quests and doors, weapons, arena waves, original menu/story/ending transitions, collision masks, grenade use, death/revival, repeated petrol shifts, sleep and the companion's bed interaction, shops and number formatting, controls, fullscreen pointer mapping, complete world round-trips, deterministic continuation, visited-room persistence, mid-shift/mid-sleep saves, original statistics separation, failed writes, invalid imports, cheats, and bounded long sessions. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
+Sixty-five checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quests and doors, weapons, arena waves, original menu/story/ending transitions, collision masks, grenade use, death/revival, repeated petrol shifts, sleep and the companion's bed interaction, shops and number formatting, controls, fullscreen pointer mapping, complete world round-trips, deterministic continuation, visited-room persistence, mid-shift/mid-sleep saves, original statistics separation, failed writes, invalid imports, cheats, bounded long sessions, and the moon trigger, persistent deactivation target, neck/collar connection, appearance preference, rendering scope, and smooth sampling. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
 
 Browser checks verified rendering, movement, computer screens, cheat controls, save/reload/Continue, file export/import, and independence from the statistics file. Audio loads on demand; rendering uses the fixed-size viewport rather than allocating room-sized canvases. Font/tint caches and sound pools are bounded. Paused games draw only when state changes. Collision and object indexes avoid scanning thousands of static instances each frame, and off-map projectiles expire.
 

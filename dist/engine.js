@@ -1,5 +1,6 @@
 import {CODE, SCRIPTS} from './code.js';
 import {WORLD_FORMAT,WORLD_VERSION,DEFAULT_CHEATS,cloneState,validateWorld,encodeWorld} from './world-state.js';
+import {FaceEasterEgg} from './easter-egg.js';
 
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 const rad=d=>d*Math.PI/180;
@@ -93,19 +94,22 @@ class Context {
 export class Renderer {
  constructor(game,canvas){this.g=game;this.canvas=canvas;this.ctx=canvas?.getContext('2d');this.images=[];this.tintCache=new Map();this.reset();}
  reset(){this.col=0xffffff;this.alpha=1;this.font=0;this.halign=0;this.valign=0;this.white=false;}
- async load(){if(typeof Image==='undefined')return;for(let i=0;i<7;i++){const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src=`assets/texture${i}.png`;});this.images.push(im);}}
- sprite(si,frame,x,y,sx=1,sy=1,angle=0,blend=0xffffff,alpha=1){
+ async load(){if(typeof Image==='undefined')return;for(let i=0;i<7;i++){const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src=`assets/texture${i}.png`;});this.images.push(im);}if(this.g.faceEgg.enabled)try{await this.g.faceEgg.load();}catch{this.g.faceEgg.setEnabled(false);}}
+ sprite(si,frame,x,y,sx=1,sy=1,angle=0,blend=0xffffff,alpha=1,secretFace=false){
   const s=this.g.sprites[si];if(!s?.textures.length||!this.ctx||!Number.isFinite(x+y+sx+sy))return;
   const info=s.info,frameIndex=((Math.floor(frame)%s.textures.length)+s.textures.length)%s.textures.length,t=s.textures[frameIndex];
   if(!t)return;
   const im=this.images[Number(t.TexturePage.split(' ').pop())];if(!im)return;
   const c=this.ctx;c.save();c.translate(x,y);c.rotate(-rad(angle));c.scale(sx,sy);c.globalAlpha=Math.max(0,Math.min(1,alpha*this.alpha));
+  const face=secretFace?this.g.faceEgg.layout(info.Name,frameIndex):null;
+  if(face){c.save();c.beginPath();c.rect(t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);c.rect(face.cut[0]-info.OriginX,face.cut[1]-info.OriginY,face.cut[2],face.cut[3]);c.clip('evenodd');}
   if((blend&0xffffff)!==0xffffff&&!this.white){
    const key=`c${si}:${frameIndex}:${blend&0xffffff}`;let tinted=this.tintCache.get(key);
    if(!tinted){tinted=document.createElement('canvas');tinted.width=t.SourceWidth;tinted.height=t.SourceHeight;const mc=tinted.getContext('2d');mc.drawImage(im,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,0,0,tinted.width,tinted.height);const pixels=mc.getImageData(0,0,tinted.width,tinted.height),r=(blend&255)/255,g=((blend>>>8)&255)/255,b=((blend>>>16)&255)/255;for(let n=0;n<pixels.data.length;n+=4){pixels.data[n]*=r;pixels.data[n+1]*=g;pixels.data[n+2]*=b;}mc.putImageData(pixels,0,0);this.cache(key,tinted);}
    c.drawImage(tinted,t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);
   }else c.drawImage(im,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);
   if(this.white){const key=`s${si}:${frameIndex}`;let mask=this.tintCache.get(key);if(!mask){mask=document.createElement('canvas');mask.width=t.SourceWidth;mask.height=t.SourceHeight;const mc=mask.getContext('2d');mc.drawImage(im,t.SourceX,t.SourceY,t.SourceWidth,t.SourceHeight,0,0,t.SourceWidth,t.SourceHeight);mc.globalCompositeOperation='source-in';mc.fillStyle='white';mc.fillRect(0,0,mask.width,mask.height);this.cache(key,mask);}c.drawImage(mask,t.TargetX-info.OriginX,t.TargetY-info.OriginY,t.TargetWidth,t.TargetHeight);}
+  if(face){c.restore();this.g.faceEgg.draw(c,face,info.OriginX,info.OriginY,this.white);}
   c.restore();
  }
  cache(k,v){if(this.tintCache.size>=24)this.tintCache.delete(this.tintCache.keys().next().value);this.tintCache.set(k,v);}
@@ -122,7 +126,7 @@ export class Renderer {
  }
  rectangle(x1,y1,x2,y2,outline=false,round=false){const c=this.ctx;if(!c)return;c.save();c.globalAlpha=Math.min(1,Math.max(0,this.alpha));c.fillStyle=c.strokeStyle=color(this.col);c.beginPath();const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);if(round&&c.roundRect)c.roundRect(x,y,w,h,Math.min(10,w/2,h/2));else c.rect(x,y,w,h);outline?c.stroke():c.fill();c.restore();}
  inView(si,x,y,sx=1,sy=1,angle=0){const s=this.g.sprites[si];if(!s)return false;const i=s.info,cam=this.g.camera;let left=x-i.OriginX*sx,top=y-i.OriginY*sy,right=left+i.Width*sx,bottom=top+i.Height*sy;if(angle){const cosine=Math.cos(rad(angle)),sine=Math.sin(rad(angle)),points=[[left-x,top-y],[right-x,top-y],[right-x,bottom-y],[left-x,bottom-y]].map(([a,b])=>[x+a*cosine+b*sine,y-a*sine+b*cosine]);left=Math.min(...points.map(p=>p[0]));right=Math.max(...points.map(p=>p[0]));top=Math.min(...points.map(p=>p[1]));bottom=Math.max(...points.map(p=>p[1]));}else{if(left>right)[left,right]=[right,left];if(top>bottom)[top,bottom]=[bottom,top];}return right>=cam.x-150&&left<=cam.x+cam.w+150&&bottom>=cam.y-150&&top<=cam.y+cam.h+150;}
- self(s){this.sprite(s.sprite_index,s.image_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle,s.image_blend,s.image_alpha);}
+ self(s){this.sprite(s.sprite_index,s.image_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle,s.image_blend,s.image_alpha,s.object_index===this.g.assets.Object1||s.object_index===this.g.assets.oPDead);}
  background(l){
   const d=l.data,i=l.info,c=this.ctx,cam=this.g.camera;if(!c||!i.IsVisible||!d.Visible)return;
   if(!d.Sprite){c.save();c.fillStyle=color(d.Color);c.globalAlpha=((d.Color>>>24)&255)/255;c.fillRect(cam.x,cam.y,cam.w,cam.h);c.restore();return;}
@@ -138,7 +142,8 @@ export class Renderer {
   const c=this.ctx;if(!c)return;this.reset();c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,this.canvas.width,this.canvas.height);c.fillStyle='#101318';c.fillRect(0,0,this.canvas.width,this.canvas.height);
   const cam=this.g.camera;c.setTransform(this.canvas.width/cam.w,0,0,this.canvas.height/cam.h,-cam.x*this.canvas.width/cam.w,-cam.y*this.canvas.height/cam.h);c.imageSmoothingEnabled=false;
   const commands=[];
-  for(const l of this.g.layers){if(l.info.LayerType===1)commands.push({depth:l.info.LayerDepth,run:()=>this.background(l)});if(l.info.IsVisible)for(const a of l.sprites||[]){const si=this.g.assets[a.Sprite];if(this.inView(si,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation))commands.push({depth:l.info.LayerDepth,run:()=>{const sp=this.g.sprites[si].info;const rate=a.AnimationSpeedType?a.AnimationSpeed:sp.GMS2PlaybackSpeed*(a.AnimationSpeed||1)/60;this.sprite(si,(a.FrameIndex||0)+this.g.frame*rate,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation,a.Color);}});}}
+  if(this.g.room.info.Name==='rMenu')commands.push({depth:950,run:()=>this.g.faceEgg.drawMoon(c)});else this.g.faceEgg.applySampling();
+  for(const l of this.g.layers){if(l.info.LayerType===1)commands.push({depth:l.info.LayerDepth,run:()=>this.background(l)});if(l.info.IsVisible)for(const a of l.sprites||[]){const si=this.g.assets[a.Sprite];if(this.inView(si,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation))commands.push({depth:l.info.LayerDepth,run:()=>{const sp=this.g.sprites[si].info;const rate=a.AnimationSpeedType?a.AnimationSpeed:sp.GMS2PlaybackSpeed*(a.AnimationSpeed||1)/60;this.sprite(si,(a.FrameIndex||0)+this.g.frame*rate,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation,a.Color,1,this.g.room.info.Name==='rMenu'&&a.Sprite==='runningSprite73');}});}}
   for(const s of this.g.instances){if(s.dead||!s.visible||!this.g.layerVisible(s.layer))continue;const ev=this.g.eventFor(s.object_index,8,0);if(ev||this.inView(s.sprite_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle))commands.push({depth:s.depth,run:()=>{this.reset();if(ev)this.g.runEvent(s,8,0);else this.self(s);}});}
   commands.sort((a,b)=>b.depth-a.depth);for(const cmd of commands)cmd.run();
   c.setTransform(this.canvas.width/this.g.gui.w,0,0,this.canvas.height/this.g.gui.h,0,0);
@@ -159,7 +164,7 @@ export class Engine {
   this.roomStates=new Map();this.worldInitialized=false;this.cheats={...DEFAULT_CHEATS};
   this.input={keys:new Set(),pressed:new Set(),released:new Set(),buttons:new Set(),bpressed:new Set(),breleased:new Set(),mx:0.5,my:0.5};
   this.errors=[];this.errorSet=new Set();this.paused=false;this.audioEnabled=true;this.audioPool=new Map();this.soundsPlaying=new Map();this.nextSound=1;
-  this.storage=storage;try{this.storage??=typeof localStorage!=='undefined'?localStorage:null;}catch{}this.memoryFiles=new Map();this.ini=null;this.renderer=new Renderer(this,canvas);this.builtins=this.makeBuiltins();this.pendingRoom=null;
+  this.storage=storage;try{this.storage??=typeof localStorage!=='undefined'?localStorage:null;}catch{}this.memoryFiles=new Map();this.ini=null;this.faceEgg=new FaceEasterEgg(this);this.renderer=new Renderer(this,canvas);this.builtins=this.makeBuiltins();this.pendingRoom=null;
   this.objectMeta=this.objects.map((o,index)=>{
    const ancestors=[];for(let n=index;n>=0;){ancestors.push(n);const p=this.objects[n].info.ParentId;n=p?this.assets[p]:-1;}
    const collisions=new Set();for(const n of ancestors)for(const key of this.objects[n].events.keys())if(key.startsWith('4:'))collisions.add(Number(key.slice(2)));

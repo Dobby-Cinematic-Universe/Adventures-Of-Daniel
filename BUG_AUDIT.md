@@ -27,7 +27,7 @@ Cheats supply invulnerability, unlimited ammunition, unlimited slow motion, reso
 
 ## Measurements and checks
 
-`npm run check` passes. `npm test` passes **59 tests**: 20 gameplay, 10 input, 14 world-save, and 15 runtime-audit checks. Suites run sequentially with a 128 MB managed heap cap. The room audit executes 150 frames and drawing events in each room. Browser checks cover cheat controls, saving across reloads, Continue, export/import, statistics separation, menu navigation, and responsive layouts.
+`npm run check` passes. `npm test` passes **65 tests**: 20 gameplay, 10 input, 14 world-save, and 21 runtime-audit checks. Suites run sequentially with a 128 MB managed heap cap. The room audit executes 150 frames and drawing events in each room. Browser checks cover cheat controls, saving across reloads, Continue, export/import, statistics separation, menu navigation, and responsive layouts.
 
 The same seeded Node benchmark, after 40 warm-up frames and over 180 measured frames per scene, gave:
 
@@ -41,3 +41,7 @@ The final run used about 16 MB of managed heap with zero runtime errors. Object 
 Compatibility decisions were checked against official GameMaker documentation for [event order](https://manual.gamemaker.io/monthly/en/The_Asset_Editors/Object_Properties/Event_Order.htm), [collision masks](https://manual.gamemaker.io/beta/en/GameMaker_Language/GML_Reference/Movement_And_Collisions/Collisions/Collisions.htm), and [friction](https://manual.gamemaker.io/lts/en/GameMaker_Language/GML_Reference/Asset_Management/Instances/Instance_Variables/friction.htm).
 
 Exact frame-by-frame comparison with the Windows runner remains unavailable. These checks verify exercised behavior and recovered assets; they cannot prove every input sequence is free of bugs.
+
+## Realistic-face easter egg follow-up
+
+A realistic face moon drifts across the original menu occasionally. One click switches Daniel and all four menu runners to a transparent photographic head with a neck that reaches into the collar. While active, the moon remains on-screen for one-click deactivation; it leaves after deactivation and returns on a later pass. The preference survives new games and reloads without changing world snapshots or collision masks. Head anchors follow each idle, running, jumping, and death frame. Six additional checks cover moon hit testing and room guards, periodic flight and persistent deactivation, appearance persistence, unchanged simulation state, player/menu-only rendering, neck alignment, and smooth photographic sampling. Artwork loads once on demand; the optional white-flash mask is bounded to 210 × 280 pixels.

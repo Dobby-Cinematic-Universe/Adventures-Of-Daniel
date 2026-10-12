@@ -1,0 +1,7 @@
+# Realistic secret face
+
+Created with the built-in image-generation tool from the user-provided `a.webp` reference. The original reference is not included in the game bundle. Final transparent asset: `dist/assets/secret-face.png`.
+
+Prompt:
+
+Use case: background-extraction and identity-preserve. Asset type: a REALISTIC photographic head cutout for a humorous hidden face replacement in a browser game. Edit the attached reference photo into ONE isolated complete head, preserving the person's recognizable face, expression, large black rectangular glasses, dark center-parted hair, and natural proportions. Remove the white background, shirt, shoulders, and body. Include all hair and the chin with only a tiny tapered neck stub at bottom; naturally reconstruct only the cropped top of the hair so the head is complete. Restore a little natural detail and reduce the washed-out harsh sunlight while preserving the reference likeness and warm skin tone. Clean softly antialiased photographic edges on an ACTUAL transparent background. Head should fill most of a portrait-oriented or square canvas with a narrow transparent margin. The result MUST stay a realistic photograph: no pixel art, no pixelation, no cartoon, no illustration, no game-style redraw, no 3D render, no posterization, no chunky outline. Keep the original straight-on/slightly angled facial pose. No text, no extra heads, no decorations, no visible checkerboard or opaque backdrop.
