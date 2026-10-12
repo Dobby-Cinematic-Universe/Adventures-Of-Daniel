@@ -192,7 +192,7 @@ E.put(E.get("global"),"takenallowance",0);
 }
 ,
 "gml_Object_Object1_Other_4":function(E){
-if(E.call("file_exists",["Save.sav"])){
+if(E.truthy(E.call("file_exists",["Save.sav"]))){
 E.call("file_delete",["Save.sav"]);
 }
 else {}
@@ -206,7 +206,7 @@ E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oBut
 else {}
 E.call("loadgame",[]);
 E.put(E.get("global"),"greentimer",0);
-E.call("layer_set_visible",["specialbutton",(!E.get("visible"))]);
+E.call("layer_set_visible",["specialbutton",(!E.truthy(E.get("visible")))]);
 }
 ,
 "gml_Object_Object1_Other_7":function(E){
@@ -221,10 +221,10 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_Object1_Step_0":function(E){
-if(E.member(E.get("global"),"hascontrol")){
-E.set("key_left",(E.call("keyboard_check_pressed",[E.get("vk_left")]) || E.call("keyboard_check",[E.call("ord",["A"])])));
-E.set("key_right",(E.call("keyboard_check",[E.get("vk_right")]) || E.call("keyboard_check",[E.call("ord",["D"])])));
-E.set("key_jump",(E.call("keyboard_check_pressed",[E.get("vk_space")]) || E.call("keyboard_check",[E.call("ord",["W"])])));
+if(E.truthy(E.member(E.get("global"),"hascontrol"))){
+E.set("key_left",(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_left")])) || E.truthy(E.call("keyboard_check",[E.call("ord",["A"])]))));
+E.set("key_right",(E.truthy(E.call("keyboard_check",[E.get("vk_right")])) || E.truthy(E.call("keyboard_check",[E.call("ord",["D"])]))));
+E.set("key_jump",(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_space")])) || E.truthy(E.call("keyboard_check",[E.call("ord",["W"])]))));
 }
 else {
 E.set("key_right",0);
@@ -237,18 +237,18 @@ E.set("hsp",((E.get("move") * E.get("walksp")) + E.get("gunkickx")));
 E.set("gunkickx",0);
 E.set("vsp",((E.get("vsp") + E.get("grv")) + E.get("gunkicky")));
 E.set("gunkicky",0);
-if((E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]) || E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("oSign")]))){
+if((E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])) || E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("oSign")])))){
 E.set("jumps",2);
 }
 else {}
-if((E.get("key_jump") && (E.get("jumps") > 0))){
+if((E.truthy(E.get("key_jump")) && (E.get("jumps") > 0))){
 E.set("jumps",(E.get("jumps") - 1));
 E.set("vsp",(-9));
 }
 else {}
-if((E.call("mouse_check_button",[E.get("mb_right")]) && ((E.member(E.get("global"),"slowmo") > 0) || E.call("cheat_enabled",["infiniteSlowmo"])))){
+if((E.truthy(E.call("mouse_check_button",[E.get("mb_right")])) && ((E.member(E.get("global"),"slowmo") > 0) || E.truthy(E.call("cheat_enabled",["infiniteSlowmo"]))))){
 E.call("game_set_speed",[30,E.get("gamespeed_fps")]);
-if((!E.call("cheat_enabled",["infiniteSlowmo"]))){
+if((!E.truthy(E.call("cheat_enabled",["infiniteSlowmo"])))){
 E.put(E.get("global"),"slowmo",(E.member(E.get("global"),"slowmo") - 1));
 }
 else {}
@@ -257,8 +257,8 @@ else {
 E.call("game_set_speed",[60,E.get("gamespeed_fps")]);
 }
 
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -266,8 +266,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("Object1")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("Object1")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("Object1")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("Object1")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -275,8 +275,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",0);
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -285,8 +285,8 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -300,7 +300,7 @@ if((E.get("aimside") != 0)){
 E.set("image_xscale",E.get("aimside"));
 }
 else {}
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("sprite_index",E.get("danielJump"));
 E.set("image_speed",0);
 if((E.call("sign",[E.get("vsp")]) > 0)){
@@ -338,31 +338,31 @@ else {}
 
 }
 
-if(E.call("keyboard_check_pressed",[E.call("ord",["S"])])){
+if(E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["S"])]))){
 E.call("savegame",[]);
-if((!E.call("instance_exists",[E.get("oDanielText5")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oDanielText5")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oDanielText5")]);
 }
 else {}
 }
 else {}
-if(E.call("keyboard_check_pressed",[E.call("ord",["L"])])){
+if(E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["L"])]))){
 E.call("loadgame",[]);
 }
 else {}
-if((E.call("keyboard_check_pressed",[E.call("ord",["A"])]) || (E.call("keyboard_check_pressed",[E.call("ord",["D"])]) && (!E.call("instance_exists",[E.get("oButtonOff")]))))){
+if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["A"])])) || (E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["D"])])) && (!E.truthy(E.call("instance_exists",[E.get("oButtonOff")])))))){
 E.put(E.get("global"),"dontshoot",true);
 }
 else {}
-if(((((E.call("point_in_circle",[E.member(E.get("oGirl16364"),"x"),E.member(E.get("oGirl16364"),"y"),E.get("x"),E.get("y"),800]) && (!E.call("instance_exists",[E.get("oGirltext2")]))) && (!E.call("instance_exists",[E.get("oGirltext71")]))) && (!E.call("instance_exists",[E.get("oPDead")]))) && E.call("instance_exists",[E.get("oGirl16364")]))){
+if(((((E.truthy(E.call("point_in_circle",[E.member(E.get("oGirl16364"),"x"),E.member(E.get("oGirl16364"),"y"),E.get("x"),E.get("y"),800])) && (!E.truthy(E.call("instance_exists",[E.get("oGirltext2")])))) && (!E.truthy(E.call("instance_exists",[E.get("oGirltext71")])))) && (!E.truthy(E.call("instance_exists",[E.get("oPDead")])))) && E.truthy(E.call("instance_exists",[E.get("oGirl16364")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oGirltext2")]);
 }
 else {}
-if(E.call("point_in_circle",[E.member(E.get("oGirl16364"),"x"),E.member(E.get("oGirl16364"),"y"),E.get("x"),E.get("y"),200])){
+if(E.truthy(E.call("point_in_circle",[E.member(E.get("oGirl16364"),"x"),E.member(E.get("oGirl16364"),"y"),E.get("x"),E.get("y"),200]))){
 E.call("instance_destroy",[E.get("oGirltext2")]);
 }
 else {}
-if((E.call("instance_exists",[E.get("oPDead")]) && (!E.call("instance_exists",[E.get("oGirltext71")])))){
+if((E.truthy(E.call("instance_exists",[E.get("oPDead")])) && (!E.truthy(E.call("instance_exists",[E.get("oGirltext71")]))))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oGirltext71")]);
 }
 else {}
@@ -391,7 +391,7 @@ E.call("event_inherited",[]);
 ,
 "gml_Object_Object59_Step_0":function(E){
 E.set("y",(E.get("ystart") + (E.call("sin",[(E.call("get_timer",[]) / 200000)]) * 10)));
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("Object1")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("Object1")]))){
 for(const __target1 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("Object1")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("flash",3);
 E.set("hitfrom",E.member(E.get("other"),"direction"));
@@ -432,8 +432,8 @@ E.call("event_inherited",[]);
 "gml_Object_eEbullet_Step_0":function(E){
 E.set("x",(E.get("x") + E.call("lengthdir_x",[E.get("spd"),E.get("direction")])));
 E.set("y",(E.get("y") + E.call("lengthdir_y",[E.get("spd"),E.get("direction")])));
-if((E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")]) && (E.get("image_index") != 0))){
-while(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")])){E.tick();
+if((E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")])) && (E.get("image_index") != 0))){
+while(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")]))){E.tick();
 {
 E.set("x",(E.get("x") - E.call("lengthdir_x",[1,E.get("direction")])));
 E.set("y",(E.get("y") - E.call("lengthdir_y",[1,E.get("direction")])));
@@ -501,7 +501,7 @@ else {
 E.set("image_index",0);
 }
 
-if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100]) && E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"clickedbed") == false))){
+if((((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100])) && E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"clickedbed") == false))){
 E.put(E.get("global"),"clickedbed",true);
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"gosleepzzz",E.get("oText5")]);
 E.putIndex(E.ensureArray("alarm"),1,30);
@@ -532,7 +532,7 @@ E.call("event_inherited",[]);
 "gml_Object_oBulletBomb_Step_0":function(E){
 E.set("x",(E.get("x") + E.call("lengthdir_x",[E.get("spd"),E.get("direction")])));
 E.set("y",(E.get("y") + E.call("lengthdir_y",[E.get("spd"),E.get("direction")])));
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("pshootable")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("pshootable")]))){
 for(const __target1 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("pshootable")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oExplosion")]);
 E.set("flash",3);
@@ -542,8 +542,8 @@ E.set("hitfrom",E.member(E.get("other"),"direction"));
 E.call("instance_destroy",[]);
 }
 else {}
-if((E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")]) && (E.get("image_index") != 0))){
-while(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")])){E.tick();
+if((E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")])) && (E.get("image_index") != 0))){
+while(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")]))){E.tick();
 {
 E.set("x",(E.get("x") - E.call("lengthdir_x",[1,E.get("direction")])));
 E.set("y",(E.get("y") - E.call("lengthdir_y",[1,E.get("direction")])));
@@ -565,7 +565,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oBulletTapes_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -603,7 +603,7 @@ E.set("x",(E.get("x") + E.call("lengthdir_x",[E.get("spd"),E.get("direction")]))
 E.set("y",(E.get("y") + E.call("lengthdir_y",[E.get("spd"),E.get("direction")])));
 E.call("layer_add_instance",["floor",E.get("id")]);
 E.set("depth",(E.get("depth") + 1));
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("pshootable")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("pshootable")]))){
 for(const __target1 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("pshootable")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",7);
@@ -613,7 +613,7 @@ E.set("hitfrom",E.member(E.get("other"),"direction"));
 E.call("instance_destroy",[]);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCar")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCar")]))){
 for(const __target2 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("oCar")]))){const E2=E.withSelf(__target2);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
@@ -623,14 +623,14 @@ E.set("hitfrom",E.member(E.get("other"),"direction"));
 E.call("instance_destroy",[]);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCar49")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCar49")]))){
 for(const __target3 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("oCar49")]))){const E2=E.withSelf(__target3);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
 E.set("hitfrom",E.member(E.get("other"),"direction"));
 }
 }}
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oEnemyBig")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oEnemyBig")]))){
 for(const __target4 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("oEnemyBig")]))){const E2=E.withSelf(__target4);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
@@ -642,8 +642,8 @@ else {}
 E.call("instance_destroy",[]);
 }
 else {}
-if((E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")]) && (E.get("image_index") != 0))){
-while(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")])){E.tick();
+if((E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")])) && (E.get("image_index") != 0))){
+while(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")]))){E.tick();
 {
 E.set("x",(E.get("x") - E.call("lengthdir_x",[1,E.get("direction")])));
 E.set("y",(E.get("y") - E.call("lengthdir_y",[1,E.get("direction")])));
@@ -665,7 +665,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oBulletsLeft97_Draw_64":function(E){
-if(E.call("instance_exists",[E.get("oshoppingstocks")])){
+if(E.truthy(E.call("instance_exists",[E.get("oshoppingstocks")]))){
 E.declare("cam",E.index(E.get("view_camera"),0));
 E.declare("sx",(E.call("display_get_gui_width",[]) / E.call("camera_get_view_width",[E.get("cam")])));
 E.declare("sy",(E.call("display_get_gui_height",[]) / E.call("camera_get_view_height",[E.get("cam")])));
@@ -690,7 +690,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oBulletsLeftGreen_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_set_colour",[E.get("c_lime")]);
@@ -718,7 +718,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oBulletsLeftRed_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_set_colour",[E.get("c_red")]);
@@ -743,7 +743,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oBulletsLeft_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -768,7 +768,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oBulletsammo_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -879,42 +879,42 @@ else {
 E.set("image_index",0);
 }
 
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"kills") >= 100))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"kills") >= 100))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") - 100));
 E.put(E.get("global"),"stocks",(E.member(E.get("global"),"stocks") + 100));
 E.putIndex(E.ensureArray("alarm"),1,30);
 }
-else if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"kills") < 100)) && (!E.call("instance_exists",[E.get("oDanielText2")])))){
+else if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"kills") < 100)) && (!E.truthy(E.call("instance_exists",[E.get("oDanielText2")]))))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),(E.member(E.get("Object1"),"y") - 85),E.get("layer"),E.get("oDanielText2")]);
 }
 else {}
 
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 100))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 100))){
 E.putIndex(E.ensureArray("alarm"),2,30);
 }
 else {}
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 200))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 200))){
 E.putIndex(E.ensureArray("alarm"),3,30);
 }
 else {}
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 300))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 300))){
 E.putIndex(E.ensureArray("alarm"),4,30);
 }
 else {}
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 400))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 400))){
 E.putIndex(E.ensureArray("alarm"),5,30);
 }
 else {}
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 500))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 500))){
 E.putIndex(E.ensureArray("alarm"),6,30);
 }
 else {}
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 600))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 600))){
 E.putIndex(E.ensureArray("alarm"),7,30);
 }
 else {}
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 700))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") > 700))){
 E.putIndex(E.ensureArray("alarm"),8,30);
 }
 else {}
@@ -935,13 +935,13 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 if((E.member(E.get("global"),"kills") >= 50)){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") - 50));
 E.put(E.get("global"),"bullets",(E.member(E.get("global"),"bullets") + 1));
 }
-else if((!E.call("instance_exists",[E.get("oDanielText2")]))){
+else if((!E.truthy(E.call("instance_exists",[E.get("oDanielText2")])))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),(E.member(E.get("Object1"),"y") - 85),E.get("layer"),E.get("oDanielText2")]);
 }
 else {}
@@ -974,7 +974,7 @@ else {
 E.set("image_index",0);
 }
 
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") != 0))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"stocks") != 0))){
 E.call("audio_play_sound",[E.get("chaching"),4,false]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + E.member(E.get("global"),"stocks")));
 E.put(E.get("global"),"stocks",0);
@@ -1001,13 +1001,13 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 if((E.member(E.get("global"),"kills") >= 100)){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") - 100));
 E.put(E.get("global"),"ammo",(E.member(E.get("global"),"ammo") + 100));
 }
-else if((!E.call("instance_exists",[E.get("oDanielText2")]))){
+else if((!E.truthy(E.call("instance_exists",[E.get("oDanielText2")])))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),(E.member(E.get("Object1"),"y") - 85),E.get("layer"),E.get("oDanielText2")]);
 }
 else {}
@@ -1033,7 +1033,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") - 10));
 }
@@ -1057,7 +1057,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 if((E.member(E.get("global"),"quest2") == 1)){
 return ;
 }
@@ -1067,7 +1067,7 @@ E.call("audio_play_sound",[E.get("chaching"),4,false]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") - 3000));
 E.put(E.get("global"),"quest2",1);
 }
-else if((!E.call("instance_exists",[E.get("oDanielText2")]))){
+else if((!E.truthy(E.call("instance_exists",[E.get("oDanielText2")])))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),(E.member(E.get("Object1"),"y") - 85),E.get("layer"),E.get("oDanielText2")]);
 }
 else {}
@@ -1093,7 +1093,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 200),(E.member(E.get("Object1"),"y") - 100),"buttons",E.get("oButton1Stock")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 300),(E.member(E.get("Object1"),"y") - 100),"buttons",E.get("oButton2Stock")]);
@@ -1126,7 +1126,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"computerbackgrounds",E.get("oshoppingyoutube")]);
 E.call("instance_destroy",[E.get("oButton3rd")]);
@@ -1157,7 +1157,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 200),(E.member(E.get("Object1"),"y") - 100),"buttons",E.get("oButton1")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 300),(E.member(E.get("Object1"),"y") - 100),"buttons",E.get("oButton2")]);
@@ -1190,7 +1190,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"mailinbox",E.get("oshoppingmail")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 455),(E.member(E.get("Object1"),"y") - 7),"gobackbutton",E.get("oButtongoback")]);
@@ -1216,7 +1216,7 @@ E.set("y",(E.member(E.get("Object1"),"y") - 7));
 }
 ,
 "gml_Object_oButtonOff_Create_0":function(E){
-if((!E.call("instance_exists",[E.get("oshopping2")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oshopping2")])))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -1234,7 +1234,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 if((E.member(E.get("global"),"hascontrol") == 0)){
 E.call("layer_set_visible",["quests",E.get("visible")]);
@@ -1262,19 +1262,19 @@ E.call("instance_destroy",[E.get("oButton3rd")]);
 E.call("instance_destroy",[E.get("oButton4th")]);
 E.call("instance_destroy",[E.get("oshoppingyoutube")]);
 E.call("instance_destroy",[E.get("oButtonYoutube")]);
-if(E.call("instance_exists",[E.get("oButton1Stock")])){
+if(E.truthy(E.call("instance_exists",[E.get("oButton1Stock")]))){
 E.put(E.get("oButton1Stock"),"y",(E.member(E.get("Object1"),"y") - 1000));
 }
 else {}
 E.put(E.get("oBulletsLeft97"),"y",(E.member(E.get("Object1"),"y") - 1000));
-if((!E.call("instance_exists",[E.get("oshopping2")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oshopping2")])))){
 E.call("instance_destroy",[]);
 }
 else {}
 E.call("instance_destroy",[E.get("oButton2Stock")]);
 E.call("instance_destroy",[E.get("oButton3Stock")]);
 E.call("instance_destroy",[E.get("oshoppingstocks")]);
-E.call("layer_set_visible",["specialbutton",(!E.get("visible"))]);
+E.call("layer_set_visible",["specialbutton",(!E.truthy(E.get("visible")))]);
 E.call("instance_destroy",[E.get("oshoppinginbox")]);
 E.call("instance_destroy",[E.get("oshoppinginbox2")]);
 E.call("instance_destroy",[E.get("oshoppinginbox3")]);
@@ -1309,7 +1309,7 @@ else {
 E.set("image_index",0);
 }
 
-if(((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"tapes") > 0))){
+if(((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"tapes") > 0))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.put(E.get("global"),"tapes",(E.member(E.get("global"),"tapes") - 1));
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + E.call("random_range",[25,100])));
@@ -1336,7 +1336,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 if((E.member(E.get("global"),"messageread") == 1)){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"gobackbutton",E.get("oMessageRead")]);
@@ -1384,7 +1384,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"computerbackgrounds",E.get("oshopping2")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 455),E.member(E.get("Object1"),"y"),"buttons",E.get("oButtonMail")]);
@@ -1403,7 +1403,7 @@ E.call("instance_destroy",[E.get("oButton3")]);
 E.call("instance_destroy",[E.get("oButtoninbox1")]);
 E.call("instance_destroy",[E.get("oButtoninbox2")]);
 E.call("instance_destroy",[E.get("oButtoninbox3")]);
-if(E.call("instance_exists",[E.get("oMessageRead")])){
+if(E.truthy(E.call("instance_exists",[E.get("oMessageRead")]))){
 E.call("instance_destroy",[E.get("oMessageRead")]);
 }
 else {}
@@ -1421,11 +1421,11 @@ E.call("instance_destroy",[E.get("oText2")]);
 E.call("instance_destroy",[E.get("oText3")]);
 E.call("instance_destroy",[E.get("oText4")]);
 E.call("instance_destroy",[E.get("oDanielText2")]);
-if(E.call("instance_exists",[E.get("oButton1Stock")])){
+if(E.truthy(E.call("instance_exists",[E.get("oButton1Stock")]))){
 E.put(E.get("oButton1Stock"),"y",(E.member(E.get("Object1"),"y") - 1000));
 }
 else {}
-E.call("layer_set_visible",["specialbutton",(!E.get("visible"))]);
+E.call("layer_set_visible",["specialbutton",(!E.truthy(E.get("visible")))]);
 }
 else {}
 E.set("x",(E.member(E.get("Object1"),"x") + 455));
@@ -1448,7 +1448,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"mailinboxopen",E.get("oshoppinginbox")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 455),(E.member(E.get("Object1"),"y") - 7),"gobackbutton2",E.get("oButtongoback2")]);
 E.call("instance_create_layer",[E.get("x"),(E.member(E.get("Object1"),"y") - 200),"gobackbutton",E.get("oText2")]);
@@ -1460,7 +1460,7 @@ E.call("instance_destroy",[E.get("oButton1")]);
 E.call("instance_destroy",[E.get("oButton2")]);
 E.call("instance_destroy",[E.get("oButton3")]);
 E.put(E.get("global"),"messageread",1);
-if((!E.call("instance_exists",[E.get("oQuestObjectives2")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oQuestObjectives2")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"quests",E.get("oQuestObjectives2")]);
 for(const __target1 of E.targets(E.get("oQuestObjectives2"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("killtextscale",2);
@@ -1492,7 +1492,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"mailinboxopen",E.get("oshoppinginbox2")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 455),(E.member(E.get("Object1"),"y") - 7),"gobackbutton2",E.get("oButtongoback2")]);
 E.call("instance_create_layer",[E.get("x"),(E.member(E.get("Object1"),"y") - 200),"gobackbutton",E.get("oText3")]);
@@ -1525,7 +1525,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"mailinboxopen",E.get("oshoppinginbox3")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 455),(E.member(E.get("Object1"),"y") - 7),"gobackbutton2",E.get("oButtongoback2")]);
 E.call("instance_create_layer",[E.get("x"),(E.member(E.get("Object1"),"y") - 200),"gobackbutton",E.get("oText4")]);
@@ -1574,7 +1574,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oCamera_Step_0":function(E){
-if(E.call("instance_exists",[E.get("follow")])){
+if(E.truthy(E.call("instance_exists",[E.get("follow")]))){
 E.set("xTo",E.member(E.get("follow"),"x"));
 E.set("yTo",E.member(E.get("follow"),"y"));
 if((E.member(E.get("follow"),"object_index") == E.get("Object1"))){
@@ -1592,19 +1592,19 @@ E.set("x",(E.get("x") + E.call("random_range",[(-E.get("shake_remain")),E.get("s
 E.set("y",(E.get("y") + E.call("random_range",[(-E.get("shake_remain")),E.get("shake_remain")])));
 E.set("shake_remain",E.call("max",[0,(E.get("shake_remain") - ((1 / E.get("shake_length")) * E.get("shake_magnitude")))]));
 E.call("camera_set_view_pos",[E.get("cam"),(E.get("x") - E.get("view_w_half")),(E.get("y") - E.get("view_h_half"))]);
-if(E.call("layer_exists",["mountains"])){
+if(E.truthy(E.call("layer_exists",["mountains"]))){
 E.call("layer_x",["mountains",(E.get("x") / 4)]);
 }
 else {}
-if(E.call("layer_exists",["trees"])){
+if(E.truthy(E.call("layer_exists",["trees"]))){
 E.call("layer_x",["trees",(E.get("x") / 4)]);
 }
 else {}
-if(E.call("layer_exists",["trees2"])){
+if(E.truthy(E.call("layer_exists",["trees2"]))){
 E.call("layer_x",["trees",(E.get("x") / 2)]);
 }
 else {}
-if(E.call("layer_exists",["stars_1"])){
+if(E.truthy(E.call("layer_exists",["stars_1"]))){
 E.call("layer_x",["stars_1",(E.get("x") / 1)]);
 }
 else {}
@@ -1654,8 +1654,8 @@ else {}
 ,
 "gml_Object_oCar49_Step_1":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -1663,8 +1663,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -1673,8 +1673,8 @@ E.set("hsp",(-E.get("hsp")));
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -1712,8 +1712,8 @@ E.call("event_inherited",[]);
 "gml_Object_oCarDead49_Step_1":function(E){
 if((E.get("done") == 0)){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -1722,13 +1722,13 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") - E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
 if((E.get("vsp") > 0)){
 E.set("done",1);
 E.set("image_index",1);
 }
 else {}
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -1769,8 +1769,8 @@ E.call("event_inherited",[]);
 "gml_Object_oCarDead_Step_1":function(E){
 if((E.get("done") == 0)){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -1779,13 +1779,13 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") - E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
 if((E.get("vsp") > 0)){
 E.set("done",1);
 E.set("image_index",1);
 }
 else {}
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -1843,8 +1843,8 @@ else {}
 ,
 "gml_Object_oCar_Step_1":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -1852,8 +1852,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -1862,8 +1862,8 @@ E.set("hsp",(-E.get("hsp")));
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -1903,8 +1903,8 @@ E.call("event_inherited",[]);
 ,
 "gml_Object_oComputerDead_Step_1":function(E){
 E.set("vspeed",(E.get("vspeed") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hspeed")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hspeed")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hspeed")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hspeed")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hspeed")])));
 }
@@ -1912,8 +1912,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hspeed")])));
 E.set("hspeed",(-E.get("hspeed")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hspeed")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hspeed")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hspeed")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hspeed")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hspeed")])));
 }
@@ -1921,8 +1921,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hspeed")])));
 E.set("hspeed",(-E.get("hspeed")));
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vspeed")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vspeed")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vspeed")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vspeed")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vspeed")])));
 }
@@ -1946,8 +1946,8 @@ E.set("grv",0.3);
 ,
 "gml_Object_oCrate2_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -1955,8 +1955,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -1965,7 +1965,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((E.call("keyboard_check_pressed",[E.call("ord",["E"])]) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100]))){
+if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["E"])])) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100])))){
 E.put(E.get("global"),"killsgreen",0);
 E.call("audio_play_sound",[E.get("chaching"),4,false]);
 E.call("instance_destroy",[]);
@@ -1991,8 +1991,8 @@ E.set("grv",0.3);
 ,
 "gml_Object_oCrate3_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2000,8 +2000,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2010,7 +2010,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((E.call("keyboard_check_pressed",[E.call("ord",["E"])]) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100]))){
+if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["E"])])) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100])))){
 E.put(E.get("global"),"killsgreen",0);
 E.call("audio_play_sound",[E.get("chaching"),4,false]);
 E.call("instance_destroy",[]);
@@ -2040,8 +2040,8 @@ E.set("grv",0.3);
 ,
 "gml_Object_oCrate_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2049,8 +2049,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2059,11 +2059,11 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((E.call("keyboard_check_pressed",[E.call("ord",["E"])]) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100]))){
+if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["E"])])) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100])))){
 E.put(E.get("global"),"killsgreen",0);
 E.call("audio_play_sound",[E.get("chaching"),4,false]);
 E.call("instance_destroy",[]);
-if(E.call("instance_exists",[E.get("oDanielText7")])){
+if(E.truthy(E.call("instance_exists",[E.get("oDanielText7")]))){
 E.call("instance_destroy",[E.get("oDanielText7")]);
 }
 else {}
@@ -2074,7 +2074,7 @@ else {}
 }
 ,
 "gml_Object_oCrowdsound_Collision_Object1":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.call("audio_play_sound",[E.get("chargecrowd"),8,false]);
 E.call("instance_destroy",[]);
 }
@@ -2103,7 +2103,7 @@ E.call("audio_play_sound",[E.get("bedbounce"),4,false]);
 E.set("size",E.call("random_range",[0.6,1]));
 E.put(E.get("global"),"customer2spd",(-2));
 E.put(E.get("global"),"customer2done",false);
-if(E.get("hasweapon")){
+if(E.truthy(E.get("hasweapon"))){
 E.set("mygun",E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oEgun")]));
 for(const __target1 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("owner",E.member(E.get("other"),"id"));
@@ -2117,9 +2117,9 @@ E.set("mygun",(-4));
 }
 ,
 "gml_Object_oCustoemrs2_Destroy_0":function(E){
-if(E.call("instance_exists",[E.get("oSpawner")])){
+if(E.truthy(E.call("instance_exists",[E.get("oSpawner")]))){
 for(const __target1 of E.targets(E.get("oSpawner"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.get("triggered")){
+if(E.truthy(E.get("triggered"))){
 E.putIndex(E.ensureArray("remaining"),E.get("current_wave"),(E.index(E.get("remaining"),E.get("current_wave")) - 1));
 }
 else {}
@@ -2142,12 +2142,12 @@ E.set("hasweapon",false);
 ,
 "gml_Object_oCustoemrs2_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(((E.get("grounded") && E.get("afraidofheights")) && (!E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer2spd")),(E.get("y") + 1),E.get("wall")])))){
+if(((E.truthy(E.get("grounded")) && E.truthy(E.get("afraidofheights"))) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer2spd")),(E.get("y") + 1),E.get("wall")]))))){
 E.put(E.get("global"),"customer2spd",(-E.member(E.get("global"),"customer2spd")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer2spd")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer2spd")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer2spd")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer2spd")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer2spd")])));
 }
@@ -2155,13 +2155,13 @@ E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer2spd")]
 E.put(E.get("global"),"customer2spd",(-E.member(E.get("global"),"customer2spd")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer2spd")),E.get("y"),E.get("oCustoemrs")])){
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer2spd")),E.get("y"),E.get("oCustoemrs")]))){
 E.put(E.get("global"),"customer2spd",0);
 }
 else {}
 E.set("x",(E.get("x") + E.member(E.get("global"),"customer2spd")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2169,8 +2169,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2179,7 +2179,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("grounded",false);
 E.set("sprite_index",E.get("enemyJump"));
 E.set("image_speed",0);
@@ -2208,7 +2208,7 @@ E.set("image_xscale",(E.call("sign",[E.member(E.get("global"),"customer2spd")]) 
 }
 else {}
 E.set("image_yscale",E.get("size"));
-if((E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oPetrolstationDoor153")]) && (!E.call("instance_exists",[E.get("oCustomerArea")])))){
+if((E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oPetrolstationDoor153")])) && (!E.truthy(E.call("instance_exists",[E.get("oCustomerArea")]))))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -2216,18 +2216,18 @@ if((E.member(E.get("global"),"customer2done") == true)){
 E.put(E.get("global"),"customer2spd",2);
 }
 else {}
-if((!E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea2")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea2")])))){
 E.put(E.get("global"),"customer2spd",(-2));
 }
 else {
 E.put(E.get("global"),"customer2spd",0);
 }
 
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea2")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea2")]))){
 E.put(E.get("global"),"customer2spd",0);
 }
 else {}
-if(E.call("instance_exists",[E.get("oCrate2")])){
+if(E.truthy(E.call("instance_exists",[E.get("oCrate2")]))){
 E.put(E.get("global"),"customer2spd",0);
 }
 else {}
@@ -2255,7 +2255,7 @@ for(const __target2 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target2)
 E.call("instance_destroy",[]);
 }
 }}
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oBulletsLeftGreen")]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + 0.2));
 E.put(E.get("global"),"killsgreen",(E.member(E.get("global"),"killsgreen") + 0.2));
@@ -2300,7 +2300,7 @@ E.call("audio_play_sound",[E.get("bedbounce"),4,false]);
 E.set("size",0.5);
 E.put(E.get("global"),"customer3spd",(-2));
 E.put(E.get("global"),"customer3done",false);
-if(E.get("hasweapon")){
+if(E.truthy(E.get("hasweapon"))){
 E.set("mygun",E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oEgun")]));
 for(const __target1 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("owner",E.member(E.get("other"),"id"));
@@ -2314,9 +2314,9 @@ E.set("mygun",(-4));
 }
 ,
 "gml_Object_oCustoemrs3_Destroy_0":function(E){
-if(E.call("instance_exists",[E.get("oSpawner")])){
+if(E.truthy(E.call("instance_exists",[E.get("oSpawner")]))){
 for(const __target1 of E.targets(E.get("oSpawner"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.get("triggered")){
+if(E.truthy(E.get("triggered"))){
 E.putIndex(E.ensureArray("remaining"),E.get("current_wave"),(E.index(E.get("remaining"),E.get("current_wave")) - 1));
 }
 else {}
@@ -2339,12 +2339,12 @@ E.set("hasweapon",false);
 ,
 "gml_Object_oCustoemrs3_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(((E.get("grounded") && E.get("afraidofheights")) && (!E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),(E.get("y") + 1),E.get("wall")])))){
+if(((E.truthy(E.get("grounded")) && E.truthy(E.get("afraidofheights"))) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),(E.get("y") + 1),E.get("wall")]))))){
 E.put(E.get("global"),"customer3spd",(-E.member(E.get("global"),"customer3spd")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer3spd")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer3spd")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer3spd")])));
 }
@@ -2352,12 +2352,12 @@ E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer3spd")]
 E.put(E.get("global"),"customer3spd",(-E.member(E.get("global"),"customer3spd")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),E.get("y"),E.get("oCustoemrs2")])){
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),E.get("y"),E.get("oCustoemrs2")]))){
 E.put(E.get("global"),"customer3spd",0);
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),E.get("y"),E.get("playerwall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer3spd")])),E.get("y"),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer3spd")),E.get("y"),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer3spd")])),E.get("y"),E.get("playerwall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer3spd")])));
 }
@@ -2366,8 +2366,8 @@ E.put(E.get("global"),"customer3spd",(-E.member(E.get("global"),"customer3spd"))
 }
 else {}
 E.set("x",(E.get("x") + E.member(E.get("global"),"customer3spd")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2375,8 +2375,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2385,7 +2385,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("grounded",false);
 E.set("sprite_index",E.get("enemyJump"));
 E.set("image_speed",0);
@@ -2414,7 +2414,7 @@ E.set("image_xscale",(E.call("sign",[E.member(E.get("global"),"customer3spd")]) 
 }
 else {}
 E.set("image_yscale",E.get("size"));
-if((E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oPetrolstationDoor153")]) && (!E.call("instance_exists",[E.get("oCustomerArea")])))){
+if((E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oPetrolstationDoor153")])) && (!E.truthy(E.call("instance_exists",[E.get("oCustomerArea")]))))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -2422,18 +2422,18 @@ if((E.member(E.get("global"),"customer3done") == true)){
 E.put(E.get("global"),"customer3spd",2);
 }
 else {}
-if((!E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea3")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea3")])))){
 E.put(E.get("global"),"customer3spd",(-2));
 }
 else {
 E.put(E.get("global"),"customer3spd",0);
 }
 
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea3")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oCustomerArea3")]))){
 E.put(E.get("global"),"customer3spd",0);
 }
 else {}
-if(E.call("instance_exists",[E.get("oCrate3")])){
+if(E.truthy(E.call("instance_exists",[E.get("oCrate3")]))){
 E.put(E.get("global"),"customer3spd",0);
 }
 else {}
@@ -2461,7 +2461,7 @@ for(const __target2 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target2)
 E.call("instance_destroy",[]);
 }
 }}
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oBulletsLeftGreen")]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + 0.2));
 E.put(E.get("global"),"killsgreen",(E.member(E.get("global"),"killsgreen") + 0.2));
@@ -2506,7 +2506,7 @@ E.call("audio_play_sound",[E.get("bedbounce"),4,false]);
 E.set("size",E.call("random_range",[0.6,1]));
 E.put(E.get("global"),"customer1spd",(-2));
 E.put(E.get("global"),"customer1done",false);
-if(E.get("hasweapon")){
+if(E.truthy(E.get("hasweapon"))){
 E.set("mygun",E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oEgun")]));
 for(const __target1 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("owner",E.member(E.get("other"),"id"));
@@ -2520,9 +2520,9 @@ E.set("mygun",(-4));
 }
 ,
 "gml_Object_oCustoemrs_Destroy_0":function(E){
-if(E.call("instance_exists",[E.get("oSpawner")])){
+if(E.truthy(E.call("instance_exists",[E.get("oSpawner")]))){
 for(const __target1 of E.targets(E.get("oSpawner"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.get("triggered")){
+if(E.truthy(E.get("triggered"))){
 E.putIndex(E.ensureArray("remaining"),E.get("current_wave"),(E.index(E.get("remaining"),E.get("current_wave")) - 1));
 }
 else {}
@@ -2545,12 +2545,12 @@ E.set("hasweapon",false);
 ,
 "gml_Object_oCustoemrs_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(((E.get("grounded") && E.get("afraidofheights")) && (!E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),(E.get("y") + 1),E.get("wall")])))){
+if(((E.truthy(E.get("grounded")) && E.truthy(E.get("afraidofheights"))) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),(E.get("y") + 1),E.get("wall")]))))){
 E.put(E.get("global"),"customer1spd",(-E.member(E.get("global"),"customer1spd")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])));
 }
@@ -2558,8 +2558,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")]
 E.put(E.get("global"),"customer1spd",(-E.member(E.get("global"),"customer1spd")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("playerwallcustomer")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("playerwallcustomer")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("playerwallcustomer")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("playerwallcustomer")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])));
 }
@@ -2567,8 +2567,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")]
 E.put(E.get("global"),"customer1spd",0);
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("playerwall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("playerwall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])));
 }
@@ -2576,8 +2576,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")]
 E.put(E.get("global"),"customer1spd",(-E.member(E.get("global"),"customer1spd")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.member(E.get("global"),"customer1spd")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.member(E.get("global"),"customer1spd")])));
 }
@@ -2586,8 +2586,8 @@ E.put(E.get("global"),"customer1spd",(-E.member(E.get("global"),"customer1spd"))
 }
 else {}
 E.set("x",(E.get("x") + E.member(E.get("global"),"customer1spd")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2595,8 +2595,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -2605,7 +2605,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("grounded",false);
 E.set("sprite_index",E.get("enemyJump"));
 E.set("image_speed",0);
@@ -2634,11 +2634,11 @@ E.set("image_xscale",(E.call("sign",[E.member(E.get("global"),"customer1spd")]) 
 }
 else {}
 E.set("image_yscale",E.get("size"));
-if(((!E.call("instance_exists",[E.get("oCrate")])) && (!E.call("instance_exists",[E.get("oCustomerArea")])))){
+if(((!E.truthy(E.call("instance_exists",[E.get("oCrate")]))) && (!E.truthy(E.call("instance_exists",[E.get("oCustomerArea")]))))){
 E.put(E.get("global"),"customer1spd",10);
 }
 else {}
-if((E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oPetrolstationDoor153")]) && (!E.call("instance_exists",[E.get("oCustomerArea")])))){
+if((E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oPetrolstationDoor153")])) && (!E.truthy(E.call("instance_exists",[E.get("oCustomerArea")]))))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -2662,7 +2662,7 @@ for(const __target2 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target2)
 E.call("instance_destroy",[]);
 }
 }}
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oBulletsLeftGreen")]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + 0.2));
 E.put(E.get("global"),"killsgreen",(E.member(E.get("global"),"killsgreen") + 0.2));
@@ -2702,7 +2702,7 @@ E.call("event_inherited",[]);
 "gml_Object_oCustomerArea3_Collision_oCustoemrs3":function(E){
 E.call("instance_create_layer",[(E.get("x") + 20),(E.get("y") - 30),"stuff",E.get("oCrate3")]);
 E.call("instance_destroy",[]);
-if(E.call("instance_exists",[E.get("oCrate3")])){
+if(E.truthy(E.call("instance_exists",[E.get("oCrate3")]))){
 E.put(E.get("global"),"customer3spd",0);
 }
 else {}
@@ -2715,7 +2715,7 @@ E.call("event_inherited",[]);
 "gml_Object_oCustomerArea_Collision_oCustoemrs":function(E){
 E.call("instance_create_layer",[(E.get("x") + 20),(E.get("y") - 30),"stuff",E.get("oCrate")]);
 E.call("instance_destroy",[]);
-if(E.call("instance_exists",[E.get("oCrate")])){
+if(E.truthy(E.call("instance_exists",[E.get("oCrate")]))){
 E.put(E.get("global"),"customer1spd",0);
 }
 else {}
@@ -2756,7 +2756,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oDanielText1_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("Object1"),"x"));
 E.set("y",(E.member(E.get("Object1"),"y") - 85));
 }
@@ -2812,7 +2812,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oDanielText2_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("Object1"),"x"));
 E.set("y",(E.member(E.get("Object1"),"y") - 85));
 }
@@ -2871,7 +2871,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oDanielText3_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("Object1"),"x"));
 E.set("y",(E.member(E.get("Object1"),"y") - 85));
 }
@@ -2924,7 +2924,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oDanielText4_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("Object1"),"x"));
 E.set("y",(E.member(E.get("Object1"),"y") - 85));
 }
@@ -2980,7 +2980,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oDanielText5_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("Object1"),"x"));
 E.set("y",(E.member(E.get("Object1"),"y") - 85));
 }
@@ -3043,7 +3043,7 @@ E.set("h",E.call("string_height",[E.get("text")]));
 }
 else {}
 E.set("w",E.call("string_width",[E.get("text_current")]));
-if((!E.call("instance_exists",[E.get("oPDead")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oPDead")])))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -3219,12 +3219,12 @@ E.set("hasweapon",false);
 ,
 "gml_Object_oDanielbaby115_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(((E.get("grounded") && E.get("afraidofheights")) && (!E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")])))){
+if(((E.truthy(E.get("grounded")) && E.truthy(E.get("afraidofheights"))) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")]))))){
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3232,8 +3232,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("playerwall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("playerwall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3241,8 +3241,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3251,8 +3251,8 @@ E.set("hsp",(-E.get("hsp")));
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3260,8 +3260,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3270,7 +3270,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("grounded",false);
 E.set("sprite_index",E.get("car1"));
 E.set("image_speed",0);
@@ -3334,12 +3334,12 @@ E.set("hasweapon",false);
 ,
 "gml_Object_oDanielbaby_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(((E.get("grounded") && E.get("afraidofheights")) && (!E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")])))){
+if(((E.truthy(E.get("grounded")) && E.truthy(E.get("afraidofheights"))) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")]))))){
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3347,22 +3347,22 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wallcustomer")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wallcustomer")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wallcustomer")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wallcustomer")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
 }
 E.set("hsp",(-E.get("hsp")));
 E.call("instance_create_layer",[E.member(E.get("wallcustomer"),"x"),(E.member(E.get("wallcustomer"),"y") - 200),E.get("layer"),E.get("oCrate")]);
-if(E.call("instance_exists",[E.get("oCrate")])){
+if(E.truthy(E.call("instance_exists",[E.get("oCrate")]))){
 E.call("instance_create_layer",[E.member(E.get("oCrate"),"x"),(E.member(E.get("oCrate"),"y") - 50),E.get("layer"),E.get("oCrate")]);
 }
 else {}
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("playerwall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("playerwall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3370,8 +3370,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3380,8 +3380,8 @@ E.set("hsp",(-E.get("hsp")));
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3389,8 +3389,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3399,7 +3399,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("grounded",false);
 E.set("sprite_index",E.get("danielJump"));
 E.set("image_speed",0);
@@ -3431,7 +3431,7 @@ E.set("image_yscale",E.get("size"));
 }
 ,
 "gml_Object_oDanielbaby_Step_1":function(E){
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("pshootable")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("pshootable")]))){
 for(const __target1 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("pshootable")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",7);
@@ -3467,8 +3467,8 @@ else {}
 E.set("image_yscale",E.get("size"));
 if((E.get("done") == 0)){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3477,13 +3477,13 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") - E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
 if((E.get("vsp") > 0)){
 E.set("done",1);
 E.set("image_index",1);
 }
 else {}
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3519,8 +3519,8 @@ else {}
 E.set("image_yscale",E.get("size"));
 if((E.get("done") == 0)){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3529,13 +3529,13 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") - E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
 if((E.get("vsp") > 0)){
 E.set("done",1);
 E.set("image_index",1);
 }
 else {}
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3597,7 +3597,7 @@ else {}
 E.call("instance_destroy",[]);
 }
 else {}
-if(((E.call("instance_exists",[E.get("Object1")]) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100])) && E.call("keyboard_check_pressed",[E.call("ord",["E"])]))){
+if(((E.truthy(E.call("instance_exists",[E.get("Object1")])) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100]))) && E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["E"])])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oDoorOpen")]);
 E.call("audio_play_sound",[E.get("dooropensound"),1,false]);
 E.call("instance_destroy",[]);
@@ -3639,8 +3639,8 @@ E.call("event_inherited",[]);
 "gml_Object_oDoorDead_Step_1":function(E){
 if((E.get("done") == 0)){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3649,13 +3649,13 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
 if((E.get("vsp") > 0)){
 E.set("done",1);
 E.set("image_index",1);
 }
 else {}
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3679,7 +3679,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oDoorOpen_Step_2":function(E){
-if((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120]) && E.call("keyboard_check_pressed",[E.call("ord",["Q"])]))){
+if((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120])) && E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["Q"])])))){
 E.call("instance_create_layer",[(E.get("x") - 30),E.get("y"),E.get("layer"),E.get("oDoor")]);
 E.call("instance_destroy",[E.get("oDoorOpen")]);
 E.call("audio_play_sound",[E.get("doorclosesound"),1,false]);
@@ -3721,7 +3721,7 @@ E.set("flash",3);
 }
 ,
 "gml_Object_oDoor_Step_1":function(E){
-if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),80]) && E.call("instance_exists",[E.get("Object1")])) && E.call("keyboard_check_pressed",[E.call("ord",["E"])])) && E.call("instance_exists",[E.get("oDoor")]))){
+if((((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),80])) && E.truthy(E.call("instance_exists",[E.get("Object1")]))) && E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["E"])]))) && E.truthy(E.call("instance_exists",[E.get("oDoor")])))){
 E.call("instance_create_layer",[(E.get("x") + 30),E.get("y"),E.get("layer"),E.get("oDoorOpen")]);
 E.call("instance_destroy",[E.get("oDoor")]);
 E.call("audio_play_sound",[E.get("dooropensound"),1,false]);
@@ -3743,7 +3743,7 @@ E.set("x",E.member(E.get("owner"),"x"));
 E.set("y",(E.member(E.get("owner"),"y") + 10));
 E.set("image_xscale",E.call("abs",[E.member(E.get("owner"),"image_xscale")]));
 E.set("image_yscale",E.call("abs",[E.member(E.get("owner"),"image_yscale")]));
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 if((E.member(E.get("Object1"),"x") < E.get("x"))){
 E.set("image_yscale",(-E.get("image_yscale")));
 }
@@ -3753,7 +3753,7 @@ E.set("image_angle",E.call("point_direction",[E.get("x"),E.get("y"),E.member(E.g
 E.set("countdown",(E.get("countdown") - 1));
 if((E.get("countdown") <= 0)){
 E.set("countdown",E.get("countdownrate"));
-if(((!E.call("collision_line",[E.get("x"),E.get("y"),E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("wall"),false,false])) && (!E.call("collision_line",[E.get("x"),E.get("y"),E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("oDoor"),false,false])))){
+if(((!E.truthy(E.call("collision_line",[E.get("x"),E.get("y"),E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("wall"),false,false]))) && (!E.truthy(E.call("collision_line",[E.get("x"),E.get("y"),E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("oDoor"),false,false]))))){
 E.call("audio_play_sound",[E.get("gunshot"),5,false]);
 for(const __target1 of E.targets(E.call("instance_create_layer",[E.get("x"),E.get("y"),"bullets",E.get("eEbullet")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("spd",18);
@@ -3811,7 +3811,7 @@ E.call("event_inherited",[]);
 E.declare("UnknownEnum",{"Value_3": 3});
 E.set("letters",(E.get("letters") + E.get("spd")));
 E.set("text",E.call("string_copy",[E.index(E.get("endtext"),E.get("currentline")),1,E.call("floor",[E.get("letters")])]));
-if(((E.get("letters") >= E.get("length")) && E.call("keyboard_check_pressed",[E.get("vk_anykey")]))){
+if(((E.get("letters") >= E.get("length")) && E.truthy(E.call("keyboard_check_pressed",[E.get("vk_anykey")])))){
 if(((E.get("currentline") + 1) == E.call("array_length_1d",[E.get("endtext")]))){
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_3")]);
 }
@@ -3835,7 +3835,7 @@ E.set("vsp",(-10));
 ,
 "gml_Object_oEnemyBig_Create_0":function(E){
 E.set("size",E.call("random_range",[0.1,0.8]));
-if(E.get("hasweapon")){
+if(E.truthy(E.get("hasweapon"))){
 E.set("mygun",E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oEgun")]));
 for(const __target1 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("owner",E.member(E.get("other"),"id"));
@@ -3849,9 +3849,9 @@ E.set("mygun",(-4));
 }
 ,
 "gml_Object_oEnemyBig_Destroy_0":function(E){
-if(E.call("instance_exists",[E.get("oSpawner")])){
+if(E.truthy(E.call("instance_exists",[E.get("oSpawner")]))){
 for(const __target1 of E.targets(E.get("oSpawner"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.get("triggered")){
+if(E.truthy(E.get("triggered"))){
 E.putIndex(E.ensureArray("remaining"),E.get("current_wave"),(E.index(E.get("remaining"),E.get("current_wave")) - 1));
 }
 else {}
@@ -3877,12 +3877,12 @@ E.set("hp",15);
 ,
 "gml_Object_oEnemyBig_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(((E.get("grounded") && E.get("afraidofheights")) && (!E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")])))){
+if(((E.truthy(E.get("grounded")) && E.truthy(E.get("afraidofheights"))) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")]))))){
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3890,8 +3890,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -3900,8 +3900,8 @@ E.set("hsp",(-E.get("hsp")));
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.call("screenShake",[6,25]);
@@ -3911,8 +3911,8 @@ E.call("audio_play_sound",[E.call("choose",[E.get("fatguyfal")]),4,false]);
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -3921,7 +3921,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("grounded",false);
 E.set("sprite_index",E.get("fatguy"));
 E.set("image_speed",0);
@@ -3970,7 +3970,7 @@ for(const __target2 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target2)
 E.call("instance_destroy",[]);
 }
 }}
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + E.call("random_range",[2.22,5.71])));
 E.put(E.get("global"),"killsthisroom",(E.member(E.get("global"),"killsthisroom") + 0.2));
 for(const __target3 of E.targets(E.get("oBulletsLeft"))){const E2=E.withSelf(__target3);{const E=E2;{
@@ -4014,7 +4014,7 @@ E.set("hp",0);
 ,
 "gml_Object_oEnemy_Collision_oSpring51":function(E){
 E.set("vsp",E.call("random_range",[(-10),(-40)]));
-if(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),1000])){
+if(E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),1000]))){
 E.call("audio_play_sound",[E.get("bedbounce"),4,false]);
 }
 else {}
@@ -4023,7 +4023,7 @@ else {}
 "gml_Object_oEnemy_Create_0":function(E){
 E.set("size",E.call("random_range",[0.6,1]));
 E.set("hsp",E.call("random_range",[3,8]));
-if(E.get("hasweapon")){
+if(E.truthy(E.get("hasweapon"))){
 E.set("mygun",E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oEgun")]));
 for(const __target1 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("owner",E.member(E.get("other"),"id"));
@@ -4037,9 +4037,9 @@ E.set("mygun",(-4));
 }
 ,
 "gml_Object_oEnemy_Destroy_0":function(E){
-if(E.call("instance_exists",[E.get("oSpawner")])){
+if(E.truthy(E.call("instance_exists",[E.get("oSpawner")]))){
 for(const __target1 of E.targets(E.get("oSpawner"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.get("triggered")){
+if(E.truthy(E.get("triggered"))){
 E.putIndex(E.ensureArray("remaining"),E.get("current_wave"),(E.index(E.get("remaining"),E.get("current_wave")) - 1));
 }
 else {}
@@ -4062,12 +4062,12 @@ E.set("hasweapon",false);
 ,
 "gml_Object_oEnemy_Step_0":function(E){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(((E.get("grounded") && E.get("afraidofheights")) && (!E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")])))){
+if(((E.truthy(E.get("grounded")) && E.truthy(E.get("afraidofheights"))) && (!E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),(E.get("y") + 1),E.get("wall")]))))){
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -4075,8 +4075,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("playerwall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("playerwall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -4084,8 +4084,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",(-E.get("hsp")));
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oDoor")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -4094,8 +4094,8 @@ E.set("hsp",(-E.get("hsp")));
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -4103,8 +4103,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wallcustomer")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wallcustomer")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -4112,8 +4112,8 @@ E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.set("vsp",0);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("playerwall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("playerwall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -4122,7 +4122,7 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("grounded",false);
 E.set("sprite_index",E.get("enemyJump"));
 E.set("image_speed",0);
@@ -4171,7 +4171,7 @@ for(const __target2 of E.targets(E.get("mygun"))){const E2=E.withSelf(__target2)
 E.call("instance_destroy",[]);
 }
 }}
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oBulletsLeftGreen")]);
 E.put(E.get("global"),"kills",(E.member(E.get("global"),"kills") + 5.87));
 E.put(E.get("global"),"killsgreen",(E.member(E.get("global"),"killsgreen") + 5.87));
@@ -4240,7 +4240,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oGame_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -4283,15 +4283,15 @@ E.set("grv",0.15);
 E.set("hsp",0);
 E.set("walksp",3);
 E.set("friction",0.25);
-if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),800]) && (!E.call("instance_exists",[E.get("oGirltext2")]))) && (!E.call("instance_exists",[E.get("oGirltext71")]))) && (!E.call("instance_exists",[E.get("oPDead")])))){
+if((((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),800])) && (!E.truthy(E.call("instance_exists",[E.get("oGirltext2")])))) && (!E.truthy(E.call("instance_exists",[E.get("oGirltext71")])))) && (!E.truthy(E.call("instance_exists",[E.get("oPDead")]))))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oGirltext2")]);
 }
 else {}
-if(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),200])){
+if(E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),200]))){
 E.call("instance_destroy",[E.get("oGirltext2")]);
 }
 else {}
-if((E.call("instance_exists",[E.get("oPDead")]) && (!E.call("instance_exists",[E.get("oGirltext71")])))){
+if((E.truthy(E.call("instance_exists",[E.get("oPDead")])) && (!E.truthy(E.call("instance_exists",[E.get("oGirltext71")]))))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"Gun",E.get("oGirltext71")]);
 }
 else {}
@@ -4324,7 +4324,7 @@ else {
 }
 
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),111]) && E.call("keyboard_check_pressed",[E.call("ord",["Q"])])) && (E.member(E.get("Object1"),"x") < E.member(E.get("oGirl16364"),"x"))) && E.call("instance_exists",[E.get("Object1")]))){
+if((((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),111])) && E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["Q"])]))) && (E.member(E.get("Object1"),"x") < E.member(E.get("oGirl16364"),"x"))) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oDanielbaby")]);
 E.call("audio_play_sound",[E.get("kissing"),3,false]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") - 53),(E.member(E.get("Object1"),"y") - 190),E.get("layer"),E.get("oGirl163")]);
@@ -4332,12 +4332,12 @@ E.call("instance_create_layer",[(E.member(E.get("oGirl16364"),"x") - 53),(E.memb
 }
 else {}
 E.set("hspeed",0);
-if((((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),111]) && E.call("keyboard_check",[E.call("ord",["E"])])) && E.call("instance_exists",[E.get("Object1")])) && E.member(E.get("global"),"hascontrol"))){
-if(E.call("keyboard_check",[E.call("ord",["D"])])){
+if((((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),111])) && E.truthy(E.call("keyboard_check",[E.call("ord",["E"])]))) && E.truthy(E.call("instance_exists",[E.get("Object1")]))) && E.truthy(E.member(E.get("global"),"hascontrol")))){
+if(E.truthy(E.call("keyboard_check",[E.call("ord",["D"])]))){
 E.set("x",(E.member(E.get("Object1"),"x") - 67));
 E.set("sprite_index",E.get("girlrunning"));
 }
-else if(E.call("keyboard_check",[E.call("ord",["A"])])){
+else if(E.truthy(E.call("keyboard_check",[E.call("ord",["A"])]))){
 E.set("x",(E.member(E.get("Object1"),"x") + 67));
 E.set("sprite_index",E.get("girlrunning"));
 }
@@ -4356,14 +4356,14 @@ if((E.get("aimside") != 0)){
 E.set("image_xscale",E.get("aimside"));
 }
 else {}
-if(E.call("keyboard_check_pressed",[E.get("vk_space")])){
+if(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_space")]))){
 E.set("vsp",(-9));
 E.set("sprite_index",E.get("girljump2"));
 }
 else {}
 }
 else {}
-if((!E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")]))){
+if((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + 1),E.get("wall")])))){
 E.set("sprite_index",E.get("girljump2"));
 E.set("image_speed",1);
 if((E.call("sign",[E.get("vsp")]) > 0)){
@@ -4383,7 +4383,7 @@ E.set("vsp",0);
 }
 else {}
 
-if((((E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")]) && (E.get("vsp") < 0)) && (E.get("sprite_index") != E.get("daniel113"))) && (E.get("hsp") == 0))){
+if((((E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("wall")])) && (E.get("vsp") < 0)) && (E.get("sprite_index") != E.get("daniel113"))) && (E.get("hsp") == 0))){
 E.call("audio_play_sound",[E.get("groundland"),4,false]);
 for(let __repeat3=Math.max(0,Math.trunc(5));__repeat3>0;__repeat3--){E.tick();{
 for(const __target4 of E.targets(E.call("instance_create_layer",[E.get("x"),E.get("bbox_bottom"),"bullets",E.get("odust")]))){const E2=E.withSelf(__target4);{const E=E2;{
@@ -4402,8 +4402,8 @@ if((E.member(E.get("global"),"php") == 0)){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oGirltext71")]);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 E.call("audio_play_sound",[E.call("choose",[E.get("fatguyfal")]),4,false]);
@@ -4420,8 +4420,8 @@ E.set("gravity",0);
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -4441,7 +4441,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oGirl16378_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",(E.member(E.get("oGirl16364"),"x") - 53));
 E.set("y",(E.member(E.get("oGirl16364"),"y") - 190));
 E.set("image_alpha",(E.get("image_alpha") - 0.008));
@@ -4461,7 +4461,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oGirl163_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",(E.member(E.get("Object1"),"x") - 53));
 E.set("y",(E.member(E.get("Object1"),"y") - 190));
 E.set("image_alpha",(E.get("image_alpha") - 0.008));
@@ -4522,7 +4522,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oGirltext2_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("oGirl16364"),"x"));
 E.set("y",(E.member(E.get("oGirl16364"),"y") - 85));
 }
@@ -4625,7 +4625,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oGirltext_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("oGirl16364"),"x"));
 E.set("y",(E.member(E.get("oGirl16364"),"y") - 85));
 }
@@ -4657,7 +4657,7 @@ E.put(E.get("global"),"equippedweapon",E.get("oGun59"));
 }
 ,
 "gml_Object_oGun59_KeyPress_70":function(E){
-if((((E.member(E.get("global"),"bullets") == 0) && (!E.call("cheat_enabled",["infiniteAmmo"]))) && (!E.call("instance_exists",[E.get("oDanielText1")])))){
+if((((E.member(E.get("global"),"bullets") == 0) && (!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && (!E.truthy(E.call("instance_exists",[E.get("oDanielText1")]))))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("layer"),E.get("oDanielText1")]);
 }
 else {}
@@ -4685,8 +4685,8 @@ E.set("y",(E.member(E.get("Object1"),"y") + 10));
 E.set("image_angle",E.call("point_direction",[E.get("x"),E.get("y"),E.get("mouse_x"),E.get("mouse_y")]));
 E.set("firingdelay",(E.get("firingdelay") - 1));
 E.set("recoil",E.call("max",[0,(E.get("recoil") - 1)]));
-if((E.call("keyboard_check_pressed",[E.call("ord",["F"])]) && E.member(E.get("global"),"hascontrol"))){
-if(E.member(E.get("global"),"weapon1")){
+if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])])) && E.truthy(E.member(E.get("global"),"hascontrol")))){
+if(E.truthy(E.member(E.get("global"),"weapon1"))){
 E.call("instance_change",[E.get("oGun"),true]);
 E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
 return ;
@@ -4697,8 +4697,8 @@ E.call("audio_play_sound",[E.get("gunempty"),2,false]);
 
 }
 else {}
-if(((((E.call("mouse_check_button",[E.get("mb_left")]) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"bullets") > 0) || E.call("cheat_enabled",["infiniteAmmo"]))) && E.member(E.get("global"),"hascontrol")) && E.member(E.get("global"),"dontshoot"))){
-if((!E.call("cheat_enabled",["infiniteAmmo"]))){
+if(((((E.truthy(E.call("mouse_check_button",[E.get("mb_left")])) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"bullets") > 0) || E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol"))) && E.truthy(E.member(E.get("global"),"dontshoot")))){
+if((!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))){
 E.put(E.get("global"),"bullets",(E.member(E.get("global"),"bullets") - 1));
 }
 else {}
@@ -4718,7 +4718,7 @@ E.set("gunkicky",E.call("lengthdir_y",[1,(E.member(E.get("other"),"image_angle")
 }}
 }
 else {}
-if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && (E.member(E.get("global"),"bullets") == 0)) && (!E.call("cheat_enabled",["infiniteAmmo"]))) && E.member(E.get("global"),"hascontrol"))){
+if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && (E.member(E.get("global"),"bullets") == 0)) && (!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol")))){
 E.call("audio_play_sound",[E.get("gunempty"),2,false]);
 }
 else {}
@@ -4783,8 +4783,8 @@ E.set("y",(E.member(E.get("Object1"),"y") + 10));
 E.set("image_angle",E.call("point_direction",[E.get("x"),E.get("y"),E.get("mouse_x"),E.get("mouse_y")]));
 E.set("firingdelay",(E.get("firingdelay") - 1));
 E.set("recoil",E.call("max",[0,(E.get("recoil") - 1)]));
-if((E.call("keyboard_check_pressed",[E.call("ord",["F"])]) && E.member(E.get("global"),"hascontrol"))){
-if(E.member(E.get("global"),"weapon2")){
+if((E.truthy(E.call("keyboard_check_pressed",[E.call("ord",["F"])])) && E.truthy(E.member(E.get("global"),"hascontrol")))){
+if(E.truthy(E.member(E.get("global"),"weapon2"))){
 E.call("instance_change",[E.get("oGun59"),true]);
 E.call("audio_play_sound",[E.get("reloadSound"),1,false]);
 return ;
@@ -4795,8 +4795,8 @@ E.call("audio_play_sound",[E.get("gunempty"),2,false]);
 
 }
 else {}
-if(((((E.call("mouse_check_button",[E.get("mb_left")]) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"ammo") > 0) || E.call("cheat_enabled",["infiniteAmmo"]))) && E.member(E.get("global"),"hascontrol")) && E.member(E.get("global"),"dontshoot"))){
-if((!E.call("cheat_enabled",["infiniteAmmo"]))){
+if(((((E.truthy(E.call("mouse_check_button",[E.get("mb_left")])) && (E.get("firingdelay") < 0)) && ((E.member(E.get("global"),"ammo") > 0) || E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol"))) && E.truthy(E.member(E.get("global"),"dontshoot")))){
+if((!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))){
 E.put(E.get("global"),"ammo",(E.member(E.get("global"),"ammo") - 1));
 }
 else {}
@@ -4816,7 +4816,7 @@ E.set("gunkicky",E.call("lengthdir_y",[1,(E.member(E.get("other"),"image_angle")
 }}
 }
 else {}
-if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && (E.member(E.get("global"),"ammo") == 0)) && (!E.call("cheat_enabled",["infiniteAmmo"]))) && E.member(E.get("global"),"hascontrol"))){
+if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && (E.member(E.get("global"),"ammo") == 0)) && (!E.truthy(E.call("cheat_enabled",["infiniteAmmo"])))) && E.truthy(E.member(E.get("global"),"hascontrol")))){
 E.call("audio_play_sound",[E.get("gunempty"),2,false]);
 }
 else {}
@@ -4842,9 +4842,9 @@ E.set("killtextscale",1);
 "gml_Object_oHealthBar_Draw_64":function(E){
 E.set("heartheight",10);
 E.set("horizontalhearts",(-60));
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
-if((E.call("place_meeting",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("oGirl1")]) && (E.member(E.get("global"),"php") < 8))){
+if((E.truthy(E.call("place_meeting",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("oGirl1")])) && (E.member(E.get("global"),"php") < 8))){
 E.put(E.get("global"),"php",(E.member(E.get("global"),"php") + 1));
 }
 else {}
@@ -4970,15 +4970,15 @@ else {
 E.set("image_index",0);
 }
 
-if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100])) && E.call("instance_exists",[E.get("oQuestMarker2")]))){
-E.call("layer_set_visible",["Gun",(!E.get("visible"))]);
+if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100]))) && E.truthy(E.call("instance_exists",[E.get("oQuestMarker2")])))){
+E.call("layer_set_visible",["Gun",(!E.truthy(E.get("visible")))]);
 E.put(E.get("global"),"hascontrol",0);
 E.call("instance_create_layer",[(E.member(E.get("oJobSign"),"x") - 122),(E.member(E.get("oJobSign"),"y") + 122),"gobackbutton",E.get("ojobmenu")]);
 E.call("instance_create_layer",[(E.member(E.get("oJobSign"),"x") - 350),(E.member(E.get("oJobSign"),"y") - 93),"gobackbutton2",E.get("ojobbutton1")]);
 E.call("instance_create_layer",[(E.member(E.get("oJobSign"),"x") - 55),(E.member(E.get("oJobSign"),"y") - 93),"gobackbutton2",E.get("ojobbutton2")]);
 }
 else {}
-if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100])) && (!E.call("instance_exists",[E.get("oQuestMarker2")])))){
+if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),100]))) && (!E.truthy(E.call("instance_exists",[E.get("oQuestMarker2")]))))){
 E.call("instance_create_layer",[(E.member(E.get("oJobSign"),"x") + 30),(E.member(E.get("oJobSign"),"y") - 30),E.get("layer"),E.get("oDanielText8")]);
 }
 else {}
@@ -5011,8 +5011,8 @@ E.set("direction",E.call("point_direction",[E.member(E.get("other"),"x"),E.membe
 "gml_Object_oLadder_Collision_wall":function(E){
 E.set("gravity",0);
 E.set("vspeed",(E.get("vspeed") + E.get("gravity")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vspeed")),E.get("wall")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vspeed")])),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vspeed")),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vspeed")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vspeed")])));
 }
@@ -5043,7 +5043,7 @@ E.call("event_inherited",[]);
 "gml_Object_oLevelEnd53_Collision_Object1":function(E){
 E.declare("UnknownEnum",{"Value_2": 2});
 for(const __target1 of E.targets(E.get("Object1"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.member(E.get("global"),"hascontrol")){
+if(E.truthy(E.member(E.get("global"),"hascontrol"))){
 E.put(E.get("global"),"hascontrol",false);
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_2"),E.member(E.get("other"),"target")]);
 }
@@ -5070,7 +5070,7 @@ E.call("event_inherited",[]);
 "gml_Object_oLevelEnd_Collision_Object1":function(E){
 E.declare("UnknownEnum",{"Value_2": 2});
 for(const __target1 of E.targets(E.get("Object1"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.member(E.get("global"),"hascontrol")){
+if(E.truthy(E.member(E.get("global"),"hascontrol"))){
 E.put(E.get("global"),"hascontrol",false);
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_2"),E.member(E.get("other"),"target")]);
 }
@@ -5097,7 +5097,7 @@ E.call("event_inherited",[]);
 "gml_Object_oLeveldoor_Collision_Object1":function(E){
 E.declare("UnknownEnum",{"Value_2": 2});
 for(const __target1 of E.targets(E.get("Object1"))){const E2=E.withSelf(__target1);{const E=E2;{
-if(E.member(E.get("global"),"hascontrol")){
+if(E.truthy(E.member(E.get("global"),"hascontrol"))){
 E.put(E.get("global"),"hascontrol",false);
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_2"),E.member(E.get("other"),"target")]);
 }
@@ -5178,8 +5178,8 @@ E.call("event_inherited",[]);
 "gml_Object_oMenu_Step_0":function(E){
 E.declare("UnknownEnum",{"Value_1": 1, "Value_2": 2});
 E.set("menu_x",(E.get("menu_x") + ((E.get("menu_x_target") - E.get("menu_x")) / E.get("menu_speed"))));
-if(E.get("menu_control")){
-if(E.call("keyboard_check_pressed",[E.get("vk_up")])){
+if(E.truthy(E.get("menu_control"))){
+if(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_up")]))){
 E.set("menu_cursor",(E.get("menu_cursor") + 1));
 if((E.get("menu_cursor") >= E.get("menu_items"))){
 E.set("menu_cursor",0);
@@ -5187,7 +5187,7 @@ E.set("menu_cursor",0);
 else {}
 }
 else {}
-if(E.call("keyboard_check_pressed",[E.get("vk_down")])){
+if(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_down")]))){
 E.set("menu_cursor",(E.get("menu_cursor") - 1));
 if((E.get("menu_cursor") < 0)){
 E.set("menu_cursor",(E.get("menu_items") - 1));
@@ -5195,7 +5195,7 @@ E.set("menu_cursor",(E.get("menu_items") - 1));
 else {}
 }
 else {}
-if(E.call("keyboard_check_pressed",[E.get("vk_enter")])){
+if(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_enter")]))){
 E.set("menu_x_target",(E.get("gui_width") + 200));
 E.set("menu_committed",E.get("menu_cursor"));
 E.call("screenShake",[4,30]);
@@ -5206,7 +5206,7 @@ else {}
 E.declare("mouse_y_gui",E.call("device_mouse_y_to_gui",[0]));
 if(((E.get("mouse_y_gui") < E.get("menu_y")) && (E.get("mouse_y_gui") > E.get("menu_top")))){
 E.set("menu_cursor",Math.trunc((E.get("menu_y") - E.get("mouse_y_gui"))/(E.get("menu_itemheight") * 1.5)));
-if(E.call("mouse_check_button_pressed",[E.get("mb_left")])){
+if(E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))){
 E.set("menu_x_target",(E.get("gui_width") + 200));
 E.set("menu_committed",E.get("menu_cursor"));
 E.call("screenShake",[4,30]);
@@ -5222,7 +5222,7 @@ if(((E.get("menu_x") > (E.get("gui_width") + 150)) && (E.get("menu_committed") !
 switch(E.get("menu_committed")){case 2:default:E.call("new_adventure",[]);
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_1")]);
 break;
-case 1:if((!E.call("file_exists",["Save.sav"]))){
+case 1:if((!E.truthy(E.call("file_exists",["Save.sav"])))){
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_1")]);
 }
 else {
@@ -5292,7 +5292,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oMumText2_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("oMum"),"x"));
 E.set("y",(E.member(E.get("oMum"),"y") - 110));
 }
@@ -5345,7 +5345,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oMumText3_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("oMum"),"x"));
 E.set("y",(E.member(E.get("oMum"),"y") - 110));
 }
@@ -5398,7 +5398,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oMumTextCompletequest_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("oMum"),"x"));
 E.set("y",(E.member(E.get("oMum"),"y") - 110));
 }
@@ -5451,7 +5451,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oMumText_Step_0":function(E){
-if(E.call("instance_exists",[E.get("Object1")])){
+if(E.truthy(E.call("instance_exists",[E.get("Object1")]))){
 E.set("x",E.member(E.get("oMum"),"x"));
 E.set("y",(E.member(E.get("oMum"),"y") - 110));
 }
@@ -5487,7 +5487,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oMum_Step_0":function(E){
-if((((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120]))){
+if((((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120])))){
 E.set("sprite_index",E.get("mum2"));
 E.put(E.get("global"),"dontshoot",false);
 }
@@ -5495,17 +5495,17 @@ else {
 E.set("sprite_index",E.get("mum1"));
 }
 
-if(((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"quest1") == 0)) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120])) && (E.member(E.get("global"),"acceptedquest") == false))){
+if(((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"quest1") == 0)) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120]))) && (E.member(E.get("global"),"acceptedquest") == false))){
 E.call("instance_create_layer",[(E.get("x") + 27),(E.get("y") - 266),"bullets",E.get("oQuestBox")]);
 E.call("instance_create_layer",[(E.get("x") + 280),(E.get("y") - 10),"buttons",E.get("oQuestAnswer1")]);
 E.call("instance_create_layer",[(E.get("x") + 280),(E.get("y") + 80),"buttons",E.get("oQuestAnswer2")]);
 E.call("instance_create_layer",[(E.get("x") + 280),(E.get("y") + 170),"buttons",E.get("oQuestAnswer3")]);
 E.put(E.get("global"),"hascontrol",0);
 E.call("audio_play_sound",[E.get("clicks"),3,false]);
-E.call("layer_set_visible",["gun",(!E.get("visible"))]);
+E.call("layer_set_visible",["gun",(!E.truthy(E.get("visible")))]);
 }
 else {}
-if(((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"quest1") == 1)) && (!E.call("instance_exists",[E.get("oMumText")]))) && E.call("instance_exists",[E.get("oQuestObjectives")]))){
+if(((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"quest1") == 1)) && (!E.truthy(E.call("instance_exists",[E.get("oMumText")])))) && E.truthy(E.call("instance_exists",[E.get("oQuestObjectives")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oMumTextCompletequest")]);
 E.call("audio_play_sound",[E.call("choose",[E.get("chaching")]),2,false]);
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oBulletsLeftGreen")]);
@@ -5514,7 +5514,7 @@ E.put(E.get("global"),"killsgreen",(E.member(E.get("global"),"killsgreen") + 50)
 E.call("greentext",[]);
 E.call("instance_destroy",[E.get("oQuestObjectives")]);
 }
-else if(((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"acceptedquest") == true)) && (E.member(E.get("global"),"quest1") == 0)) && (!E.call("instance_exists",[E.get("oMumText3")])))){
+else if(((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && (E.member(E.get("global"),"acceptedquest") == true)) && (E.member(E.get("global"),"quest1") == 0)) && (!E.truthy(E.call("instance_exists",[E.get("oMumText3")]))))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oMumText3")]);
 }
 else {}
@@ -5526,9 +5526,9 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oNepalGuy_Step_0":function(E){
-if(((((!E.call("instance_exists",[E.get("oCustoemrs")])) && (!E.call("instance_exists",[E.get("oCustoemrs2")]))) && (!E.call("instance_exists",[E.get("oCustoemrs3")]))) && E.call("instance_exists",[E.get("oQuestObjectives3")]))){
+if(((((!E.truthy(E.call("instance_exists",[E.get("oCustoemrs")]))) && (!E.truthy(E.call("instance_exists",[E.get("oCustoemrs2")])))) && (!E.truthy(E.call("instance_exists",[E.get("oCustoemrs3")])))) && E.truthy(E.call("instance_exists",[E.get("oQuestObjectives3")])))){
 E.put(E.get("global"),"quest3",1);
-if((!E.call("instance_exists",[E.get("oNepalguytext")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oNepalguytext")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oNepalguytext")]);
 }
 else {}
@@ -5541,9 +5541,9 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oNepalguysound_Step_0":function(E){
-if(((((!E.call("instance_exists",[E.get("oCustoemrs")])) && (!E.call("instance_exists",[E.get("oCustoemrs2")]))) && (!E.call("instance_exists",[E.get("oCustoemrs3")]))) && E.call("instance_exists",[E.get("oQuestObjectives3")]))){
+if(((((!E.truthy(E.call("instance_exists",[E.get("oCustoemrs")]))) && (!E.truthy(E.call("instance_exists",[E.get("oCustoemrs2")])))) && (!E.truthy(E.call("instance_exists",[E.get("oCustoemrs3")])))) && E.truthy(E.call("instance_exists",[E.get("oQuestObjectives3")])))){
 E.call("instance_destroy",[]);
-if((!E.member(E.get("global"),"petrolpaid"))){
+if((!E.truthy(E.member(E.get("global"),"petrolpaid")))){
 E.put(E.get("global"),"petrolpaid",true);
 E.put(E.get("global"),"quest3",1);
 E.call("audio_play_sound",[E.get("powerup"),4,false]);
@@ -5641,8 +5641,8 @@ E.call("event_inherited",[]);
 "gml_Object_oPDead_Step_0":function(E){
 if((E.get("done") == 0)){
 E.set("vsp",(E.get("vsp") + E.get("grv")));
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("wall")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("wall")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -5651,7 +5651,7 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
 if((E.get("vsp") > 0)){
 E.call("audio_play_sound",[E.get("splash"),2,false]);
 E.call("instance_create_layer",[E.member(E.get("oPDead"),"x"),(E.member(E.get("oPDead"),"y") - 80),E.get("layer"),E.get("oDanielText6")]);
@@ -5664,7 +5664,7 @@ E.put(E.get("Object1"),"x",E.member(E.get("oPDead"),"x"));
 E.put(E.get("Object1"),"y",(E.member(E.get("oPDead"),"y") + 2.5));
 }
 else {}
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")]))){E.tick();
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }
@@ -5679,12 +5679,12 @@ if((E.get("hspeed") == 0)){
 E.call("instance_create_layer",[E.member(E.get("oPDead"),"x"),(E.member(E.get("oPDead"),"y") + 500),"player",E.get("oDanielText6")]);
 }
 else {}
-if(((E.call("keyboard_check_pressed",[E.get("vk_space")]) && (E.get("vsp") == 0)) && (E.get("done") == 1))){
+if(((E.truthy(E.call("keyboard_check_pressed",[E.get("vk_space")])) && (E.get("vsp") == 0)) && (E.get("done") == 1))){
 E.call("instance_destroy",[]);
 E.put(E.get("global"),"hascontrol",1);
 E.call("layer_set_visible",["player",true]);
 E.call("layer_set_visible",["Gun",true]);
-if(E.call("instance_exists",[E.get("oBedSleep")])){
+if(E.truthy(E.call("instance_exists",[E.get("oBedSleep")]))){
 E.put(E.get("Object1"),"x",E.member(E.get("oBedSleep"),"x"));
 E.put(E.get("Object1"),"y",(E.member(E.get("oBedSleep"),"y") - 90));
 }
@@ -5706,13 +5706,13 @@ E.call("instance_destroy",[E.get("oBulletsLeftRed")]);
 E.call("instance_destroy",[E.get("oDanielText6")]);
 E.call("instance_destroy",[E.get("oGun")]);
 E.call("instance_destroy",[E.get("oGun59")]);
-if(((E.member(E.get("global"),"respawnweapon") == E.get("oGun59")) && E.member(E.get("global"),"weapon2"))){
+if(((E.member(E.get("global"),"respawnweapon") == E.get("oGun59")) && E.truthy(E.member(E.get("global"),"weapon2")))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun59")]);
 }
-else if(E.member(E.get("global"),"weapon1")){
+else if(E.truthy(E.member(E.get("global"),"weapon1"))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun")]);
 }
-else if(E.member(E.get("global"),"weapon2")){
+else if(E.truthy(E.member(E.get("global"),"weapon2"))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun59")]);
 }
 else {}
@@ -5741,7 +5741,7 @@ else {
 E.set("image_index",0);
 }
 
-if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),200])) && (E.member(E.get("global"),"quest3") == 1))){
+if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),200]))) && (E.member(E.get("global"),"quest3") == 1))){
 E.call("audio_play_sound",[E.get("doorclosesound"),4,false]);
 E.put(E.get("Object1"),"x",E.member(E.get("oJobSign"),"x"));
 E.put(E.get("Object1"),"y",(E.member(E.get("oJobSign"),"y") - 100));
@@ -5750,7 +5750,7 @@ E.put(E.get("global"),"hasquest3",0);
 E.put(E.get("global"),"hasslept",false);
 E.call("instance_destroy",[E.get("oGun")]);
 E.call("instance_destroy",[E.get("oGun59")]);
-if(((E.member(E.get("global"),"petrolweapon") == E.get("oGun59")) && E.member(E.get("global"),"weapon2"))){
+if(((E.member(E.get("global"),"petrolweapon") == E.get("oGun59")) && E.truthy(E.member(E.get("global"),"weapon2")))){
 E.call("instance_create_layer",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),"Gun",E.get("oGun59")]);
 }
 else {
@@ -5778,7 +5778,7 @@ else {
 E.set("image_index",0);
 }
 
-if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),200])) && E.call("instance_exists",[E.get("oQuestObjectives3")]))){
+if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),200]))) && E.truthy(E.call("instance_exists",[E.get("oQuestObjectives3")])))){
 E.put(E.get("Object1"),"x",(E.member(E.get("wallcustomer"),"x") - 60));
 E.put(E.get("Object1"),"y",(E.member(E.get("wallcustomer"),"y") - 100));
 E.call("instance_destroy",[E.get("playerwallcustomer")]);
@@ -5787,7 +5787,7 @@ E.put(E.get("global"),"customer1spd",(-2));
 E.put(E.get("global"),"customer2spd",(-2));
 E.put(E.get("global"),"customer3spd",(-2));
 E.put(E.get("global"),"petrolweapon",E.get("oGun"));
-if(E.call("instance_exists",[E.get("oGun59")])){
+if(E.truthy(E.call("instance_exists",[E.get("oGun59")]))){
 E.put(E.get("global"),"petrolweapon",E.get("oGun59"));
 }
 else {}
@@ -5798,7 +5798,7 @@ else {}
 }
 ,
 "gml_Object_oPunch_Create_0":function(E){
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oSign")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oSign")]))){
 for(const __target1 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("oSign")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
@@ -5808,7 +5808,7 @@ E.set("hitfrom",E.member(E.get("other"),"direction"));
 E.call("instance_destroy",[]);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oDoor")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oDoor")]))){
 for(const __target2 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("oDoor")]))){const E2=E.withSelf(__target2);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
@@ -5818,7 +5818,7 @@ E.set("hitfrom",E.member(E.get("other"),"direction"));
 E.call("instance_destroy",[]);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oEnemy")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oEnemy")]))){
 for(const __target3 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("oEnemy")]))){const E2=E.withSelf(__target3);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
@@ -5851,14 +5851,14 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),3,false]);
 E.call("instance_destroy",[E.get("oQuestBox")]);
 E.call("instance_destroy",[]);
 E.call("instance_destroy",[E.get("oQuestAnswer2")]);
 E.call("instance_destroy",[E.get("oQuestAnswer3")]);
 E.put(E.get("global"),"hascontrol",1);
-if((!E.call("instance_exists",[E.get("oMumText2")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oMumText2")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oMumText2")]);
 }
 else {}
@@ -5882,7 +5882,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),3,false]);
 E.call("layer_set_visible",["gun",E.get("visible")]);
 E.call("instance_destroy",[E.get("oQuestBox")]);
@@ -5891,19 +5891,19 @@ E.call("instance_destroy",[E.get("oQuestAnswer1")]);
 E.call("instance_destroy",[E.get("oQuestAnswer2")]);
 E.call("instance_destroy",[E.get("oQuestAnswer3")]);
 E.put(E.get("global"),"hascontrol",1);
-if(E.call("instance_exists",[E.get("oMumText2")])){
+if(E.truthy(E.call("instance_exists",[E.get("oMumText2")]))){
 E.call("instance_destroy",[E.get("oMumText2")]);
 }
 else {}
-if((!E.call("instance_exists",[E.get("oMumText2")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oMumText2")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oMumText")]);
 }
 else {}
-if((!E.call("instance_exists",[E.get("oMumText")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oMumText")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oMumText")]);
 }
 else {}
-if((!E.call("instance_exists",[E.get("oQuestObjectives")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oQuestObjectives")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"quests",E.get("oQuestObjectives")]);
 for(const __target1 of E.targets(E.get("oQuestObjectives"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("killtextscale",2);
@@ -5931,7 +5931,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("audio_play_sound",[E.get("clicks"),3,false]);
 E.call("instance_destroy",[E.get("oQuestBox")]);
 E.call("instance_destroy",[E.get("oQuestAnswer1")]);
@@ -5940,7 +5940,7 @@ E.call("instance_destroy",[E.get("oQuestAnswer3")]);
 E.call("layer_set_visible",["gun",E.get("visible")]);
 E.put(E.get("global"),"hascontrol",1);
 E.call("instance_destroy",[E.get("oMumText")]);
-if((!E.call("instance_exists",[E.get("oMumText2")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oMumText2")])))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oMumText2")]);
 }
 else {}
@@ -5961,7 +5961,7 @@ E.set("y",(E.member(E.get("oMum"),"y") - 266));
 }
 ,
 "gml_Object_oQuestLocation_Collision_Object1":function(E){
-if(E.call("instance_exists",[E.get("oQuestObjectives")])){
+if(E.truthy(E.call("instance_exists",[E.get("oQuestObjectives")]))){
 E.put(E.get("global"),"quest1",(E.member(E.get("global"),"quest1") + 1));
 for(const __target1 of E.targets(E.get("oQuestObjectives"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("killtextscale",2);
@@ -6009,7 +6009,7 @@ E.call("event_inherited",[]);
 ,
 "gml_Object_oQuestMarker_Step_0":function(E){
 E.set("y",(E.get("ystart") + (E.call("sin",[(E.call("get_timer",[]) / 200000)]) * 10)));
-if(E.call("instance_exists",[E.get("oQuestObjectives")])){
+if(E.truthy(E.call("instance_exists",[E.get("oQuestObjectives")]))){
 E.set("image_alpha",(E.get("image_alpha") - 0.008));
 }
 else {}
@@ -6022,7 +6022,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oQuestObjectives2_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,0,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -6046,13 +6046,13 @@ E.call("display_set_gui_size",[1024,768]);
 E.put(E.get("global"),"quest3",0);
 E.set("killtextscale",1);
 if((E.member(E.get("global"),"hasquest3") == 0)){
-E.call("layer_set_visible",["questlayer",(!E.get("visible"))]);
+E.call("layer_set_visible",["questlayer",(!E.truthy(E.get("visible")))]);
 }
 else {}
 }
 ,
 "gml_Object_oQuestObjectives3_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,0,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -6076,13 +6076,13 @@ E.call("display_set_gui_size",[1024,768]);
 E.put(E.get("global"),"quest1",0);
 E.set("killtextscale",1);
 if((E.member(E.get("global"),"hasquest1") == 0)){
-E.call("layer_set_visible",["questlayer",(!E.get("visible"))]);
+E.call("layer_set_visible",["questlayer",(!E.truthy(E.get("visible")))]);
 }
 else {}
 }
 ,
 "gml_Object_oQuestObjectives_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,0,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -6148,7 +6148,7 @@ E.set("text2","dede");
 }
 ,
 "gml_Object_oSign_Step_0":function(E){
-if(((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("image_index",1);
 E.put(E.get("global"),"dontshoot",false);
 }
@@ -6156,8 +6156,8 @@ else {
 E.set("image_index",0);
 }
 
-if((((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120])) && E.call("place_meeting",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("wall")]))){
-if(((E.call("point_in_circle",[E.member(E.get("oSign"),"x"),E.member(E.get("oSign"),"y"),E.get("x"),E.get("y"),100]) && (!E.call("instance_exists",[E.get("oButtongoback")]))) && E.call("instance_exists",[E.get("Object1")]))){
+if((((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom")))) && E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),120]))) && E.truthy(E.call("place_meeting",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("wall")])))){
+if(((E.truthy(E.call("point_in_circle",[E.member(E.get("oSign"),"x"),E.member(E.get("oSign"),"y"),E.get("x"),E.get("y"),100])) && (!E.truthy(E.call("instance_exists",[E.get("oButtongoback")])))) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.call("audio_play_sound",[E.get("clicks"),4,false]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 80),(E.member(E.get("Object1"),"y") - 550),"computerbackgrounds",E.get("oshopping2")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 455),(E.member(E.get("Object1"),"y") - 154),"buttons",E.get("oButtonAmazon")]);
@@ -6167,12 +6167,12 @@ E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") - 70),(E.member(
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 455),(E.member(E.get("Object1"),"y") - 7),"buttons",E.get("oButtonMail")]);
 E.call("instance_create_layer",[(E.member(E.get("Object1"),"x") + 700),(E.member(E.get("Object1"),"y") + 66),"gobackbutton2",E.get("oButtonOff")]);
 E.put(E.get("global"),"hascontrol",0);
-E.call("layer_set_visible",["Gun",(!E.get("visible"))]);
+E.call("layer_set_visible",["Gun",(!E.truthy(E.get("visible")))]);
 if((E.member(E.get("global"),"messageread") == 1)){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"gobackbutton",E.get("oMessageRead")]);
 }
 else {}
-E.call("layer_set_visible",["quests",(!E.get("visible"))]);
+E.call("layer_set_visible",["quests",(!E.truthy(E.get("visible")))]);
 }
 else {}
 }
@@ -6194,12 +6194,12 @@ E.call("event_inherited",[]);
 ,
 "gml_Object_oSleepBlck119_Step_0":function(E){
 E.set("image_alpha",E.call("max",[0,(E.get("image_alpha") - 0.005)]));
-if(((!E.get("woken")) && (E.get("image_alpha") <= 0.5))){
+if(((!E.truthy(E.get("woken"))) && (E.get("image_alpha") <= 0.5))){
 E.set("woken",true);
 E.put(E.get("global"),"hascontrol",1);
 }
 else {}
-if(((!E.get("messagecleared")) && (E.get("image_alpha") <= 0.3))){
+if(((!E.truthy(E.get("messagecleared"))) && (E.get("image_alpha") <= 0.3))){
 E.set("messagecleared",true);
 E.call("instance_destroy",[E.get("oText5")]);
 }
@@ -6254,7 +6254,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_oSlowmo_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_text_transformed",[759,12,("slowmo: " + E.call("string",[E.member(E.get("global"),"slowmo")])),E.get("killtextscale"),E.get("killtextscale"),0]);
@@ -6277,7 +6277,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oSpawn_Step_0":function(E){
-if(((!E.call("instance_exists",[E.get("oCustoemrs3")])) && (!E.call("instance_exists",[E.get("oCustoemrs")])))){
+if(((!E.truthy(E.call("instance_exists",[E.get("oCustoemrs3")]))) && (!E.truthy(E.call("instance_exists",[E.get("oCustoemrs")]))))){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oCustoemrs")]);
 }
 else {}
@@ -6324,7 +6324,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oSpawner_Step_0":function(E){
-if(E.get("triggered")){
+if(E.truthy(E.get("triggered"))){
 {E.declare("i",0);
 for(;(E.get("i") < E.call("ds_list_size",[E.get("waves")]));E.set("i",(E.get("i") + 1))){E.tick();{
 E.declare("next",E.call("ds_list_find_value",[E.get("waves"),E.get("i")]));
@@ -6427,7 +6427,7 @@ E.set("h",E.call("string_height",[E.get("text")]));
 }
 else {}
 E.set("w",E.call("string_width",[E.get("text_current")]));
-if((!E.call("instance_exists",[E.get("oSign")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oSign")])))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -6468,7 +6468,7 @@ E.set("h",E.call("string_height",[E.get("text")]));
 }
 else {}
 E.set("w",E.call("string_width",[E.get("text_current")]));
-if((!E.call("instance_exists",[E.get("oSign")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oSign")])))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -6509,7 +6509,7 @@ E.set("h",E.call("string_height",[E.get("text")]));
 }
 else {}
 E.set("w",E.call("string_width",[E.get("text_current")]));
-if((!E.call("instance_exists",[E.get("oSign")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oSign")])))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -6551,11 +6551,11 @@ E.set("h",E.call("string_height",[E.get("text")]));
 }
 else {}
 E.set("w",E.call("string_width",[E.get("text_current")]));
-if((!E.call("instance_exists",[E.get("oSign")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oSign")])))){
 E.call("instance_destroy",[]);
 }
 else {}
-if((E.call("instance_exists",[E.get("oSleepBlck119")]) && (E.member(E.get("oSleepBlck119"),"image_alpha") == 0.5))){
+if((E.truthy(E.call("instance_exists",[E.get("oSleepBlck119")])) && (E.member(E.get("oSleepBlck119"),"image_alpha") == 0.5))){
 E.call("instance_destroy",[]);
 }
 else {}
@@ -6592,7 +6592,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oText_Step_0":function(E){
-if((E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),300]) && (!E.call("instance_exists",[E.get("oText2")])))){
+if((E.truthy(E.call("point_in_circle",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("x"),E.get("y"),300])) && (!E.truthy(E.call("instance_exists",[E.get("oText2")]))))){
 E.set("letters",(E.get("letters") + E.get("spd")));
 E.set("text_current",E.call("string_copy",[E.get("text"),0,E.get("letters")]));
 E.call("draw_set_font",[E.get("fsign")]);
@@ -6675,7 +6675,7 @@ E.set("killtextscale",1);
 }
 ,
 "gml_Object_obulletsgreentimer_Draw_64":function(E){
-if(((E.get("room") != E.get("rMenu")) && E.call("instance_exists",[E.get("Object1")]))){
+if(((E.get("room") != E.get("rMenu")) && E.truthy(E.call("instance_exists",[E.get("Object1")])))){
 E.set("killtextscale",E.call("max",[(E.get("killtextscale") * 0.95),1]));
 E.call("DrawSetText",[0,1,2,0]);
 E.call("draw_set_colour",[E.get("c_white")]);
@@ -6755,7 +6755,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.call("instance_destroy",[E.get("ojobbutton1")]);
 E.call("instance_destroy",[E.get("ojobbutton2")]);
 E.call("instance_destroy",[E.get("ojobmenu")]);
@@ -6789,7 +6789,7 @@ else {
 E.set("image_index",0);
 }
 
-if((E.call("mouse_check_button_pressed",[E.get("mb_left")]) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
+if((E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")])) && ((((E.get("mouse_x") >= E.get("bbox_left")) && (E.get("mouse_x") <= E.get("bbox_right"))) && (E.get("mouse_y") >= E.get("bbox_top"))) && (E.get("mouse_y") <= E.get("bbox_bottom"))))){
 E.put(E.get("global"),"hascontrol",1);
 E.call("layer_set_visible",["gun",E.get("visible")]);
 E.call("instance_destroy",[E.get("ojobbutton1")]);
@@ -6976,7 +6976,7 @@ if((E.get("hp") <= 0)){
 E.call("instance_destroy",[]);
 }
 else {}
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oGirl16364")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oGirl16364")]))){
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
 E.set("hitfrom",E.member(E.get("other"),"direction"));
@@ -7318,14 +7318,14 @@ E.call("draw_set_valign",[E.get("arg3")]);
 },
 "KillPlayer":function(E){
 {
-if((E.call("cheat_enabled",["invincible"]) || E.call("instance_exists",[E.get("oPDead")]))){
+if((E.truthy(E.call("cheat_enabled",["invincible"])) || E.truthy(E.call("instance_exists",[E.get("oPDead")])))){
 return ;
 }
 else {}
 E.put(E.get("global"),"php",E.call("max",[0,(E.member(E.get("global"),"php") - 1)]));
 if((E.member(E.get("global"),"php") == 0)){
 E.put(E.get("global"),"respawnweapon",E.get("oGun"));
-if(E.call("instance_exists",[E.get("oGun59")])){
+if(E.truthy(E.call("instance_exists",[E.get("oGun59")]))){
 E.put(E.get("global"),"respawnweapon",E.get("oGun59"));
 }
 else {}
@@ -7338,7 +7338,7 @@ E.call("instance_destroy",[]);
 }
 }}
 E.call("instance_create_layer",[E.get("x"),E.get("y"),"bullets",E.get("oPDead")]);
-E.call("layer_set_visible",["player",(!E.get("visible"))]);
+E.call("layer_set_visible",["player",(!E.truthy(E.get("visible")))]);
 E.put(E.get("global"),"hascontrol",0);
 E.put(E.get("Object1"),"x",E.member(E.get("oPDead"),"x"));
 E.call("instance_destroy",[E.get("oBulletsLeftGreen")]);
@@ -7360,11 +7360,11 @@ else {}
 },
 "KillPlayer9":function(E){
 {
-if((E.call("cheat_enabled",["invincible"]) || E.call("instance_exists",[E.get("oPDead")]))){
+if((E.truthy(E.call("cheat_enabled",["invincible"])) || E.truthy(E.call("instance_exists",[E.get("oPDead")])))){
 return ;
 }
 else {}
-if(E.call("place_meeting",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("oKillTrigger")])){
+if(E.truthy(E.call("place_meeting",[E.member(E.get("Object1"),"x"),E.member(E.get("Object1"),"y"),E.get("oKillTrigger")]))){
 E.put(E.get("global"),"php",E.call("max",[0,(E.member(E.get("global"),"php") - 1)]));
 if((E.member(E.get("global"),"php") == 0)){
 for(const __target1 of E.targets(E.get("oGun"))){const E2=E.withSelf(__target1);{const E=E2;{
@@ -7431,7 +7431,7 @@ E.set("automatic",E.call("ds_map_find_value",[E.get("wp_map"),"automatic"]));
 },
 "destroycomputer":function(E){
 {
-if(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oSign")])){
+if(E.truthy(E.call("place_meeting",[E.get("x"),E.get("y"),E.get("oSign")]))){
 for(const __target1 of E.targets(E.call("instance_place",[E.get("x"),E.get("y"),E.get("oSign")]))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("hp",(E.get("hp") - 1));
 E.set("flash",3);
@@ -7484,7 +7484,7 @@ else {}
 },
 "loadgame":function(E){
 {
-if(E.call("file_exists",["User.sav"])){
+if(E.truthy(E.call("file_exists",["User.sav"]))){
 E.call("ini_open",["User.sav"]);
 E.put(E.get("global"),"kills",E.call("ini_read_real",["Save1","gscore",E.member(E.get("global"),"kills")]));
 E.put(E.get("global"),"ammo",E.call("ini_read_real",["Save1","gammo",E.member(E.get("global"),"ammo")]));
@@ -7496,7 +7496,7 @@ E.put(E.get("global"),"tapes",E.call("ini_read_real",["Save1","gtapes",E.member(
 E.put(E.get("global"),"takenallowance",E.call("ini_read_real",["Save1","gallowance",E.member(E.get("global"),"takenallowance")]));
 E.call("ini_close",[]);
 E.put(E.get("global"),"php",E.call("clamp",[E.call("floor",[E.member(E.get("global"),"php")]),0,8]));
-if((!E.call("instance_exists",[E.get("oPDead")]))){
+if((!E.truthy(E.call("instance_exists",[E.get("oPDead")])))){
 E.put(E.get("global"),"php",E.call("max",[1,E.member(E.get("global"),"php")]));
 }
 else {}
@@ -7549,8 +7549,8 @@ else {}
 ,
 "solidObject":function(E){
 {
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oCar")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oCar")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oCar")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oCar")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -7558,8 +7558,8 @@ E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 E.set("hsp",0);
 }
 else {}
-if(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")])){
-while((!E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oCar")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[(E.get("x") + E.get("hsp")),E.get("y"),E.get("oDoor")]))){
+while((!E.truthy(E.call("place_meeting",[(E.get("x") + E.call("sign",[E.get("hsp")])),E.get("y"),E.get("oCar")])))){E.tick();
 {
 E.set("x",(E.get("x") + E.call("sign",[E.get("hsp")])));
 }
@@ -7568,8 +7568,8 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
-if(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("oCar")])){
-while((!E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("oCar")]))){E.tick();
+if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("oCar")]))){
+while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("oCar")])))){E.tick();
 {
 E.set("y",(E.get("y") + E.call("sign",[E.get("vsp")])));
 }

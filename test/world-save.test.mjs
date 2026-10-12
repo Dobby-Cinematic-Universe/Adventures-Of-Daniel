@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {Engine} from '../dist/engine.js';
 import {encodeWorld,validateWorld,MAX_WORLD_BYTES} from '../dist/world-state.js';
-import {MemoryWorldStorage,WorldSaveRepository} from '../dist/world-saves.js';
+import {BrowserWorldStorage,MemoryWorldStorage,WorldSaveRepository} from '../dist/world-saves.js';
 const data=JSON.parse(fs.readFileSync(new URL('../dist/data.json',import.meta.url)));
 const make=(room='room26',storage=null)=>{const game=new Engine(data,null,storage,{seed:12345});game.audioEnabled=false;game.loadRoom(room,false);return game;};
 const obj=(g,name)=>g.first(g.assets[name]);
@@ -92,4 +92,27 @@ test('active cheat toggles and resource gifts round-trip and reset only on a new
  const g=make();g.setCheat('invincible',true);g.setCheat('infiniteAmmo',true);g.setCheat('infiniteSlowmo',true);g.applyCheat('money');g.applyCheat('ammo');
  const copy=make();copy.applyWorld(encodeWorld(g.captureWorld(),data).text);assert.deepEqual(copy.cheats,g.cheats);assert.equal(copy.global.kills,g.global.kills);assert.equal(copy.global.ammo,g.global.ammo);
  copy.beginNewAdventure();assert.deepEqual(copy.cheats,{invincible:false,infiniteAmmo:false,infiniteSlowmo:false});
+});
+test('malformed physics and statistics cannot poison the current world through a save import',()=>{
+ const g=make(),saved=g.captureWorld(),before=shape(g);
+ const changes=[
+  w=>delete w.rooms.room26.instances[0].gravity_direction,
+  w=>w.rooms.room26.instances[0].friction='bad',
+  w=>w.rooms.room26.instances[0].depth=null,
+  w=>w.rooms.room26.instances[0].image_blend='white',
+  w=>w.rooms.room26.instances[0].layer=.5,
+  w=>w.rooms.room26.instances.find(s=>s.object_index===g.assets.Object1).hsp='bad',
+  w=>w.global.kills='bad',w=>w.global.slowmo={},
+  w=>w.rooms.room26.locals.customer1spd='bad',
+  w=>w.rooms.room26.locals.php=-50,
+  w=>w.rooms.room26.locals.hascontrol='bad'
+ ];
+ for(const change of changes){const broken=structuredClone(saved);change(broken);assert.throws(()=>g.applyWorld(broken));assert.deepEqual(shape(g),before);}
+});
+test('a synchronous IndexedDB failure aborts queued writes so slot contents and metadata stay together',async()=>{
+ const values={worlds:new Map([[1,'original']]),metadata:new Map([[1,{name:'original'}]])};let aborted=0;
+ const db={transaction(){const queued=[],tx={cancelled:false,abort(){this.cancelled=true;aborted++;},objectStore(name){return {put(value,key){if(name==='metadata')throw new Error('Could not clone metadata');queued.push(()=>values[name].set(key,value));}};}};queueMicrotask(()=>{if(tx.cancelled)tx.onabort?.();else{for(const write of queued)write();tx.oncomplete?.();}});return tx;}};
+ const storage=new BrowserWorldStorage({open(){const request={};queueMicrotask(()=>{request.result=db;request.onsuccess();});return request;}});
+ await assert.rejects(storage.write(1,'replacement',{name:'replacement'}),/clone metadata/);await Promise.resolve();
+ assert.equal(aborted,1);assert.equal(values.worlds.get(1),'original');assert.deepEqual(values.metadata.get(1),{name:'original'});
 });

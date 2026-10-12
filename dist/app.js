@@ -24,6 +24,7 @@ function paused(value){
 }
 function resumeAmbience(){if(game.audioEnabled&&['room26','petrolstationroom'].includes(game.room.info.Name))game.audioPlay(game.assets.nightsounds,true);game.faceEgg.syncAudio(true);}
 function start(){
+  if(!game?.room)return;
   if(started){paused(false);return;}started=true;game.paused=false;
   game.audioEnabled=!$('soundButton').classList.contains('muted');
   overlay.hidden=true;for(const id of ['pauseButton','saveButton','menuButton'])$(id).disabled=false;
@@ -40,7 +41,7 @@ function frame(time){
 }
 function updateGameplayHelp(){
   if(!game)return;
-  const dead=game.resolve(game.assets.oPDead)[0],gun=game.resolve(game.assets.oGun)[0],launcher=game.resolve(game.assets.oGun59)[0],p=game.resolve(game.assets.Object1)[0],girl=game.resolve(game.assets.oGirl16364)[0],bed=game.resolve(game.assets.oBedSleep)[0];
+  const dead=game.first(game.assets.oPDead),gun=game.first(game.assets.oGun),launcher=game.first(game.assets.oGun59),p=game.first(game.assets.Object1),girl=game.first(game.assets.oGirl16364),bed=game.first(game.assets.oBedSleep);
   const moon=game.room?.info.Name==='rMenu'?game.faceEgg.moonFrame():null;
   const moonAvailable=moon&&game.faceEgg.moonImage&&moon.x-moon.r>=game.camera.x&&moon.x+moon.r<=game.camera.x+game.camera.w;
   const key=id=>profile.first(id)?keyLabel(profile.first(id)):null;
@@ -73,7 +74,7 @@ $('soundButton').onclick=()=>{
   const muted=$('soundButton').classList.toggle('muted');$('soundButton').setAttribute('aria-pressed',String(muted));
   $('soundButton').setAttribute('aria-label',muted?'Unmute sound':'Mute sound');$('soundButton').title=muted?'Unmute sound':'Mute sound';
   document.querySelector('.sound-waves').style.opacity=muted?'0.15':'1';
-  if(game){game.audioEnabled=!muted;if(muted)game.audioStop();else if(started&&!game.paused)resumeAmbience();}canvas.focus();
+  if(game){game.audioEnabled=started&&!muted;if(muted)game.audioStop();else if(started&&!game.paused)resumeAmbience();}canvas.focus();
 };
 $('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.game-frame').requestFullscreen();canvas.focus();}catch{toast('Fullscreen is unavailable in this browser.');}};
 
@@ -142,7 +143,7 @@ document.addEventListener('keydown',e=>{
     clearInput();capture=null;$('cancelBinding').hidden=true;renderBindings();updateHints();
     setBindingStatus(`${action.label} set to ${keyLabel(e.code)}.${profile.saved?' Saved in this browser.':' Preferences could not be saved; they work for this session.'}`);return;
   }
-  if(!game||e.metaKey||((e.ctrlKey||e.altKey)&&!/^Control|^Alt/.test(e.code)))return;
+  if(!game?.room||e.metaKey||((e.ctrlKey||e.altKey)&&!/^Control|^Alt/.test(e.code)))return;
   if(!started){if(e.code==='Enter'||e.code==='Space'||profile.matches(e.code,'game').some(a=>a.id==='jump')){e.preventDefault();start();}return;}
   const commandActions=profile.matches(e.code,gameContext(game)).filter(a=>a.command);
   if(commandActions.length){e.preventDefault();if(!e.repeat)handleCommands(router.down(e.code).commands);return;}

@@ -18,7 +18,7 @@ export class BrowserWorldStorage {
   const db=await this.ready;
   return new Promise((resolve,reject)=>{
    let tx,result;
-   try{tx=db.transaction(stores,mode);result=action(tx);}catch(error){reject(error);return;}
+   try{tx=db.transaction(stores,mode);result=action(tx);}catch(error){try{tx?.abort();}catch{}reject(error);return;}
    tx.oncomplete=()=>resolve(typeof result==='function'?result():result);
    tx.onabort=tx.onerror=()=>reject(new Error('The world was not saved. Browser storage may be full; export your world to keep a file.'));
   });

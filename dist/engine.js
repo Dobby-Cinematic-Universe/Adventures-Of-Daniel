@@ -1,5 +1,5 @@
 import {CODE, SCRIPTS} from './code.js';
-import {WORLD_FORMAT,WORLD_VERSION,DEFAULT_CHEATS,cloneState,validateWorld,encodeWorld} from './world-state.js';
+import {WORLD_FORMAT,WORLD_VERSION,DEFAULT_CHEATS,ROOM_VARIABLES,cloneState,validateWorld,encodeWorld} from './world-state.js';
 import {FaceEasterEgg} from './easter-egg.js';
 
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
@@ -9,14 +9,15 @@ const direction=(x,y,a,b)=>(Math.atan2(y-b,a-x)*180/Math.PI+360)%360;
 const color=n=>`rgb(${n&255},${(n>>>8)&255},${(n>>>16)&255})`;
 const parseFile=(text,fallback)=>{try{return text&&text.length<=65536?JSON.parse(text):fallback;}catch{return fallback;}};
 export const formatGameNumber=value=>Number.isFinite(value)?String(Number(value.toFixed(2))):String(value);
+export const gmlBoolean=value=>typeof value==='number'?value>.5:!!value;
 const arrays=new Set(['alarm','spawn','remaining','endtext','menu','weapons']);
 const sharedProgress=['kills','ammo','bullets','stocks','tapes','php','slowmo','weapon1','weapon2','equippedweapon','takenallowance','hasquest1','hasquest2','hasquest3','quest1','quest2','quest3','acceptedquest','hasslept'];
-const roomVariables=['customer1spd','customer2spd','customer3spd','customer1done','customer2done','customer3done','petrolpaid','petrolweapon','respawnweapon','hascontrol','gosleep','clickedbed','greentimer','killsgreen','killsred','killsthisroom','dontshoot','stocksdown'];
 const constants={vk_left:37,vk_right:39,vk_up:38,vk_down:40,vk_enter:13,vk_space:32,vk_escape:27,vk_anykey:1,vk_nokey:0,mb_left:1,mb_right:2,mb_middle:3,fa_left:0,fa_center:1,fa_right:2,fa_top:0,fa_middle:1,fa_bottom:2,c_white:0xffffff,c_black:0,c_red:255,c_lime:65280,c_green:32768,c_yellow:65535,c_gray:8421504,c_silver:12632256,c_aqua:16776960,c_blue:16711680,gamespeed_fps:0,noone:-4,all:-3,self:-1,other:-2};
 
 class Context {
  constructor(game,self,other=null,args=[],locals={},event=null,budget={n:0}) {Object.assign(this,{game,self,other,args,locals,event,budget});}
  tick(){if(++this.budget.n>12000)throw new Error('Loop exceeded 12,000 iterations');}
+ truthy(value){return gmlBoolean(value);}
  get(k){
   if(own(this.locals,k))return this.locals[k];
   const g=this.game,s=this.self;
@@ -245,7 +246,7 @@ export class Engine {
   this.rebuildIndexes();
  }
  captureRoom(includePersistent=true){
-  const locals=Object.fromEntries(roomVariables.filter(k=>own(this.global,k)).map(k=>[k,this.global[k]]));
+  const locals=Object.fromEntries(ROOM_VARIABLES.filter(k=>own(this.global,k)).map(k=>[k,this.global[k]]));
   if(!includePersistent&&this.first(this.assets.oTransition)?.mode&&this.first(this.assets.Object1)&&!this.first(this.assets.oPDead)&&!this.global.clickedbed)locals.hascontrol=true;
   return cloneState({room:this.room.info.Name,frame:this.frame,fps:this.fps,camera:{...this.camera},gui:{...this.gui},layers:this.layers.map(l=>l.info),instances:this.instances.filter(s=>!s.dead&&(includePersistent||!s.persistent)),locals});
  }
@@ -290,7 +291,7 @@ export class Engine {
   const x=this.camera.x+this.input.mx*this.camera.w,y=this.camera.y+this.input.my*this.camera.h;
   this.global.dontshoot=true;
   this.fireBlockers??=new Set(['oBedSleep','oJobSign','oMum','oPetrolstationDoor','oSign'].map(n=>this.assets[n]));
-  for(const s of this.instances){if(s.dead||!this.fireBlockers.has(s.object_index)||!s.visible||!this.layerVisible(s.layer))continue;const b=this.bounds(s);if(x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom){this.global.dontshoot=false;return;}}
+  for(const type of this.fireBlockers)for(const s of this.byObject.get(type)||[]){if(s.dead||s.object_index!==type||!s.visible||!this.layerVisible(s.layer))continue;const b=this.bounds(s);if(x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom){this.global.dontshoot=false;return;}}
  }
  loadRoom(index,keep=true){
   if(typeof index==='string')index=this.assets[index];if(!this.data.rooms[index])throw new Error('Unknown room '+index);this.pendingRoom=null;

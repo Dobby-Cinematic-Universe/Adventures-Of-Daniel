@@ -2,6 +2,9 @@ export const WORLD_FORMAT='himr-world';
 export const WORLD_VERSION=3;
 export const MAX_WORLD_BYTES=8*1024*1024;
 export const DEFAULT_CHEATS=Object.freeze({invincible:false,infiniteAmmo:false,infiniteSlowmo:false});
+export const ROOM_VARIABLES=Object.freeze(['customer1spd','customer2spd','customer3spd','customer1done','customer2done','customer3done','petrolpaid','petrolweapon','respawnweapon','hascontrol','gosleep','clickedbed','greentimer','killsgreen','killsred','killsthisroom','dontshoot','stocksdown']);
+const numericGlobals=['kills','stocks','slowmo','greentimer','killsgreen','killsred','killsthisroom','customer1spd','customer2spd','customer3spd','equippedweapon','respawnweapon','petrolweapon'];
+const flagGlobals=['hascontrol','gosleep','clickedbed','dontshoot','stocksdown','customer1done','customer2done','customer3done','petrolpaid','weapon1','weapon2','takenallowance','hasquest1','hasquest2','hasquest3','quest1','quest2','quest3','acceptedquest','hasslept','newmail','pcclickedon','messageread'];
 const forbidden=new Set(['__proto__','prototype','constructor']);
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 
@@ -23,6 +26,10 @@ export function cloneState(value,budget={nodes:0},depth=0){
 function number(v,label,min=-Infinity,max=Infinity){if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)throw new Error(`Invalid ${label} in the world save.`);return v;}
 function integer(v,label,min,max){number(v,label,min,max);if(!Number.isInteger(v))throw new Error(`Invalid ${label} in the world save.`);return v;}
 function record(v,label){if(!v||typeof v!=='object'||Array.isArray(v))throw new Error(`Invalid ${label} in the world save.`);return v;}
+function globals(values){
+ for(const key of numericGlobals)if(own(values,key))number(values[key],key);
+ for(const key of flagGlobals)if(own(values,key)&&typeof values[key]!=='boolean')number(values[key],key);
+}
 
 export function validateWorld(source,data){
  if(typeof source==='string'){
@@ -33,6 +40,7 @@ export function validateWorld(source,data){
  if(source.format!==WORLD_FORMAT||source.version!==WORLD_VERSION||source.game!=='himr-1.6')throw new Error('This is not a supported HIMR world save.');
  const world=cloneState(source);
  record(world.global,'statistics');record(world.rooms,'rooms');record(world.cheats,'cheats');
+ globals(world.global);
  integer(world.randomState,'random state',1,4294967295);integer(world.nextId,'next instance ID',200000,2147483647);
  number(world.timeMs,'play time',0,1e12);number(world.savedAt,'save time',0,1e15);
  if(Object.keys(world.cheats).length!==Object.keys(DEFAULT_CHEATS).length)throw new Error('Invalid cheat settings in the world save.');
@@ -51,6 +59,8 @@ export function validateWorld(source,data){
   for(const key of ['x','y'])number(camera[key],'camera position',-1e7,1e7);
   for(const key of ['w','h']){number(camera[key],'camera size',1,32768);number(gui[key],'interface size',1,32768);}
   record(state.locals,'room variables');
+  if(Object.keys(state.locals).some(key=>!ROOM_VARIABLES.includes(key)))throw new Error('The save contains an invalid room variable.');
+  globals(state.locals);
   if(!Array.isArray(state.instances)||state.instances.length>10000||(total+=state.instances.length)>20000)throw new Error('The save contains too many objects.');
   const scene=data.rooms[roomNames.get(name)];
   if(!Array.isArray(state.layers)||state.layers.length!==scene.layers.length)throw new Error('The saved room layers are incomplete.');
@@ -69,7 +79,9 @@ export function validateWorld(source,data){
    for(const key of ['image_xscale','image_yscale'])number(s[key],'object scale',-10000,10000);
    integer(s.sprite_index,'sprite',-1,data.sprites.length-1);integer(s.mask_index,'collision mask',-1,data.sprites.length-1);
    const mask=data.sprites[s.mask_index>=0?s.mask_index:s.sprite_index];if(mask&&[1,2].includes(mask.info.SepMasks)&&(Math.abs(s.image_xscale)>8||Math.abs(s.image_yscale)>8))throw new Error('A precise collision mask is too large.');
-   for(const key of ['image_index','image_speed','image_angle','image_alpha','hspeed','vspeed','gravity','speed','direction'])number(s[key],'object value',-1e7,1e7);
+   for(const key of ['image_index','image_speed','image_angle','image_alpha','hspeed','vspeed','gravity','gravity_direction','friction','speed','direction','depth'])number(s[key],'object value',-1e7,1e7);
+   for(const key of ['hsp','vsp','spd','hp'])if(own(s,key))number(s[key],'object '+key,-1e7,1e7);
+   integer(s.image_blend,'object colour',0,0xffffff);integer(s.layer,'object layer',-1,2147483647);
    if(s.dead||s.destroying)throw new Error('A world save cannot contain destroyed objects.');
    if(typeof s.visible!=='boolean'||typeof s.persistent!=='boolean')throw new Error('Invalid object visibility in the world save.');
    if(!Array.isArray(s.alarm)||s.alarm.length!==12)throw new Error('The saved alarms are incomplete.');

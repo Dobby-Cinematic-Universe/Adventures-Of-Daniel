@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {Engine} from '../dist/engine.js';
+import {Engine,gmlBoolean} from '../dist/engine.js';
 import {FACE_LAYOUTS} from '../dist/easter-egg.js';
 const data=JSON.parse(fs.readFileSync(new URL('../dist/data.json',import.meta.url)));
 const make=(room='room26')=>{const g=new Engine(data,null,null,{seed:12345});g.audioEnabled=false;g.loadRoom(room,false);return g;};
@@ -176,4 +176,22 @@ test('rapid pause and resume ignores an obsolete play rejection and muting cance
  pending[0].reject(new Error('Playback interrupted'));await settleAudio();assert.equal(g.faceEgg.musicBlocked,false);assert.equal(music.paused,false);
  g.audioEnabled=false;g.audioStop();pending[1].resolve();await settleAudio();step(g,30);assert.equal(music.paused,true);assert.equal(music.plays,2);
  g.audioEnabled=true;g.faceEgg.syncAudio(true);pending[2].resolve();await settleAudio();assert.equal(music.paused,false);assert.equal(music.plays,3);assert.equal(g.errors.length,0);
+});
+test('GameMaker numeric boolean conversion treats noone, negatives, and numbers up to one half as false',()=>{
+ for(const value of [false,0,-4,-1,.1,.5])assert.equal(gmlBoolean(value),false);
+ for(const value of [true,.500001,1,100000])assert.equal(gmlBoolean(value),true);
+});
+test('enemy guns fire through a clear line of sight and stop firing when a wall blocks the line',()=>{
+ const g=make('room1'),p=obj(g,'Object1');p.x=6000;p.y=-5000;
+ const enemy=g.create(g.assets.oEnemy,p.x+300,p.y,'floor'),gun=g.create(g.assets.oEgun,enemy.x,enemy.y,'Gun');gun.owner=enemy.id;gun.countdown=1;
+ g.runEvent(gun,3,1);assert.equal(g.resolve(g.assets.eEbullet).length,1);
+ const barrier=g.create(g.assets.wall,p.x+150,p.y+5,'floor');gun.countdown=1;g.runEvent(gun,3,1);assert.equal(g.resolve(g.assets.eEbullet).length,1);
+ g.destroy(barrier);gun.countdown=1;g.runEvent(gun,3,1);assert.equal(g.resolve(g.assets.eEbullet).length,2);assert.equal(g.errors.length,0);
+});
+test('indexed firing guards still suppress shots over visible interactions and release hidden or removed targets',()=>{
+ const g=make(),bed=obj(g,'oBedSleep'),b=g.bounds(bed);g.input.mx=((b.left+b.right)/2-g.camera.x)/g.camera.w;g.input.my=((b.top+b.bottom)/2-g.camera.y)/g.camera.h;
+ g.updateFireEligibility();assert.equal(g.global.dontshoot,false);
+ bed.visible=false;g.updateFireEligibility();assert.equal(g.global.dontshoot,true);
+ bed.visible=true;g.getLayer(bed.layer).info.IsVisible=false;g.updateFireEligibility();assert.equal(g.global.dontshoot,true);
+ g.getLayer(bed.layer).info.IsVisible=true;g.destroy(bed);g.updateFireEligibility();assert.equal(g.global.dontshoot,true);
 });
