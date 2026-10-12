@@ -1,0 +1,9 @@
+spd = 0.3;
+letters = 0;
+text = "Zzz...";
+length = string_length(text);
+text_current = "";
+w = 0;
+h = 0;
+image_alpha = 1;
+border = 10;

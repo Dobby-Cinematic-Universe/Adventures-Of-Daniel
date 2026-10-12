@@ -1,0 +1,1 @@
+hasweapon = true;

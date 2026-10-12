@@ -1,0 +1,2 @@
+doorisclosed = true;
+doorisopen = true;

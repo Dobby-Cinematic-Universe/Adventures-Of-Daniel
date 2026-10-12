@@ -1,0 +1,15 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+*.zip
+*.tar.gz
+.env
+.env.*
+!.env.example
+recovered/data.win
+recovered/*.exe
+recovered/*.dll
+recovered/*.error
+recovered/code/*.error

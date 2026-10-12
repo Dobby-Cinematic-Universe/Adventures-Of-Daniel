@@ -1,0 +1,9 @@
+spd = 0.25;
+letters = 0;
+text = "22";
+length = string_length(text);
+text_current = "";
+w = 0;
+h = 0;
+border = 10;
+audio_play_sound(newmailsound, 1, false);

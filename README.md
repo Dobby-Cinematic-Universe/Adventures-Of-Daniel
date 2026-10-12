@@ -4,14 +4,33 @@ A playable browser port of the supplied version 1.6 Windows release. It runs the
 
 ## Run locally
 
-Node.js 18 or newer is sufficient. No dependencies need to be installed.
+Use Node.js 22 or newer (Node.js 24 LTS is used in CI). No npm dependencies need to be installed.
 
 ```sh
-cd browser-port
+git clone https://github.com/Dobby-Cinematic-Universe/Adventures-Of-Daniel.git
+cd Adventures-Of-Daniel
 npm start
 ```
 
 Open http://localhost:4173. Alternatively, serve `dist/` with any static HTTP server. Opening `index.html` directly with a `file:` URL will not work because the game loads its data with `fetch`.
+
+## GitHub Pages
+
+The deployment URL is [dobby-cinematic-universe.github.io/Adventures-Of-Daniel/](https://dobby-cinematic-universe.github.io/Adventures-Of-Daniel/) once the first Pages deployment succeeds.
+
+For the initial setup, open [Settings → Pages](https://github.com/Dobby-Cinematic-Universe/Adventures-Of-Daniel/settings/pages) and choose **GitHub Actions** as the build and deployment source. Push `main`, or run **Check and deploy GitHub Pages** from the Actions tab. The workflow rebuilds and compares generated files, checks syntax, runs the regression suites sequentially, verifies all deployment assets under the repository URL path, and deploys only `dist/`. Pull requests run the same checks without deploying. The official GitHub actions are pinned to commit hashes, and only the deployment job receives permission to publish Pages.
+
+No custom domain, server, npm install, or repository secret is required. See [GitHub's custom workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) for Pages configuration.
+
+To preview the repository path locally:
+
+```sh
+BASE_PATH=/Adventures-Of-Daniel/ npm start
+```
+
+Open http://localhost:4173/Adventures-Of-Daniel/. Asset URLs are relative, so the same `dist/` works at a domain root or repository path.
+
+World saves and control preferences belong to the browser origin. Before moving from the previous hosted site or localhost to GitHub Pages, export world slots from **World saves**, then import them on the new site. Preferences can be set again in **Controls**. The game does not upload saves to a server.
 
 ## Controls
 
@@ -59,16 +78,27 @@ On touch devices, the movement, jump, weapon, and fire buttons appear below the 
 - `dist/assets/`: seven original texture atlases and 33 audio assets, converted to Ogg where needed.
 - `patches/*.gml`, `patches/rooms.json`: browser script and room-layer corrections, preserving original recovery output.
 - `test/*.test.mjs`: gameplay, input, save, and runtime regression checks; `test/performance.mjs` profiles simulation time.
+- `recovered/code/`, `recovered/manifest.json`, `recovered/masks.json`: unmodified recovered GML and the resource metadata needed to regenerate the browser files.
+- `tools/`: source translation, data packaging, deployment verification, and original recovery/export tools.
+- `.github/workflows/pages.yml`: verification and automatic GitHub Pages deployment from `main`.
 
-The adjacent `../recovered/code/` directory contains the recovered GML. `../tools/transpile.py` regenerates `dist/code.js`, using matching files in `patches/` in preference to recovered events. `../tools/package-data.py` regenerates `dist/data.json` from `../recovered/manifest.json`. Run these tools from the parent `Game` directory.
+Python 3 regenerates the checked-in browser scripts and resource data; no original executable or decompiler is needed for this step:
+
+```sh
+npm run rebuild:game
+```
+
+`tools/transpile.py` translates `recovered/code/`, giving matching `patches/*.gml` precedence, and writes `dist/code.js` and the tested call list. `tools/package-data.py` packages the manifest and masks with `patches/rooms.json` into `dist/data.json`. Both resolve paths relative to the repository. Graphics and audio are already included. [REVERSE_ENGINEERING.md](REVERSE_ENGINEERING.md) records the original extraction and its limits; the Windows installer, executable, game-data binary, and external decompiler are excluded from this repository.
 
 ## Verification
 
 ```sh
 npm run check
 npm test
-npm run benchmark
+npm run check:pages
 ```
+
+`npm run check:pages` checks the static artifact for unsupported files or links, resolves module and asset references, and serves every deployment file under `/Adventures-Of-Daniel/` to verify its content and MIME type. It uses a temporary loopback server on an automatically assigned port and stops it afterward. `npm run benchmark` is available separately for simulation profiling.
 
 Seventy-three checks cover all rooms and drawing scripts, movement and double jump, computer/email interactions, quests and doors, weapons, arena waves, original menu/story/ending transitions, collision masks, grenade use, death/revival, repeated petrol shifts, sleep and the companion's bed interaction, shops and number formatting, controls, fullscreen pointer mapping, complete world round-trips, deterministic continuation, visited-room persistence, mid-shift/mid-sleep saves, original statistics separation, failed writes, invalid imports, cheats, bounded long sessions, and the moon trigger, persistent deactivation target, neck/collar connection, appearance preference, rendering scope, smooth sampling, and menu music lifecycle. The final scan adds numeric boolean compatibility, enemy sight-line firing, complete physics validation, synchronous IndexedDB rollback, and indexed firing guards. Every referenced GameMaker function is implemented. Tests run sequentially with a 128 MB managed heap cap.
 
@@ -81,3 +111,11 @@ Corrections preserve weapon ownership, restore the gun layer after computer use,
 This is a reconstruction of the game's runtime behavior, not an exported GameMaker project. Editor-only organization and the original authors' comments are not recoverable from the executable. Collision uses recovered bounding boxes, rotation, and the original precise masks for both sprites that require them. The standalone Windows runner was unavailable for frame-by-frame comparison.
 
 The final static scan and its measurements are recorded in [BUG_AUDIT.md](BUG_AUDIT.md#final-static-scan--october-12-2026). Enemy guns now honor the original clear-sight condition through GameMaker numeric boolean conversion. Invalid saved physics and statistics are rejected before loading, synchronous database failures abort pending writes, and early keyboard input cannot bypass asset loading. Firing checks and contextual hints use existing object indexes.
+
+## Attribution and licensing
+
+The recovered GML, game graphics, fonts, sounds, characters, and room designs come from **HIMR: The Adventures of Daniel**, version 1.6. This repository adds the browser runtime, translation and recovery tools, browser corrections, and player interface. [UndertaleModTool](https://github.com/UnderminersTeam/UndertaleModTool) was used for extraction; it is an external tool and is not bundled here.
+
+The realistic face artwork was generated from the supplied reference photograph; the image prompts are retained in `art/`. The easter egg menu MP3 was supplied separately and is included without re-encoding.
+
+Licensing is unchanged. No new license has been applied to the runtime, tools, recovered code, or assets, and inclusion in this public repository does not relicense the original material.

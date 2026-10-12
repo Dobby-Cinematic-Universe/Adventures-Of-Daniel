@@ -1,0 +1,2 @@
+global.gosleep--;
+alarm_set(1, 30);

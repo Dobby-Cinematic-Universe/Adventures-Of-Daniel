@@ -1,0 +1,2 @@
+KillPlayer();
+flash = 7;
