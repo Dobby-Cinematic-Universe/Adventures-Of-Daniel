@@ -221,6 +221,16 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_Object1_Step_0":function(E){
+if(((!E.truthy(E.member(E.get("global"),"hascontrol"))) && ((E.truthy(E.call("instance_exists",[E.get("ojobmenu")])) || E.truthy(E.call("instance_exists",[E.get("oQuestBox")]))) || E.truthy(E.call("instance_exists",[E.get("oButtonOff")]))))){
+E.set("hsp",0);
+E.set("vsp",0);
+E.set("gunkickx",0);
+E.set("gunkicky",0);
+E.call("game_set_speed",[60,E.get("gamespeed_fps")]);
+return ;
+}
+else {}
+E.call("player_unstick",[]);
 if(E.truthy(E.member(E.get("global"),"hascontrol"))){
 E.set("key_left",(E.truthy(E.call("keyboard_check_pressed",[E.get("vk_left")])) || E.truthy(E.call("keyboard_check",[E.call("ord",["A"])]))));
 E.set("key_right",(E.truthy(E.call("keyboard_check",[E.get("vk_right")])) || E.truthy(E.call("keyboard_check",[E.call("ord",["D"])]))));
@@ -285,6 +295,10 @@ E.set("hsp",0);
 }
 else {}
 E.set("x",(E.get("x") + E.get("hsp")));
+if((E.call("abs",[E.get("vsp")]) > 32)){
+E.call("player_move_vertical",[E.get("vsp")]);
+}
+else {
 if(E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.get("vsp")),E.get("wall")]))){
 while((!E.truthy(E.call("place_meeting",[E.get("x"),(E.get("y") + E.call("sign",[E.get("vsp")])),E.get("wall")])))){E.tick();
 {
@@ -295,6 +309,8 @@ E.set("vsp",0);
 }
 else {}
 E.set("y",(E.get("y") + E.get("vsp")));
+}
+
 E.declare("aimside",E.call("sign",[(E.get("mouse_x") - E.get("x"))]));
 if((E.get("aimside") != 0)){
 E.set("image_xscale",E.get("aimside"));

@@ -27,7 +27,7 @@ Cheats supply invulnerability, unlimited ammunition, unlimited slow motion, reso
 
 ## Measurements and checks
 
-`npm run check` passes. `npm test` passes **73 tests**: 20 gameplay, 10 input, 16 world-save, and 27 runtime-audit checks. Suites run sequentially with a 128 MB managed heap cap. The room audit executes 150 frames and drawing events in each room. Browser checks cover cheat controls, saving across reloads, Continue, export/import, statistics separation, menu navigation, and responsive layouts.
+`npm run check` passes. After the touch-control follow-up, `npm test` passes **90 tests**: 20 gameplay, 10 keyboard input, 16 world-save, 32 runtime-audit, and 12 gamepad checks. Suites run sequentially with a 128 MB managed heap cap. The room audit executes 150 frames and drawing events in each room. Browser checks cover cheat controls, saving across reloads, Continue, export/import, statistics separation, menu navigation, and responsive layouts.
 
 The same seeded Node benchmark, after 40 warm-up frames and over 180 measured frames per scene, gave:
 
@@ -71,3 +71,17 @@ One sequential seeded benchmark before and after this scan measured:
 | First level, 600 instances | 1.263 / 1.976 | 1.250 / 1.974 |
 
 The after-run reported zero runtime errors and 14.32 MB of managed heap. These are individual local simulation measurements, not a general FPS or memory guarantee. The five added regressions bring the suite to 73 passing tests. An asset/reference scan resolved all event and room-creation references for the eight rooms, 169 objects, 685 compiled events, 33 original sounds, textures, fonts, and easter egg assets. No unverified rendering rewrites were introduced; further batching or draw-command caching should follow browser profiling. Exact Windows-runner parity and exhaustive testing of every possible input sequence remain outside the verified scope.
+
+## Touch controls and launch recovery — October 12, 2026
+
+The virtual gamepad uses independent input sources for each finger and shares the original keyboard/mouse router. Movement, jumping/revival, aiming and firing, weapon switching, interaction, closing/kissing, slow motion, menu selection, and story/ending continuation are covered. Automatic/always-show/hide preferences are independent of keyboard bindings and saves. Pause, dialog opening, rotation, room changes, and cancelled pointers release virtual inputs. The renderer still uses one fixed-resolution canvas; no extra game images or rendering surfaces were added.
+
+Browser checks used touch emulation and actual 320 × 640, 390 × 844, and 844 × 390 viewports. They verified stick movement, touch settings and persistence, native fullscreen with usable dialogs, weapon switching, aimed grenade use and release, and face activation through the menu moon. A simulated two-pointer DOM sequence verified that releasing Jump preserves movement and cancelling the movement pointer clears its input. Native multi-touch dispatch is unavailable in the in-app browser; physical iOS/Android testing remains unverified. Short-screen dialog headers now scroll with their content instead of covering buttons. The expanded toolbar has a separate strip so it does not cover the game's health, money, and ammunition.
+
+Fast vertical movement now sweeps the intervening walls, preventing thin-platform tunneling after an extreme launch. An embedded player is moved to a verified clear wall edge, allowing movement to resume. World-anchored computer/job/quest choices stop the player while open so launch momentum cannot carry their camera away. Ordinary movement uses the recovered collision code. Regressions exercise both high downward and upward impulses, adjoining stair tiles, and closing a job menu after a launch.
+
+The recovered `gml_GlobalScript_KillPlayer.gml` removes one heart per call. `Object1` collision events for `oEnemy` and `oEnemyBig` call it each frame without a cooldown; the enemy-bullet event also destroys that bullet. This behavior is retained. The regression verifies one bullet removes one heart and sustained enemy contact removes one heart per frame, rather than introducing a new invulnerability period.
+
+`oDanielbaby`, spawned by the companion's Q interaction, now shares the photographic face mode with Daniel and the menu runners. Existing idle/run/jump head anchors and the four-pixel collar overlap scale with each miniature's size and facing. Toggling the mode changes appearance without changing masks or simulation state; other characters retain their original faces. Both regression checks and the live companion interaction verified these miniature faces.
+
+The follow-up adds 17 checks, bringing the suite from 73 to 90. The release verifier serves all 56 files correctly under both `/` and `/Adventures-Of-Daniel/`. One sequential seeded simulation run measured Home median/p95 **2.220/3.625 ms**, first level **1.249/1.742 ms**, **12.38 MiB** of managed heap, and zero runtime errors. Browser timing and physical-phone performance are outside these measurements.

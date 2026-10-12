@@ -1,6 +1,7 @@
 import {Engine} from './engine.js';
 import {ACTIONS,BindingProfile,InputRouter,gameContext,keyLabel,canvasPoint} from './bindings.js';
 import {PlayerMenus} from './player-menus.js';
+import {VirtualGamepad} from './gamepad.js';
 
 const $=id=>document.getElementById(id);
 const canvas=$('game'),overlay=$('overlay'),dialog=$('controlsDialog');
@@ -10,17 +11,22 @@ const profile=new BindingProfile(storage);
 const router=new InputRouter(profile,()=>game?.input,()=>gameContext(game));
 const roomNames={room26:'Home',rMenu:'Original menu',introroom2:'The story begins',introroom:'A new day',room1:'Into the world',room3:'The adventure continues',rEnding:'The end',petrolstationroom:'Petrol station'};
 const menus=new PlayerMenus({getGame:()=>game,isStarted:()=>started,pause:paused,clearInput,loaded:snapshot=>{game.applyWorld(snapshot);clearInput();started=true;game.audioEnabled=!$('soundButton').classList.contains('muted');for(const id of ['pauseButton','menuButton'])$(id).disabled=false;paused(false);lastDrawKey='';updateGameplayHelp();},notify:toast});
+const stage=$('playerStage');
+for(const id of ['controlsDialog','worldDialog','cheatsDialog'])stage.append($(id));
+const touchSettings=document.createElement('button');touchSettings.id='touchSettingsButton';touchSettings.type='button';touchSettings.hidden=true;touchSettings.textContent='Controls';touchSettings.setAttribute('aria-label','Gamepad and keyboard controls');document.querySelector('.player-actions').insertBefore(touchSettings,$('fullscreenButton'));
+const gamepad=new VirtualGamepad({element:$('virtualGamepad'),router,getGame:()=>game,isReady:()=>started&&!dialog.open&&!menus.isOpen(),storage,onModeChange:()=>{clearInput();updateHints();}});
+const focusGame=()=>canvas.focus({preventScroll:true});
 
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2200);}
-function clearInput(){router.clear();for(const b of document.querySelectorAll('.touch-controls button'))b.classList.remove('active');}
-function pauseHint(){const key=profile.first('pause');return key?`Press ${keyLabel(key)} to resume`:'Use Resume to continue';}
+function clearInput(){router.clear();gamepad.clear();}
+function pauseHint(){if(gamepad.visible)return 'Tap Resume game to continue';const key=profile.first('pause');return key?`Press ${keyLabel(key)} to resume`:'Use Resume to continue';}
 function paused(value){
   if(!started)return;game.paused=value;clearInput();overlay.hidden=!value;
   $('panelKicker').textContent='TAKE A BREATHER';$('panelTitle').textContent='Adventure can wait.';
   $('panelDescription').textContent='Your world is right where you left it.';$('playLabel').textContent='Resume game';
   $('continueButton').hidden=true;$('startHint').textContent=pauseHint();$('pauseLabel').textContent=value?'Resume':'Pause';
   $('playerStatus').textContent=value?'PAUSED':'PLAYING';$('statusDot').classList.toggle('paused',value);
-  if(value)game.audioStop();else{resumeAmbience();canvas.focus();}last=0;accumulator=0;
+  if(value)game.audioStop();else{resumeAmbience();focusGame();}last=0;accumulator=0;
 }
 function resumeAmbience(){if(game.audioEnabled&&['room26','petrolstationroom'].includes(game.room.info.Name))game.audioPlay(game.assets.nightsounds,true);game.faceEgg.syncAudio(true);}
 function start(){
@@ -28,13 +34,14 @@ function start(){
   if(started){paused(false);return;}started=true;game.paused=false;
   game.audioEnabled=!$('soundButton').classList.contains('muted');
   overlay.hidden=true;for(const id of ['pauseButton','saveButton','menuButton'])$(id).disabled=false;
-  $('playerStatus').textContent='PLAYING';resumeAmbience();canvas.focus();last=0;
+  $('playerStatus').textContent='PLAYING';resumeAmbience();focusGame();last=0;
 }
-function openMenu(){game.fps=60;clearInput();game.loadRoom(game.assets.rMenu);paused(false);canvas.focus();}
+function openMenu(){game.fps=60;clearInput();game.loadRoom(game.assets.rMenu);paused(false);focusGame();}
 function frame(time){
   requestAnimationFrame(frame);if(!game)return;if(!last)last=time;
   const dt=Math.min(100,time-last);last=time;
-  if(started&&!game.paused){accumulator+=dt;let n=0;while(accumulator>=1000/game.fps&&n++<5){const step=1000/game.fps;game.step();accumulator-=step;}if(n>5)accumulator=Math.min(accumulator,1000/game.fps);}
+  gamepad.tick(time);
+  if(started&&!game.paused){accumulator+=dt;let n=0;while(accumulator>=1000/game.fps&&n++<5){const step=1000/game.fps;gamepad.input.updateAim();game.step();gamepad.afterStep();accumulator-=step;}if(n>5)accumulator=Math.min(accumulator,1000/game.fps);}
   else accumulator=0;
   const drawKey=`${game.roomIndex}:${game.frame}:${game.drawVersion}`;if(drawKey!==lastDrawKey){game.renderer.draw();lastDrawKey=drawKey;}
   if(time-lastHelpTime>200){updateGameplayHelp();lastHelpTime=time;}
@@ -44,28 +51,29 @@ function updateGameplayHelp(){
   const dead=game.first(game.assets.oPDead),gun=game.first(game.assets.oGun),launcher=game.first(game.assets.oGun59),p=game.first(game.assets.Object1),girl=game.first(game.assets.oGirl16364),bed=game.first(game.assets.oBedSleep);
   const moon=game.room?.info.Name==='rMenu'?game.faceEgg.moonFrame():null;
   const moonAvailable=moon&&game.faceEgg.moonImage&&moon.x-moon.r>=game.camera.x&&moon.x+moon.r<=game.camera.x+game.camera.w;
-  const key=id=>profile.first(id)?keyLabel(profile.first(id)):null;
+  const touch=gamepad.visible,tap=touch?'tap':'click';
+  const touchLabels={jump:'Jump',interact:'Use',secondary:'Close',weapon:'Weapon'};
+  const key=id=>touch&&touchLabels[id]?touchLabels[id]:profile.first(id)?keyLabel(profile.first(id)):null;
   const revive=key('jump')?`press ${key('jump')} or click Revive`:'click Revive';
-  let text='Walk up to people and objects, then click them. '+(key('interact')?`${key('interact')} opens doors and collects crates.`:'Use Controls to choose an interaction key.');
+  let text=`Walk up to people and objects, then ${tap} them. `+(key('interact')?`${key('interact')} opens doors and collects crates.`:'Use Controls to choose an interaction key.');
   $('reviveButton').hidden=!(dead&&dead.done===1&&dead.vsp===0);
-  const touchJump=document.querySelector('[data-action="jump"]');touchJump.textContent=dead?'Revive':'Jump';
-  if(dead)text=dead.done===1&&dead.vsp===0?`Defeated — ${revive} to return.`:`Wait for Daniel to land, then ${revive}.`;
-  else if(gameContext(game)==='story')text=key('weapon')?`Press ${key('weapon')} to continue the story.`:'Set a story key in Controls to continue.';
-  else if(gameContext(game)==='menu')text=`Choose with ${key('menuUp')||'a menu key'} / ${key('menuDown')||'a menu key'}, then ${key('confirm')||'your confirm key'}.${moonAvailable?game.faceEgg.enabled?' Click the moon to restore the original faces.':' Click the moon to reveal a familiar face.':''}`;
-  else if(gameContext(game)==='ending')text='Press any key to advance the ending text.';
+  if(dead)text=dead.done===1&&dead.vsp===0?touch?'Defeated — tap Revive to return.':`Defeated — ${revive} to return.`:`Wait for Daniel to land, then ${touch?'tap Revive':revive}.`;
+  else if(gameContext(game)==='story')text=touch?'Tap Next to continue the story.':key('weapon')?`Press ${key('weapon')} to continue the story.`:'Set a story key in Controls to continue.';
+  else if(gameContext(game)==='menu')text=(touch?'Choose with the left stick, then tap Select.':`Choose with ${key('menuUp')||'a menu key'} / ${key('menuDown')||'a menu key'}, then ${key('confirm')||'your confirm key'}.`)+(moonAvailable?game.faceEgg.enabled?` ${tap} the moon to restore the original faces.`:` ${tap} the moon to reveal a familiar face.`:'');
+  else if(gameContext(game)==='ending')text=touch?'Tap Next to advance the ending text.':'Press any key to advance the ending text.';
   else if(game.global.clickedbed)text='Sleeping — wait for the fade to clear. Health and slow motion recover.';
-  else if(!game.global.hascontrol)text=game.resolve(game.assets.oButtonOff).length?'Click an option. The power button closes the computer.':'Click an option to continue.';
-  else if(p&&p.x>18000&&game.resolve(game.assets.oQuestObjectives3).length)text=game.global.quest3===1?'Shift complete — click the door on the right to go home.':`${key('interact')||'Your interaction key'} collects each crate. Serve all three customers, then use the exit door.`;
+  else if(!game.global.hascontrol)text=game.resolve(game.assets.oButtonOff).length?`${tap} an option. The power button closes the computer.`:`${tap} an option to continue.`;
+  else if(p&&p.x>18000&&game.resolve(game.assets.oQuestObjectives3).length)text=game.global.quest3===1?`Shift complete — ${tap} the door on the right to go home.`:`${key('interact')||'Your interaction key'} collects each crate. Serve all three customers, then use the exit door.`;
   else if(p&&girl&&Math.hypot(p.x-girl.x,p.y-girl.y)<=111)text=`Hold ${key('interact')||'your interaction key'} while moving to guide her. From her left, ${key('secondary')||'your secondary key'} kisses. Bring her onto the bed to restore hearts.`;
-  else if(p&&bed&&Math.hypot(p.x-bed.x,p.y-bed.y)<=130)text='Click the bed to sleep. Bring the companion onto the bed to restore hearts.';
-  else if(gun||launcher){const weapon=launcher?'Grenade launcher':'Gun',other=launcher?'gun':'grenades',unlocked=launcher?game.global.weapon1:game.global.weapon2;text=`${weapon} equipped · Left click to fire${game.cheats.infiniteAmmo?' · Unlimited ammunition':''}${unlocked&&key('weapon')?` · ${key('weapon')} switches to ${other}`:''}.`;}
+  else if(p&&bed&&Math.hypot(p.x-bed.x,p.y-bed.y)<=130)text=`${tap} the bed to sleep. Bring the companion onto the bed to restore hearts.`;
+  else if(gun||launcher){const weapon=launcher?'Grenade launcher':'Gun',other=launcher?'gun':'grenades',unlocked=launcher?game.global.weapon1:game.global.weapon2;text=`${weapon} equipped · ${touch?'Right stick aims and fires':'Left click to fire'}${game.cheats.infiniteAmmo?' · Unlimited ammunition':''}${unlocked&&key('weapon')?` · ${key('weapon')} switches to ${other}`:''}.`;}
   if(started&&!game.paused)$('playerStatus').textContent=Object.values(game.cheats).some(Boolean)?'PLAYING · CHEATS':'PLAYING';
   if($('gameHelpText').textContent!==text)$('gameHelpText').textContent=text;
 }
 $('reviveButton').onclick=()=>{
   if(!game||!started)return;
   if(game.paused)paused(false);
-  router.action('jump','revive-button');game.step();router.up('revive-button');updateGameplayHelp();canvas.focus();
+  router.action('jump','revive-button');game.step();router.up('revive-button');updateGameplayHelp();focusGame();
 };
 $('playButton').onclick=()=>start();$('continueButton').onclick=()=>menus.continueWorld();
 $('pauseButton').onclick=()=>paused(!game.paused);
@@ -74,9 +82,18 @@ $('soundButton').onclick=()=>{
   const muted=$('soundButton').classList.toggle('muted');$('soundButton').setAttribute('aria-pressed',String(muted));
   $('soundButton').setAttribute('aria-label',muted?'Unmute sound':'Mute sound');$('soundButton').title=muted?'Unmute sound':'Mute sound';
   document.querySelector('.sound-waves').style.opacity=muted?'0.15':'1';
-  if(game){game.audioEnabled=started&&!muted;if(muted)game.audioStop();else if(started&&!game.paused)resumeAmbience();}canvas.focus();
+  if(game){game.audioEnabled=started&&!muted;if(muted)game.audioStop();else if(started&&!game.paused)resumeAmbience();}focusGame();
 };
-$('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.querySelector('.game-frame').requestFullscreen();canvas.focus();}catch{toast('Fullscreen is unavailable in this browser.');}};
+$('fullscreenButton').onclick=async()=>{
+ clearInput();
+ if(document.fullscreenElement){try{await document.exitFullscreen();}catch{toast('Use your browser’s fullscreen control to exit.');}return;}
+ if(stage.classList.contains('expanded')){stage.classList.remove('expanded');document.body.classList.remove('player-expanded');updateFullscreen();return;}
+ try{if(!stage.requestFullscreen)throw new Error('Fullscreen unavailable');await stage.requestFullscreen();}
+ catch{stage.classList.add('expanded');document.body.classList.add('player-expanded');updateFullscreen();}
+ focusGame();
+};
+function updateFullscreen(){clearInput();const expanded=!!document.fullscreenElement||stage.classList.contains('expanded');$('fullscreenButton').setAttribute('aria-label',expanded?'Exit expanded game':'Expand game');$('fullscreenButton').title=expanded?'Exit expanded game':'Expand game';touchSettings.hidden=!gamepad.visible&&!expanded;}
+document.addEventListener('fullscreenchange',updateFullscreen);
 
 function setBindingStatus(text,error=false){$('bindingStatus').textContent=text;$('bindingStatus').classList.toggle('binding-error',error);}
 function updateHints(){
@@ -85,7 +102,8 @@ function updateHints(){
   $('pauseButton').title=`Pause${profile.first('pause')?` (${keyLabel(profile.first('pause'))})`:''}`;
   $('saveButton').title='Save, load, import, or export a full world';
   if(started&&game?.paused)$('startHint').textContent=pauseHint();
-  canvas.setAttribute('aria-label',`HIMR game. Move with ${keyLabel(profile.first('left'))} and ${keyLabel(profile.first('right'))}. Jump with ${keyLabel(profile.first('jump'))}. Mouse aims and interacts.`);
+  canvas.setAttribute('aria-label',gamepad.visible?'HIMR game. Left stick moves, right stick aims and fires. Jump double jumps or revives. Use opens doors and collects crates. Tap objects to interact.':`HIMR game. Move with ${keyLabel(profile.first('left'))} and ${keyLabel(profile.first('right'))}. Jump with ${keyLabel(profile.first('jump'))}. Mouse aims and interacts.`);
+  if(!started)$('startHint').textContent=gamepad.visible?'Touch controls ready · Best in landscape':'Keyboard + mouse recommended';
   updateGameplayHelp();
 }
 function renderBindings(){
@@ -126,11 +144,13 @@ function cancelCapture(){capture=null;$('cancelBinding').hidden=true;renderBindi
 $('cancelBinding').onclick=cancelCapture;
 $('resetBindings').onclick=()=>{capture=null;clearInput();profile.reset();$('cancelBinding').hidden=true;renderBindings();updateHints();setBindingStatus(`Default key bindings restored.${profile.saved?'':' Preferences could not be saved; they work for this session.'}`);};
 $('controlsButton').onclick=()=>{wasPaused=game?.paused??true;if(started)paused(true);capture=null;renderBindings();setBindingStatus('Preferences save in this browser. Escape cancels a key assignment.');dialog.showModal();};
+touchSettings.onclick=()=>$('controlsButton').click();
 dialog.addEventListener('close',()=>{capture=null;$('cancelBinding').hidden=true;clearInput();if(started&&!wasPaused)paused(false);});
 dialog.addEventListener('cancel',e=>{if(capture){e.preventDefault();cancelCapture();}});
 
 function handleCommands(commands){for(const command of commands){if(command==='pause')paused(!game.paused);if(command==='menu')openMenu();if(command==='worldSaves')menus.openWorld();if(command==='cheats')menus.openCheats();}}
 document.addEventListener('keydown',e=>{
+  if(stage.classList.contains('expanded')&&e.code==='Escape'&&!dialog.open&&!menus.isOpen()){e.preventDefault();stage.classList.remove('expanded');document.body.classList.remove('player-expanded');updateFullscreen();if(started)paused(true);return;}
   if(menus.isOpen())return;
   if(dialog.open){
     if(!capture)return;
@@ -143,6 +163,7 @@ document.addEventListener('keydown',e=>{
     clearInput();capture=null;$('cancelBinding').hidden=true;renderBindings();updateHints();
     setBindingStatus(`${action.label} set to ${keyLabel(e.code)}.${profile.saved?' Saved in this browser.':' Preferences could not be saved; they work for this session.'}`);return;
   }
+  if(e.target.closest?.('.virtual-gamepad button')&&['Enter','Space'].includes(e.code))return;
   if(!game?.room||e.metaKey||((e.ctrlKey||e.altKey)&&!/^Control|^Alt/.test(e.code)))return;
   if(!started){if(e.code==='Enter'||e.code==='Space'||profile.matches(e.code,'game').some(a=>a.id==='jump')){e.preventDefault();start();}return;}
   const commandActions=profile.matches(e.code,gameContext(game)).filter(a=>a.command);
@@ -151,10 +172,10 @@ document.addEventListener('keydown',e=>{
   const result=router.down(e.code);if(result.handled)e.preventDefault();
 });
 document.addEventListener('keyup',e=>router.up(e.code));
-canvas.addEventListener('pointermove',e=>{if(!game)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);game.input.mx=point.mx;game.input.my=point.my;canvas.style.cursor=point.inside&&game.faceEgg.moonHit(point.mx,point.my)?'pointer':'';});
+canvas.addEventListener('pointermove',e=>{if(!game)return;gamepad.canvasAim();const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);game.input.mx=point.mx;game.input.my=point.my;canvas.style.cursor=point.inside&&game.faceEgg.moonHit(point.mx,point.my)?'pointer':'';});
 const mouseNumber=e=>e.button===2?2:e.button===1?3:1;
 canvas.addEventListener('pointerdown',async e=>{
-  if(!game||game.paused||!started)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);if(!point.inside)return;canvas.focus();canvas.setPointerCapture(e.pointerId);
+  if(!game||game.paused||!started)return;const point=canvasPoint(canvas.getBoundingClientRect(),canvas.width,canvas.height,e.clientX,e.clientY);if(!point.inside)return;gamepad.canvasAim();focusGame();canvas.setPointerCapture(e.pointerId);
   game.input.mx=point.mx;game.input.my=point.my;
   const secret=e.button===0?game.faceEgg.menuClick(point.mx,point.my):{handled:false};
   if(secret.handled){e.preventDefault();clearInput();if(secret.triggered){try{toast('A familiar face is arriving…');const enabled=await game.faceEgg.toggle();if(enabled!==null)toast(enabled?'A familiar face.':'The original face returns.');}catch(error){toast(error.message);}}return;}
@@ -165,11 +186,6 @@ canvas.addEventListener('pointercancel',()=>clearInput());canvas.addEventListene
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('blur',()=>{if(started&&!game.paused)paused(true);clearInput();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&started&&!game.paused)paused(true);});
-for(const button of document.querySelectorAll('.touch-controls button')){
-  const source=`touch:${button.dataset.action}`;
-  button.addEventListener('pointerdown',e=>{if(!game||!started||game.paused)return;button.setPointerCapture(e.pointerId);router.action(button.dataset.action,source);button.classList.add('active');e.preventDefault();});
-  const release=()=>{router.up(source);button.classList.remove('active');};button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
-}
 async function init(){
   try{
     const response=await fetch('data.json');if(!response.ok)throw new Error('Game data could not load');

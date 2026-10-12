@@ -48,6 +48,34 @@ test('cheats prevent damage and preserve zero ammunition while firing both weapo
  g.input.buttons.clear();g.global.slowmo=0;g.setCheat('infiniteSlowmo',true);g.input.buttons.add(2);g.step();assert.equal(g.fps,30);assert.equal(g.global.slowmo,0);g.input.buttons.clear();g.step();assert.equal(g.fps,60);
  g.applyCheat('ammo');g.applyCheat('grenades');g.applyCheat('money');g.applyCheat('slowmo');assert.equal(g.global.ammo,1000);assert.equal(g.global.bullets,50);assert.equal(g.global.kills,money+1000);assert.equal(g.global.slowmo,100);assert.equal(g.errors.length,0);
 });
+test('one enemy bullet costs one heart and sustained enemy contact retains the original per-frame damage',()=>{
+ const g=make();step(g,40);const p=obj(g,'Object1');p.grv=0;p.vsp=0;g.global.php=8;
+ const shot=g.create(g.assets.eEbullet,p.x,p.y,'bullets');shot.spd=0;g.step();assert.equal(g.global.php,7);assert.equal(shot.dead,true);g.step();assert.equal(g.global.php,7);
+ for(const name of ['oEnemy','oEnemyBig']){
+  const enemy=g.create(g.assets[name],p.x,p.y,'player');enemy.grv=0;enemy.hsp=0;enemy.vsp=0;
+  g.global.php=8;step(g,3);assert.equal(g.global.php,5);g.destroy(enemy);
+ }
+ assert.equal(g.errors.length,0);
+});
+test('extreme launch falls and upward impulses cannot tunnel through a thin platform',()=>{
+ for(const velocity of [1000,-1000]){
+  const g=make(),p=obj(g,'Object1'),wall=g.create(g.assets.wall,30000,1000,'floor');p.x=30020;p.grv=0;p.image_xscale=1;p.image_angle=0;
+  const w=g.bounds(wall),offset=g.bounds(p);p.y=velocity>0?w.top-400-(offset.bottom-p.y):w.bottom+400-(offset.top-p.y);p.vsp=velocity;
+  g.runEvent(p,3,0);assert.equal(p.vsp,0);assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);
+  const b=g.bounds(p);assert.equal(velocity>0?b.bottom:b.top,velocity>0?w.top:w.bottom);assert.equal(g.errors.length,0);
+ }
+});
+test('an embedded player recovers from adjoining stair tiles and can walk again',()=>{
+ const g=make(),p=obj(g,'Object1');p.x=11100;p.y=2140;p.vsp=0;
+ assert.ok(g.place(p,p.x,p.y,g.assets.wall));g.step();assert.equal(g.place(p,p.x,p.y,g.assets.wall),null);assert.equal(g.global.hascontrol,true);
+ const x=p.x;g.input.keys.add(65);step(g,5);assert.ok(p.x<x);assert.equal(g.errors.length,0);
+});
+test('opening a world dialog during a launch stops the camera from leaving its choices',()=>{
+ const g=make();step(g,40);const p=obj(g,'Object1'),sign=obj(g,'oJobSign');p.x=sign.x-50;p.y=sign.y;p.vsp=0;step(g,2);p.vsp=-20;click(g,'oJobSign');
+ assert.ok(obj(g,'ojobmenu'));assert.equal(g.global.hascontrol,0);p.vsp=-300;const position=[p.x,p.y];step(g,60);assert.deepEqual([p.x,p.y],position);
+ const back=obj(g,'ojobbutton2'),b=g.bounds(back);assert.ok(b.right>g.camera.x&&b.left<g.camera.x+g.camera.w&&b.bottom>g.camera.y&&b.top<g.camera.y+g.camera.h);
+ click(g,'ojobbutton2');assert.equal(g.global.hascontrol,1);assert.equal(obj(g,'ojobmenu'),undefined);assert.equal(g.errors.length,0);
+});
 test('native direction uses velocity and friction stops a pushed ladder',()=>{
  const g=make('room1'),ladder=g.create(g.assets.oLadder,9000,20,'floor');ladder.gravity=0;g.runEvent(ladder,4,g.assets.Object1,obj(g,'Object1'));
  assert.ok(Math.abs(Math.hypot(ladder.hspeed,ladder.vspeed)-20)<1e-9);assert.notEqual(ladder.vspeed,0);
@@ -126,6 +154,24 @@ test('realistic heads use smooth photographic sampling and preserve the canvas d
  for(const layout of [...FACE_LAYOUTS.danielJump,...FACE_LAYOUTS.playerDead])g.faceEgg.draw(ctx,layout,64,64);
  assert.equal(calls.length,4);for(const call of calls){assert.equal(call.smooth,true);assert.equal(call.quality,'high');assert.deepEqual(call.args.slice(1,5),[173,12,931,1257]);}
  assert.equal(ctx.imageSmoothingEnabled,false);assert.equal(ctx.imageSmoothingQuality,'low');
+});
+test('companion-spawned miniature characters share the face mode at their original size and facing',()=>{
+ const g=make();step(g,40);const p=obj(g,'Object1'),girl=obj(g,'oGirl16364');
+ p.x=girl.x-67;p.y=girl.y;p.vsp=0;g.input.pressed.add(81);g.step();
+ const baby=obj(g,'oDanielbaby');assert.ok(baby);assert.ok(baby.size>=.3&&baby.size<=.7);
+ const calls=[],scales=[];
+ g.renderer.ctx=new Proxy({scale:(x,y)=>scales.push([x,y])},{get:(o,k)=>o[k]??(()=>{})});g.renderer.images=Array.from({length:7},()=>({}));
+ g.faceEgg.image={};g.faceEgg.draw=(ctx,face)=>calls.push(face);
+ for(const enabled of [false,true,false]){
+  g.faceEgg.enabled=enabled;calls.length=0;
+  for(const name of ['daniel','runningSprite','danielJump'])for(const facing of [-1,1]){
+   baby.sprite_index=g.assets[name];baby.image_index=0;baby.image_xscale=facing*baby.size;baby.image_yscale=baby.size;
+   const bounds=g.bounds(baby);g.renderer.self(baby);assert.deepEqual(g.bounds(baby),bounds);assert.deepEqual(scales.at(-1),[facing*baby.size,baby.size]);
+  }
+  assert.equal(calls.length,enabled?6:0);
+  if(enabled)for(const face of calls)assert.equal(face.y+face.h/2,face.cut[1]+face.cut[3]+4);
+ }
+ g.faceEgg.enabled=true;g.renderer.self(girl);assert.equal(calls.length,0);assert.equal(g.errors.length,0);
 });
 test('the moon stays within the menu while faces are active and clicking it deactivates before its next visit',async()=>{
  const g=make('rMenu');g.faceEgg.moonImage={};g.faceEgg.load=async()=>{g.faceEgg.image={};};g.faceEgg.moonFrame();g.frame=540;

@@ -127,7 +127,7 @@ export class Renderer {
  }
  rectangle(x1,y1,x2,y2,outline=false,round=false){const c=this.ctx;if(!c)return;c.save();c.globalAlpha=Math.min(1,Math.max(0,this.alpha));c.fillStyle=c.strokeStyle=color(this.col);c.beginPath();const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);if(round&&c.roundRect)c.roundRect(x,y,w,h,Math.min(10,w/2,h/2));else c.rect(x,y,w,h);outline?c.stroke():c.fill();c.restore();}
  inView(si,x,y,sx=1,sy=1,angle=0){const s=this.g.sprites[si];if(!s)return false;const i=s.info,cam=this.g.camera;let left=x-i.OriginX*sx,top=y-i.OriginY*sy,right=left+i.Width*sx,bottom=top+i.Height*sy;if(angle){const cosine=Math.cos(rad(angle)),sine=Math.sin(rad(angle)),points=[[left-x,top-y],[right-x,top-y],[right-x,bottom-y],[left-x,bottom-y]].map(([a,b])=>[x+a*cosine+b*sine,y-a*sine+b*cosine]);left=Math.min(...points.map(p=>p[0]));right=Math.max(...points.map(p=>p[0]));top=Math.min(...points.map(p=>p[1]));bottom=Math.max(...points.map(p=>p[1]));}else{if(left>right)[left,right]=[right,left];if(top>bottom)[top,bottom]=[bottom,top];}return right>=cam.x-150&&left<=cam.x+cam.w+150&&bottom>=cam.y-150&&top<=cam.y+cam.h+150;}
- self(s){this.sprite(s.sprite_index,s.image_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle,s.image_blend,s.image_alpha,s.object_index===this.g.assets.Object1||s.object_index===this.g.assets.oPDead);}
+ self(s){this.sprite(s.sprite_index,s.image_index,s.x,s.y,s.image_xscale,s.image_yscale,s.image_angle,s.image_blend,s.image_alpha,s.object_index===this.g.assets.Object1||s.object_index===this.g.assets.oPDead||s.object_index===this.g.assets.oDanielbaby);}
  background(l){
   const d=l.data,i=l.info,c=this.ctx,cam=this.g.camera;if(!c||!i.IsVisible||!d.Visible)return;
   if(!d.Sprite){c.save();c.fillStyle=color(d.Color);c.globalAlpha=((d.Color>>>24)&255)/255;c.fillRect(cam.x,cam.y,cam.w,cam.h);c.restore();return;}
@@ -364,6 +364,33 @@ export class Engine {
  }
  query(b,target,self){const found=[];for(const s of this.candidates(b,target,self))if(this.collides(b,this.bounds(s)))found.push(s);return found;}
  place(s,x,y,target){const b=this.bounds(s,x,y);for(const other of this.candidates(b,target,s))if(this.collides(b,this.bounds(other)))return other;return null;}
+ recoverPlayer(s){
+  if(!gmlBoolean(this.global.hascontrol)||this.first(this.assets.oPDead))return;
+  const b=this.bounds(s),walls=this.query(b,this.assets.wall,s);if(!walls.length)return;
+  // Test the edges of overlapping walls, including adjoining stair tiles.
+  // Only the player moves; enemy collision and normal movement remain unchanged.
+  let best=null;
+  for(const wall of walls){const w=this.bounds(wall);
+   for(const [dx,dy] of [[0,w.top-b.bottom],[0,w.bottom-b.top],[w.left-b.right,0],[w.right-b.left,0]]){
+    const distance=Math.abs(dx)+Math.abs(dy);if(best&&distance>=best.distance)continue;
+    if(!this.place(s,s.x+dx,s.y+dy,this.assets.wall))best={dx,dy,distance};
+   }
+  }
+  if(best){s.x+=best.dx;s.y+=best.dy;if(best.dy)s.vsp=0;}
+ }
+ movePlayerVertical(s,amount){
+  if(!Number.isFinite(amount)||!amount)return;
+  const b=this.bounds(s),sweep={...b,top:Math.min(b.top,b.top+amount),bottom:Math.max(b.bottom,b.bottom+amount)};
+  let move=amount;
+  for(const wall of this.candidates(sweep,this.assets.wall,s)){
+   const w=this.bounds(wall);if(b.left>=w.right||b.right<=w.left)continue;
+   const distance=amount>0?w.top-b.bottom:w.bottom-b.top;
+   if(amount>0?distance<0||distance>move:distance>0||distance<move)continue;
+   // Verify the swept contact against the actual collision masks.
+   if(this.collides(this.bounds(s,s.x,s.y+distance+Math.sign(amount)),w))move=distance;
+  }
+  s.y+=move;if(move!==amount)s.vsp=0;
+ }
  step(){
   if(this.paused||!this.room)return;this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
   for(const s of before){if(s.dead)continue;s.xprevious=s.x;s.yprevious=s.y;this.runEvent(s,3,1);}
@@ -400,7 +427,7 @@ export class Engine {
   const f={
    sign:(_,n)=>Math.sign(n),abs:(_,n)=>Math.abs(n),sin:(_,n)=>Math.sin(n),floor:(_,n)=>Math.floor(n),min:(_, ...a)=>Math.min(...a.filter(n=>!Number.isNaN(n))),max:(_, ...a)=>Math.max(...a.filter(n=>!Number.isNaN(n))),clamp:(_,n,a,b)=>Math.max(a,Math.min(b,n)),random_range:(_,a,b)=>a+g.random()*(b-a),choose:(_, ...a)=>a[Math.floor(g.random()*a.length)],lengthdir_x:(_,n,d)=>lx(n,d),lengthdir_y:(_,n,d)=>ly(n,d),point_direction:(_,x,y,a,b)=>direction(x,y,a,b),point_distance:(_,x,y,a,b)=>Math.hypot(x-a,y-b),point_in_circle:(_,x,y,a,b,r)=>Math.hypot(x-a,y-b)<=r,
    keyboard_check:(_,k)=>k===1?g.input.keys.size>0:g.input.keys.has(k),keyboard_check_pressed:(_,k)=>k===1?g.input.pressed.size>0:g.input.pressed.has(k),mouse_check_button:(_,n)=>g.input.buttons.has(n),mouse_check_button_pressed:(_,n)=>g.input.bpressed.has(n),ord:(_,s)=>String(s).toUpperCase().charCodeAt(0),device_mouse_y_to_gui:()=>g.input.my*g.gui.h,
-   instance_exists:(e,o)=>!!g.first(o,e.self,e.other),instance_create_layer:(e,x,y,l,o)=>g.create(o,x,y,l).id,instance_destroy:(e,o)=>g.destroy(o,e.self),instnce_destroy:(e,o)=>g.destroy(o,e.self),instance_change:(e,o,v)=>g.change(e.self,o,v),place_meeting:(e,x,y,o)=>!!g.place(e.self,x,y,o),instance_place:(e,x,y,o)=>g.place(e.self,x,y,o)?.id??-4,petrol_shift_start:()=>g.resetPetrolShift(),cheat_enabled:(_,name)=>g.cheats[name]===true,new_adventure:()=>g.beginNewAdventure(),
+   instance_exists:(e,o)=>!!g.first(o,e.self,e.other),instance_create_layer:(e,x,y,l,o)=>g.create(o,x,y,l).id,instance_destroy:(e,o)=>g.destroy(o,e.self),instnce_destroy:(e,o)=>g.destroy(o,e.self),instance_change:(e,o,v)=>g.change(e.self,o,v),place_meeting:(e,x,y,o)=>!!g.place(e.self,x,y,o),instance_place:(e,x,y,o)=>g.place(e.self,x,y,o)?.id??-4,player_unstick:e=>g.recoverPlayer(e.self),player_move_vertical:(e,amount)=>g.movePlayerVertical(e.self,amount),petrol_shift_start:()=>g.resetPetrolShift(),cheat_enabled:(_,name)=>g.cheats[name]===true,new_adventure:()=>g.beginNewAdventure(),
    collision_line:(e,x1,y1,x2,y2,o,precise,notme)=>{const b={left:Math.min(x1,x2),right:Math.max(x1,x2)+1,top:Math.min(y1,y2),bottom:Math.max(y1,y2)+1,valid:true};for(const s of g.query(b,o,notme?e.self:null)){const a=g.bounds(s);let lo=0,hi=1;for(const [p,q] of [[-(x2-x1),x1-a.left],[x2-x1,a.right-x1],[-(y2-y1),y1-a.top],[y2-y1,a.bottom-y1]]){if(p===0&&q<0){lo=2;break;}if(p<0)lo=Math.max(lo,q/p);else if(p>0)hi=Math.min(hi,q/p);}if(lo<=hi){if(!precise)return s.id;const count=Math.max(1,Math.ceil(Math.hypot(x2-x1,y2-y1)*(hi-lo)*2));for(let k=0;k<=count;k++){const t=lo+(hi-lo)*k/count;if(g.maskContains(a,x1+(x2-x1)*t,y1+(y2-y1)*t))return s.id;}}}return -4;},
    event_inherited:(e)=>{if(!e.event)return;const p=g.objects[e.event.owner]?.info.ParentId;if(p)g.runEvent(e.self,e.event.type,e.event.sub,e.other,g.assets[p]);},alarm_set:(e,n,v)=>e.self.alarm[n]=v,
    layer_set_visible:(_,l,v)=>{const layer=g.getLayer(l);if(layer)layer.info.IsVisible=!!v;},layer_exists:(_,l)=>!!g.getLayer(l),layer_x:(_,l,v)=>{const layer=g.getLayer(l);if(layer)layer.info.XOffset=v;},layer_add_instance:(_,l,id)=>{const s=g.resolve(id)[0],layer=g.getLayer(l);if(s&&layer){s.layer=layer.info.LayerId;s.depth=layer.info.LayerDepth;}},

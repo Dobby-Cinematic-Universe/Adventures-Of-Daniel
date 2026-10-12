@@ -79,6 +79,8 @@
   "ord",
   "petrol_shift_start",
   "place_meeting",
+  "player_move_vertical",
+  "player_unstick",
   "point_direction",
   "point_distance",
   "point_in_circle",

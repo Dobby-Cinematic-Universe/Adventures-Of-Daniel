@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111719"><meta name="description" content="Play HIMR: The Adventures of Daniel in your browser. The original version 1.6, restored from its Windows release.">
 <title>HIMR — The Adventures of Daniel</title><link rel="stylesheet" href="style.css">
 </head>
@@ -10,6 +10,7 @@
 <header class="masthead"><a class="brand" href="./" aria-label="HIMR home"><span class="brand-mark">H<span class="brand-dot">.</span></span><span class="brand-copy">HIMR<span>THE ADVENTURES OF DANIEL</span></span></a><div class="edition"><span class="edition-dot"></span> VERSION 1.6 <span class="edition-divider">/</span> BROWSER EDITION</div><button class="text-button" id="controlsButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M6 9h2m2 0h2m2 0h2m2 0h1M6 12h2m2 0h2m2 0h2m2 0h1M7 15h10"/></svg>Controls</button></header>
 <main>
 <div class="game-heading"><div><p class="eyebrow">AN OLD ADVENTURE. A NEW HOME.</p><h1>The Adventures of Daniel<span class="heading-dot">.</span></h1></div><div class="location"><span class="location-dot"></span><span id="location">Home</span></div></div>
+<div id="playerStage" class="player-stage">
 <section class="game-frame" aria-label="Game player">
 <canvas id="game" width="1366" height="768" tabindex="0" aria-label="HIMR game. Use A and D to move, Space to jump, and mouse to interact."></canvas>
 <div class="overlay" id="overlay"><div class="start-panel"><span class="panel-kicker" id="panelKicker">HIMR · 1.6</span><h2 id="panelTitle">Back to the adventure.</h2><p id="panelDescription">A familiar world, right in your browser.</p><button class="play-button" id="playButton" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg><span id="playLabel">Loading the game…</span></button><button class="continue-button" id="continueButton" hidden>Continue saved world <span>↗</span></button><span class="start-hint" id="startHint">Keyboard + mouse recommended</span></div></div>
@@ -17,7 +18,18 @@
 </section>
 <div class="player-bar"><div class="player-status"><span id="statusDot" class="status-dot"></span><span id="playerStatus">READY TO PLAY</span></div><div class="player-actions"><button id="pauseButton" title="Pause (Escape)" disabled><svg id="pauseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 5v14M15 5v14"/></svg><span id="pauseLabel">Pause</span></button><button id="saveButton" title="Save and restore full worlds" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h12l4 4v14H3V3h2Z"/><path d="M7 3v7h10V3M7 21v-7h10v7"/></svg><span>World saves</span></button><button id="cheatsButton" title="Cheat menu" disabled><span>Cheats</span></button><button id="menuButton" title="Open the original game menu" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Menu</span></button><span class="action-divider"></span><button id="soundButton" title="Mute sound" aria-label="Mute sound" aria-pressed="false"><svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m11 4-6 5H2v6h3l6 5V4Z"/><path class="sound-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg></button><button id="fullscreenButton" title="Fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg></button></div></div>
 <div class="game-help" role="status" aria-live="polite"><span id="gameHelpText">Walk up to people and objects, then click them to interact.</span><button id="reviveButton" hidden>Revive</button></div>
-<div class="touch-controls"><button data-action="left" aria-label="Move left">←</button><button data-action="right" aria-label="Move right">→</button><button data-action="jump" aria-label="Jump / revive">Jump</button><button data-action="weapon" aria-label="Switch weapon">Weapon</button><button data-action="fire" aria-label="Fire">Fire</button></div>
+<div id="virtualGamepad" class="virtual-gamepad" hidden aria-label="Virtual gamepad">
+ <div class="pad-side">
+  <div class="stick-group"><div id="moveStick" class="thumbstick" role="group" tabindex="0" aria-label="Movement stick. Drag left or right to move, up or down to choose menu options."><span class="stick-cross" aria-hidden="true"></span><span class="stick-knob" aria-hidden="true"></span></div><span id="moveStickLabel" class="stick-label">MOVE ← →</span></div>
+  <div class="pad-buttons"><button type="button" data-pad-action="interact" aria-label="Use, confirm a menu choice, or continue the story">Use</button><button type="button" data-pad-action="secondary" aria-label="Close a door or kiss the companion">Close</button><button type="button" data-pad-action="slowmo" aria-label="Hold for slow motion">Slow</button></div>
+ </div>
+ <div class="pad-side">
+  <div class="pad-buttons"><button type="button" data-pad-action="jump" aria-label="Jump, double jump, or revive">Jump</button><button type="button" data-pad-action="weapon" aria-label="Switch equipped weapon">Weapon</button><button type="button" data-pad-action="fire" aria-label="Fire in the last aimed direction">Fire</button></div>
+  <div class="stick-group"><div id="aimStick" class="thumbstick aim-stick" role="group" tabindex="0" aria-label="Aim and fire stick. Drag in the direction you want to shoot."><span class="stick-cross" aria-hidden="true"></span><span class="stick-knob" aria-hidden="true"></span></div><span class="stick-label">AIM + FIRE</span></div>
+ </div>
+ <p class="gamepad-note">Two thumbs to move and shoot. Tap objects to interact. Best in landscape.</p>
+</div>
+</div>
 <div class="under-game"><div class="quick-controls"><span id="moveHint"><kbd>A</kbd><kbd>D</kbd> Move</span><span id="jumpHint"><kbd>SPACE</kbd> Jump</span><span><svg viewBox="0 0 16 20" fill="none" stroke="currentColor"><rect x="2" y="1" width="12" height="18" rx="6"/><path d="M8 1v7M2 8h12"/></svg> Aim & interact</span><span id="weaponHint"><kbd>F</kbd> Switch weapon</span></div><span class="save-note">World saves can be exported.</span></div>
 </main>
 <footer><span>THE ORIGINAL ADVENTURE, RESTORED.</span><span>HIMR <span class="footer-dot">•</span> 2022 → 2026</span></footer>
@@ -26,6 +38,7 @@
   <div class="controls-header"><form method="dialog"><button class="dialog-close" aria-label="Close controls">×</button></form>
     <p class="eyebrow">MAKE YOURSELF AT HOME</p><h2 id="controlsTitle">Controls & key bindings</h2>
     <p class="dialog-intro">Click a binding, then press a key. Alternative keys work too. Walk up to people and objects to interact.</p>
+    <div class="gamepad-setting"><label for="gamepadMode">Virtual gamepad</label><select id="gamepadMode"><option value="auto">Automatic on touch screens</option><option value="show">Always show</option><option value="hide">Hide</option></select></div>
     <div class="binding-message"><p id="bindingStatus" role="status" aria-live="polite">Preferences save in this browser. Escape cancels a key assignment.</p><button type="button" id="cancelBinding" hidden>Cancel</button></div>
   </div>
   <div id="bindingRows"></div>

@@ -1,3 +1,14 @@
+// World-anchored choices must stay in reach after a launch or a midair click.
+if (!global.hascontrol && (instance_exists(ojobmenu) || instance_exists(oQuestBox) || instance_exists(oButtonOff)))
+{
+    hsp = 0;
+    vsp = 0;
+    gunkickx = 0;
+    gunkicky = 0;
+    game_set_speed(60, gamespeed_fps);
+    return;
+}
+player_unstick();
 if (global.hascontrol)
 {
     key_left = keyboard_check_pressed(vk_left) || keyboard_check(ord("A"));
@@ -61,15 +72,22 @@ if (place_meeting(x + hsp, y, oDoor))
     hsp = 0;
 }
 x += hsp;
-if (place_meeting(x, y + vsp, wall))
+if (abs(vsp) > 32)
 {
-    while (!place_meeting(x, y + sign(vsp), wall))
-    {
-        y += sign(vsp);
-    }
-    vsp = 0;
+    player_move_vertical(vsp);
 }
-y += vsp;
+else
+{
+    if (place_meeting(x, y + vsp, wall))
+    {
+        while (!place_meeting(x, y + sign(vsp), wall))
+        {
+            y += sign(vsp);
+        }
+        vsp = 0;
+    }
+    y += vsp;
+}
 var aimside = sign(mouse_x - x);
 if (aimside != 0)
 {
