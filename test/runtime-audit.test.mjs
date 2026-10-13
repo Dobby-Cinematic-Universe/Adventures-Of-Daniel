@@ -200,6 +200,20 @@ test('realistic heads use smooth photographic sampling and preserve the canvas d
  assert.equal(calls.length,4);for(const call of calls){assert.equal(call.smooth,true);assert.equal(call.quality,'high');assert.deepEqual(call.args.slice(1,5),[173,12,931,1257]);}
  assert.equal(ctx.imageSmoothingEnabled,false);assert.equal(ctx.imageSmoothingQuality,'low');
 });
+test('the ending runner uses the active face on every animation frame and preserves the ending world',()=>{
+ const g=make('rEnding');step(g,40);const runner=g.layers.flatMap(l=>l.sprites||[]).find(s=>s.Sprite==='runningSprite');assert.ok(runner);
+ const faces=[];g.faceEgg.image={};g.faceEgg.draw=(ctx,face)=>faces.push(face);
+ g.renderer.ctx=new Proxy({}, {get:(o,k)=>o[k]??(()=>{})});g.renderer.images=Array.from({length:7},()=>({}));g.renderer.canvas={width:1366,height:768,style:{}};g.renderer.text=()=>{};
+ g.frame=0;const before=g.captureWorld();delete before.savedAt;
+ for(const enabled of [false,true,false]){
+  g.faceEgg.setEnabled(enabled);
+  for(let frame=0;frame<4;frame++){
+   runner.FrameIndex=frame;faces.length=0;g.renderer.draw();assert.equal(faces.length,enabled?1:0);
+   if(enabled)assert.equal(faces[0],FACE_LAYOUTS.runningSprite[frame]);
+  }
+ }
+ runner.FrameIndex=0;const after=g.captureWorld();delete after.savedAt;assert.deepEqual(after,before);assert.equal(g.errors.length,0);
+});
 test('companion-spawned miniature characters share the face mode at their original size and facing',()=>{
  const g=make();step(g,40);const p=obj(g,'Object1'),girl=obj(g,'oGirl16364');
  p.x=girl.x-67;p.y=girl.y;p.vsp=0;g.input.pressed.add(81);g.step();

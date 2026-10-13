@@ -162,3 +162,16 @@ Those two initialization calls now identify themselves as automatic loads. A new
 Four additional regressions cover all four gameplay rooms with memory-only, persistent, and failing-write storage; explicit statistics loading; world round-trips during the introduction and at Home; and the original ending restart. They fail against the previous runtime and pass with the fix. No per-frame work, asset allocation, or additional world copy was introduced.
 
 A browser runtime check reset $1,000, 1,110 bullets, 50 grenades, stocks, tapes, and the allowance flag to the original Home defaults while retaining `User.sav`, with zero runtime errors. The full sequential suite passes **193 tests** with 128 MB heaps; syntax and both Pages URL layouts pass verification.
+
+
+## Ending face and stranded stair controls — October 12, 2026
+
+The ending's Daniel is an animated `runningSprite` asset on the scene layer rather than a player instance. The renderer now applies the existing face and neck layout to that asset when the face preference is active. It retains the original animation, scenery, ending text, transforms, and disabled appearance, and reuses the loaded photograph without adding assets or rendering surfaces.
+
+The reported stair lock was reproduced from a cold Home start: contacting the high room-exit trigger at x=10,890, y=1,560 set `hascontrol` false, but no `oTransition` existed to execute the requested fade. Daniel then fell to y=2,155.4 on the stair and could neither move nor jump; the hint read "Click an option to continue." There were no runtime errors. Opening the original menu first happened to supply the persistent controller, explaining the inconsistent behavior.
+
+The transition script now creates one controller at its original object depth when absent, starts the outgoing fade from zero, and honors the original room target. Existing controllers are reused. Before simulation, the runtime also restores an orphaned control lock when no dialogue, computer control, sleep, corpse, or active transition accounts for it. This repairs already-stranded saves on resume while preserving position, resources, and legitimate locks. The screenshot's pause on lost focus remains the normal browser behavior.
+
+Six new regressions cover all four ending animation frames and active/disabled rendering, cold-start Home and combat-level exits, deterministic recovery of a stranded world save with working movement and jumping, legitimate control locks and pause, and reuse of the persistent fade.
+
+The sequential suite passes **199 tests** with 128 MB heaps; syntax and both Pages URL layouts pass. Browser checks completed the Home exit with one fade controller and unchanged $740.67 and 210 bullets, restored left movement and jumping from the stranded stair position, and rendered the active photographic face in the ending with zero runtime errors.

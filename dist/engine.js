@@ -167,7 +167,7 @@ export class Renderer {
   for(const cmd of this.commands){
    if(cmd.kind===0)this.g.faceEgg.drawMoon(c);
    else if(cmd.kind===1)this.background(cmd.ref);
-   else if(cmd.kind===2){const a=cmd.ref,l=cmd.layer,sp=this.g.sprites[cmd.si].info,rate=a.AnimationSpeedType?a.AnimationSpeed:sp.GMS2PlaybackSpeed*(a.AnimationSpeed||1)/60;this.sprite(cmd.si,(a.FrameIndex||0)+this.g.frame*rate,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation,a.Color,1,this.g.room.info.Name==='rMenu'&&a.Sprite==='runningSprite73');}
+   else if(cmd.kind===2){const a=cmd.ref,l=cmd.layer,sp=this.g.sprites[cmd.si].info,rate=a.AnimationSpeedType?a.AnimationSpeed:sp.GMS2PlaybackSpeed*(a.AnimationSpeed||1)/60;this.sprite(cmd.si,(a.FrameIndex||0)+this.g.frame*rate,a.X+l.info.XOffset,a.Y+l.info.YOffset,a.ScaleX,a.ScaleY,a.Rotation,a.Color,1,(this.g.room.info.Name==='rMenu'&&a.Sprite==='runningSprite73')||(this.g.room.info.Name==='rEnding'&&a.Sprite==='runningSprite'));}
    else{this.reset();if(cmd.event)this.g.runEvent(cmd.ref,8,0);else this.self(cmd.ref);}
   }
   c.setTransform(this.canvas.width/this.g.gui.w,0,0,this.canvas.height/this.g.gui.h,0,0);
@@ -445,6 +445,13 @@ export class Engine {
   }
   s.y+=move;if(move!==amount)s.vsp=0;
  }
+ repairControlLock(){
+  if(gmlBoolean(this.global.hascontrol)||this.pendingRoom!==null||!this.first(this.assets.Object1)||gmlBoolean(this.global.clickedbed))return;
+  if(this.first(this.assets.oTransition)?.mode)return;
+  for(const name of ['oQuestBox','ojobmenu','oButtonOff','oSleepBlck119','oPDead'])if(this.first(this.assets[name]))return;
+  // Older worlds can retain the lock from an exit whose fade controller was missing.
+  this.global.hascontrol=true;
+ }
  guardMapFall(){
   if(this.pendingRoom!==null)return;
   const player=this.first(this.assets.Object1),body=this.first(this.assets.oPDead),s=body||player;
@@ -465,7 +472,7 @@ export class Engine {
   if(!ready){corpse.alarm[0]=60;this.onFallRecovery?.(true);}
  }
  step(){
-  if(this.paused||!this.room)return;this.freezePointer();try{this.guardMapFall();const wasDead=!!this.first(this.assets.oPDead);this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
+  if(this.paused||!this.room)return;this.freezePointer();try{this.repairControlLock();this.guardMapFall();const wasDead=!!this.first(this.assets.oPDead);this.frame++;this.timeMs+=1000/this.fps;this.updateFireEligibility();const before=[...this.instances];for(const s of before)if(s.hspeed||s.vspeed||s.gravity)this.promoteDynamic(s);
   for(const s of before){if(s.dead)continue;s.xprevious=s.x;s.yprevious=s.y;if(this.objectMeta[s.object_index].beginStep)this.runEvent(s,3,1);}
   this.alarms.step(before,(s,i)=>this.runEvent(s,2,i));
   for(const s of before){if(s.dead)continue;if(this.objectMeta[s.object_index].keysPressed)for(const k of this.input.pressed)this.runEvent(s,9,k);if(this.objectMeta[s.object_index].keysReleased)for(const k of this.input.released)this.runEvent(s,10,k);if(this.objectMeta[s.object_index].keysHeld)for(const k of this.input.keys)this.runEvent(s,5,k);if(this.input.pressed.size&&this.objectMeta[s.object_index].keysPressed)this.runEvent(s,9,1);this.runMouse(s);if(this.objectMeta[s.object_index].step)this.runEvent(s,3,0);}

@@ -12,6 +12,11 @@ else {}
 }
 ,
 "gml_GlobalScript_slideTransition":function(E){
+if((!E.truthy(E.call("instance_exists",[E.get("oTransition")])))){
+E.declare("transition",E.call("instance_create_layer",[0,0,(-1),E.get("oTransition")]));
+E.put(E.get("transition"),"percent",0);
+}
+else {}
 for(const __target1 of E.targets(E.get("oTransition"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("mode",E.index(E.get("argument"),0));
 if((E.get("argument_count") > 1)){
@@ -7603,6 +7608,11 @@ else {}
 }
 ,
 "slideTransition":function(E){
+if((!E.truthy(E.call("instance_exists",[E.get("oTransition")])))){
+E.declare("transition",E.call("instance_create_layer",[0,0,(-1),E.get("oTransition")]));
+E.put(E.get("transition"),"percent",0);
+}
+else {}
 for(const __target1 of E.targets(E.get("oTransition"))){const E2=E.withSelf(__target1);{const E=E2;{
 E.set("mode",E.index(E.get("argument"),0));
 if((E.get("argument_count") > 1)){
