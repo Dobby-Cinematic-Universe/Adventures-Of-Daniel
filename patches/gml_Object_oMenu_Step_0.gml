@@ -26,7 +26,7 @@ if (menu_control)
         audio_play_sound(menusound, 3, false);
     }
     var mouse_y_gui = device_mouse_y_to_gui(0);
-    if (mouse_y_gui < menu_y && mouse_y_gui > menu_top)
+    if (mouse_y_gui < menu_y && mouse_y_gui > menu_top && (mouse_y_gui != menu_mouse_y || mouse_check_button_pressed(mb_left)))
     {
         menu_cursor = (menu_y - mouse_y_gui) div (menu_itemheight * 1.5);
         if (mouse_check_button_pressed(mb_left))
@@ -38,6 +38,7 @@ if (menu_control)
             audio_play_sound(menusound, 3, false);
         }
     }
+    menu_mouse_y = mouse_y_gui;
 }
 if (menu_x > (gui_width + 150) && menu_committed != -1)
 {
@@ -49,7 +50,12 @@ if (menu_x > (gui_width + 150) && menu_committed != -1)
             slideTransition(UnknownEnum.Value_1);
             break;
         case 1:
-            if (!file_exists("Save.sav"))
+            var resume_room = adventure_resume_room();
+            if (resume_room >= 0)
+            {
+                slideTransition(UnknownEnum.Value_2, resume_room);
+            }
+            else if (!file_exists("Save.sav"))
             {
                 slideTransition(UnknownEnum.Value_1);
             }

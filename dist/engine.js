@@ -188,7 +188,7 @@ export class Engine {
   this.eventCache=new Map();this.boundsCache=new WeakMap();this.nullInstance={};this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.instances=[];this.byId=new Map();this.byObject=new Map();this.dynamicByObject=new Map();this.gridDirty=true;this.nextId=200000;this.roomIndex=0;this.fps=60;this.frame=0;this.timeMs=0;this.drawVersion=0;this.camera={x:0,y:0,w:1366,h:768};this.gui={w:1024,h:768};
   this.randomState=(options.seed??Math.floor(Math.random()*4294967296))>>>0||12345;
   this.alarms=new AlarmIndex();
-  this.roomStates=new Map();this.worldInitialized=false;this.cheats={...DEFAULT_CHEATS};
+  this.roomStates=new Map();this.worldInitialized=false;this.menuReturnRoom=null;this.cheats={...DEFAULT_CHEATS};
   this.input={keys:new Set(),pressed:new Set(),released:new Set(),buttons:new Set(),bpressed:new Set(),breleased:new Set(),mx:0.5,my:0.5};
   this.errors=[];this.errorSet=new Set();this.paused=false;this.audioEnabled=true;this.audio=new GameAudio(this);this.audioPool=this.audio.pool;this.soundsPlaying=this.audio.playing;
   this.storage=storage;try{this.storage??=typeof localStorage!=='undefined'?localStorage:null;}catch{}this.memoryFiles=new Map();this.ini=null;this.faceEgg=new FaceEasterEgg(this);this.renderer=new Renderer(this,canvas);this.builtins=this.makeBuiltins();this.pendingRoom=null;
@@ -281,7 +281,8 @@ export class Engine {
  captureWorld(){
   if(!this.room||this.pendingRoom!==null)throw new Error('Wait for the room transition to finish before saving.');
   const rooms=Object.fromEntries(this.roomStates);rooms[this.room.info.Name]=this.captureRoom();
-  return {format:WORLD_FORMAT,version:WORLD_VERSION,game:'himr-1.6',savedAt:Date.now(),active:this.room.info.Name,global:cloneState({...this.global}),rooms,nextId:this.nextId,randomState:this.randomState,timeMs:this.timeMs,cheats:{...this.cheats}};
+  const menuReturn=this.room.info.Name==='rMenu'&&this.menuReturnRoom&&own(rooms,this.menuReturnRoom)?{menuReturnRoom:this.menuReturnRoom}:{};
+  return {format:WORLD_FORMAT,version:WORLD_VERSION,game:'himr-1.6',savedAt:Date.now(),active:this.room.info.Name,global:cloneState({...this.global}),rooms,nextId:this.nextId,randomState:this.randomState,timeMs:this.timeMs,cheats:{...this.cheats},...menuReturn};
  }
  installRoom(state,persistent=[]){
   this.clearPointer();
@@ -296,10 +297,12 @@ export class Engine {
   const world=validateWorld(source,this.data);
   this.global=new Proxy(world.global,{get:(o,k)=>o[k]??0});this.cheats={...world.cheats};this.nextId=world.nextId;this.randomState=world.randomState;this.timeMs=world.timeMs;
   this.roomStates=new Map(Object.entries(world.rooms).filter(([name])=>name!==world.active));this.installRoom(world.rooms[world.active]);this.worldInitialized=Object.prototype.hasOwnProperty.call(world.global,'ammo');
+  this.menuReturnRoom=world.menuReturnRoom??(world.active==='rMenu'?[...this.roomStates].reverse().find(([,state])=>state.instances.some(s=>s.object_index===this.assets.Object1))?.[0]:null)??null;
   for(const set of ['keys','pressed','released','buttons','bpressed','breleased'])this.input[set].clear();this.input.mx=.5;this.input.my=.5;
   this.errors=[];this.errorSet.clear();this.onRoomChange?.(this.room.info.Name);return true;
  }
- beginNewAdventure(){this.clearPointer();this.roomStates.clear();this.worldInitialized=false;this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.cheats={...DEFAULT_CHEATS};this.timeMs=0;}
+ beginNewAdventure(){this.clearPointer();this.roomStates.clear();this.worldInitialized=false;this.menuReturnRoom=null;this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.cheats={...DEFAULT_CHEATS};this.timeMs=0;}
+ adventureResumeRoom(){return this.room?.info.Name==='rMenu'&&this.worldInitialized&&this.roomStates.has(this.menuReturnRoom)?this.assets[this.menuReturnRoom]:-1;}
  setCheat(name,enabled){if(!own(DEFAULT_CHEATS,name))throw new Error('Unknown cheat.');this.cheats[name]=!!enabled;this.drawVersion++;}
  applyCheat(action){
   const player=this.first(this.assets.Object1);if(!player)throw new Error('Enter the world to use this cheat.');
@@ -336,6 +339,7 @@ export class Engine {
   if(typeof index==='string')index=this.assets[index];if(!this.data.rooms[index])throw new Error('Unknown room '+index);this.pendingRoom=null;
   for(const s of this.instances)this.runEvent(s,7,5);
   const progress=keep&&this.worldInitialized?Object.fromEntries(sharedProgress.filter(k=>own(this.global,k)).map(k=>[k,this.global[k]])):null;
+  if(index===this.assets.rMenu){if(keep&&this.worldInitialized&&this.room&&this.room.info.Name!=='rMenu')this.menuReturnRoom=this.room.info.Name;else if(!keep)this.menuReturnRoom=null;}
   if(keep&&this.worldInitialized&&this.room&&this.roomIndex!==index&&this.room.info.Name!=='rMenu')this.roomStates.set(this.room.info.Name,this.captureRoom(false));
   const cached=keep&&this.data.rooms[index].info.Name!=='rMenu'?this.roomStates.get(this.data.rooms[index].info.Name):null;
   if(cached){const persistent=this.instances.filter(s=>!s.dead&&s.persistent);this.installRoom(cached,persistent);this.roomStates.delete(cached.room);this.repairWeaponOwnership();this.reconcileWeapon(progress?.equippedweapon);this.onRoomChange?.(this.room.info.Name);return;}
@@ -500,7 +504,7 @@ export class Engine {
   const f={
    sign:(_,n)=>Math.sign(n),abs:(_,n)=>Math.abs(n),sin:(_,n)=>Math.sin(n),floor:(_,n)=>Math.floor(n),min:(_, ...a)=>Math.min(...a.filter(n=>!Number.isNaN(n))),max:(_, ...a)=>Math.max(...a.filter(n=>!Number.isNaN(n))),clamp:(_,n,a,b)=>Math.max(a,Math.min(b,n)),random_range:(_,a,b)=>a+g.random()*(b-a),choose:(_, ...a)=>a[Math.floor(g.random()*a.length)],lengthdir_x:(_,n,d)=>lx(n,d),lengthdir_y:(_,n,d)=>ly(n,d),point_direction:(_,x,y,a,b)=>direction(x,y,a,b),point_distance:(_,x,y,a,b)=>Math.hypot(x-a,y-b),point_in_circle:(_,x,y,a,b,r)=>Math.hypot(x-a,y-b)<=r,
    keyboard_check:(_,k)=>k===1?g.input.keys.size>0:g.input.keys.has(k),keyboard_check_pressed:(_,k)=>k===1?g.input.pressed.size>0:g.input.pressed.has(k),mouse_check_button:(_,n)=>g.input.buttons.has(n),mouse_check_button_pressed:(_,n)=>g.input.bpressed.has(n),ord:(_,s)=>String(s).toUpperCase().charCodeAt(0),device_mouse_y_to_gui:()=>g.input.my*g.gui.h,
-   instance_exists:(e,o)=>!!g.first(o,e.self,e.other),instance_create_layer:(e,x,y,l,o)=>g.create(o,x,y,l).id,instance_destroy:(e,o)=>g.destroy(o,e.self),instnce_destroy:(e,o)=>g.destroy(o,e.self),instance_change:(e,o,v)=>g.change(e.self,o,v),place_meeting:(e,x,y,o)=>!!g.place(e.self,x,y,o),instance_place:(e,x,y,o)=>g.place(e.self,x,y,o)?.id??-4,player_unstick:e=>g.recoverPlayer(e.self),player_move_vertical:(e,amount)=>g.movePlayerVertical(e.self,amount),petrol_shift_start:()=>g.resetPetrolShift(),cheat_enabled:(_,name)=>g.cheats[name]===true,new_adventure:()=>g.beginNewAdventure(),
+   instance_exists:(e,o)=>!!g.first(o,e.self,e.other),instance_create_layer:(e,x,y,l,o)=>g.create(o,x,y,l).id,instance_destroy:(e,o)=>g.destroy(o,e.self),instnce_destroy:(e,o)=>g.destroy(o,e.self),instance_change:(e,o,v)=>g.change(e.self,o,v),place_meeting:(e,x,y,o)=>!!g.place(e.self,x,y,o),instance_place:(e,x,y,o)=>g.place(e.self,x,y,o)?.id??-4,player_unstick:e=>g.recoverPlayer(e.self),player_move_vertical:(e,amount)=>g.movePlayerVertical(e.self,amount),petrol_shift_start:()=>g.resetPetrolShift(),cheat_enabled:(_,name)=>g.cheats[name]===true,new_adventure:()=>g.beginNewAdventure(),adventure_resume_room:()=>g.adventureResumeRoom(),
    collision_line:(e,x1,y1,x2,y2,o,precise,notme)=>{const b={left:Math.min(x1,x2),right:Math.max(x1,x2)+1,top:Math.min(y1,y2),bottom:Math.max(y1,y2)+1,valid:true};for(const s of g.query(b,o,notme?e.self:null)){const a=g.bounds(s);let lo=0,hi=1;for(const [p,q] of [[-(x2-x1),x1-a.left],[x2-x1,a.right-x1],[-(y2-y1),y1-a.top],[y2-y1,a.bottom-y1]]){if(p===0&&q<0){lo=2;break;}if(p<0)lo=Math.max(lo,q/p);else if(p>0)hi=Math.min(hi,q/p);}if(lo<=hi){if(!precise)return s.id;const count=Math.max(1,Math.ceil(Math.hypot(x2-x1,y2-y1)*(hi-lo)*2));for(let k=0;k<=count;k++){const t=lo+(hi-lo)*k/count;if(g.maskContains(a,x1+(x2-x1)*t,y1+(y2-y1)*t))return s.id;}}}return -4;},
    event_perform:(e,type,sub)=>g.runEvent(e.self,type,sub,e.other),event_inherited:(e)=>{if(!e.event)return;const p=g.objects[e.event.owner]?.info.ParentId;if(p)g.runEvent(e.self,e.event.type,e.event.sub,e.other,g.assets[p]);},alarm_set:(e,n,v)=>e.self.alarm[n]=v,
    layer_set_visible:(_,l,v)=>{const layer=g.getLayer(l);if(layer)layer.info.IsVisible=!!v;},layer_exists:(_,l)=>!!g.getLayer(l),layer_x:(_,l,v)=>{const layer=g.getLayer(l);if(layer)layer.info.XOffset=v;},layer_add_instance:(_,l,id)=>{const s=g.resolve(id)[0],layer=g.getLayer(l);if(s&&layer){s.layer=layer.info.LayerId;s.depth=layer.info.LayerDepth;}},

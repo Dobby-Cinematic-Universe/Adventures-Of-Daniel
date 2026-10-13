@@ -27,7 +27,7 @@ Cheats supply invulnerability, unlimited ammunition, unlimited slow motion, reso
 
 ## Measurements and checks
 
-`npm run check` passes. After the one-shot touch follow-up, `npm test` passes **183 tests**: 21 gameplay, 10 keyboard input, 16 world-save, 37 runtime-audit, 29 gamepad, 16 audio, 14 alarm, 9 renderer, 8 hint, 8 pointer, 8 fall, and 7 movement/aim checks. Suites run sequentially with a 128 MB managed heap cap. The room audit executes 150 frames and drawing events in each room. Browser checks cover cheat controls, saving across reloads, Continue, export/import, statistics separation, menu navigation, and responsive layouts.
+`npm run check` passes. After the menu continuation follow-up, `npm test` passes **189 tests**: 21 gameplay, 10 keyboard input, 16 world-save, 37 runtime-audit, 29 gamepad, 16 audio, 14 alarm, 9 renderer, 8 hint, 8 pointer, 8 fall, 7 movement/aim, and 6 menu continuation checks. Suites run sequentially with a 128 MB managed heap cap. The room audit executes 150 frames and drawing events in each room. Browser checks cover cheat controls, saving across reloads, Continue, export/import, statistics separation, menu navigation, and responsive layouts.
 
 The same seeded Node benchmark, after 40 warm-up frames and over 180 measured frames per scene, gave:
 
@@ -140,3 +140,14 @@ At the player's request, the virtual Grenade button now arms a single throw inst
 Armed/queued state is tied to the actual player instance. Clearing stale touch state after loading a same-room world cannot overwrite the newly restored controller, even when the saved instance IDs match. This state remains outside world snapshots. The pressed-pointer capture accepts the virtual F edge, preserving the tapped world position across camera updates without inventing a primary mouse press. Hints and accessibility labels explain the next tap and cancellation.
 
 Live 844×390 browser checks confirmed arming kept 50 grenades and 110 bullets, one target tap reduced grenades to 49 and automatically restored the gun with 110 bullets, and the following ordinary tap fired the gun (109 bullets). Holding Throw for 700 ms consumed only one grenade and no gun ammunition; all held input cleared after release. Six further checks bring the sequential regression suite to **183 passing tests**, including exact target angle, taps released before a frame, cancellation with another physical F owner, room/death guards, same-room snapshot preservation, and the queued world-point capture. Syntax and static Pages verification pass; rendering/audio resource limits are unchanged.
+
+
+## Menu continuation preserves the live adventure — October 12, 2026
+
+The original Continue branch read the room and money from `Save.sav`, which records values when a room starts. Entering the menu preserved live resources, but Continue then assigned that stale money over the current balance. The reproduction changed $1,234.56 to $0. Cached-room revisits also left that file pointing to a previously visited room.
+
+The runtime now remembers which room an active adventure left when opening the menu. Continue first returns to that cached room without reading or overwriting its live money, inventory, ownership, quests, or original statistics files. New Game clears this continuation target; a fresh menu session keeps the original statistics-save path. Worlds saved on the menu carry an optional validated return-room name. Earlier menu worlds infer the most recently cached player room, while ordinary version-3 worlds remain unchanged. Invalid return targets are rejected before loading mutates the current game.
+
+Stationary mouse coordinates no longer override keyboard menu selection every frame. Moving the pointer or clicking still selects the corresponding row.
+
+Six regressions cover all four gameplay rooms, full resources and exact player/weapon identity, collected and destroyed room objects, a stale previous-room file, repeated menu entry, menu world reloads including earlier saves, New Game, fresh statistics continuation, rejected return metadata, and keyboard selection under a stationary pointer. A native browser Menu→Continue check preserved **$1,000, 1,110 bullets, and 50 grenades**. The sequential full suite passes **189 tests** with 128 MB heaps; syntax and both Pages URL layouts pass verification. No extra world copy or room-sized rendering surface was introduced.

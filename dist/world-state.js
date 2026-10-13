@@ -49,6 +49,7 @@ export function validateWorld(source,data){
  for(const key of ['ammo','bullets','tapes'])if(own(world.global,key))integer(world.global[key],key,0,1e12);
  const roomNames=new Map(data.rooms.map((r,i)=>[r.info.Name,i]));
  if(!roomNames.has(world.active)||!own(world.rooms,world.active))throw new Error('The saved active room is missing.');
+ if(own(world,'menuReturnRoom')&&(world.active!=='rMenu'||typeof world.menuReturnRoom!=='string'||world.menuReturnRoom==='rMenu'||!roomNames.has(world.menuReturnRoom)||!own(world.rooms,world.menuReturnRoom)))throw new Error('The saved menu return room is missing or invalid.');
  if(Object.keys(world.rooms).length>data.rooms.length)throw new Error('The save contains too many rooms.');
  const allIds=new Set();let total=0;
  for(const [name,state] of Object.entries(world.rooms)){

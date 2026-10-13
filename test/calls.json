@@ -2,6 +2,7 @@
   "DrawSetText",
   "KillPlayer",
   "abs",
+  "adventure_resume_room",
   "alarm_set",
   "array_length_1d",
   "audio_play_sound",

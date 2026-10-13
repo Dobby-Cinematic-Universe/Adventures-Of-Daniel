@@ -5253,7 +5253,7 @@ E.call("audio_play_sound",[E.get("menusound"),3,false]);
 }
 else {}
 E.declare("mouse_y_gui",E.call("device_mouse_y_to_gui",[0]));
-if(((E.get("mouse_y_gui") < E.get("menu_y")) && (E.get("mouse_y_gui") > E.get("menu_top")))){
+if((((E.get("mouse_y_gui") < E.get("menu_y")) && (E.get("mouse_y_gui") > E.get("menu_top"))) && ((E.get("mouse_y_gui") != E.get("menu_mouse_y")) || E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))))){
 E.set("menu_cursor",Math.trunc((E.get("menu_y") - E.get("mouse_y_gui"))/(E.get("menu_itemheight") * 1.5)));
 if(E.truthy(E.call("mouse_check_button_pressed",[E.get("mb_left")]))){
 E.set("menu_x_target",(E.get("gui_width") + 200));
@@ -5265,13 +5265,18 @@ E.call("audio_play_sound",[E.get("menusound"),3,false]);
 else {}
 }
 else {}
+E.set("menu_mouse_y",E.get("mouse_y_gui"));
 }
 else {}
 if(((E.get("menu_x") > (E.get("gui_width") + 150)) && (E.get("menu_committed") != (-1)))){
 switch(E.get("menu_committed")){case 2:default:E.call("new_adventure",[]);
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_1")]);
 break;
-case 1:if((!E.truthy(E.call("file_exists",["Save.sav"])))){
+case 1:E.declare("resume_room",E.call("adventure_resume_room",[]));
+if((E.get("resume_room") >= 0)){
+E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_2"),E.get("resume_room")]);
+}
+else if((!E.truthy(E.call("file_exists",["Save.sav"])))){
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_1")]);
 }
 else {
@@ -5281,6 +5286,7 @@ E.put(E.get("global"),"kills",E.call("file_text_read_real",[E.get("file")]));
 E.call("file_text_close",[E.get("file")]);
 E.call("slideTransition",[E.member(E.get("UnknownEnum"),"Value_2"),E.get("target")]);
 }
+
 
 break;
 case 0:E.set("menu_x_target",(E.get("gui_width") - E.get("gui_margin")));
