@@ -4,7 +4,7 @@ export const MAX_WORLD_BYTES=8*1024*1024;
 export const DEFAULT_CHEATS=Object.freeze({invincible:false,infiniteAmmo:false,infiniteSlowmo:false});
 export const ROOM_VARIABLES=Object.freeze(['customer1spd','customer2spd','customer3spd','customer1done','customer2done','customer3done','petrolpaid','petrolweapon','respawnweapon','hascontrol','gosleep','clickedbed','greentimer','killsgreen','killsred','killsthisroom','dontshoot','stocksdown']);
 const numericGlobals=['kills','stocks','slowmo','greentimer','killsgreen','killsred','killsthisroom','customer1spd','customer2spd','customer3spd','equippedweapon','respawnweapon','petrolweapon'];
-const flagGlobals=['hascontrol','gosleep','clickedbed','dontshoot','stocksdown','customer1done','customer2done','customer3done','petrolpaid','weapon1','weapon2','takenallowance','hasquest1','hasquest2','hasquest3','quest1','quest2','quest3','acceptedquest','hasslept','newmail','pcclickedon','messageread'];
+const flagGlobals=['hascontrol','gosleep','clickedbed','dontshoot','stocksdown','customer1done','customer2done','customer3done','petrolpaid','weapon1','weapon2','takenallowance','hasquest1','hasquest2','hasquest3','quest1','quest2','quest3','acceptedquest','hasslept','newmail','pcclickedon','messageread','skipstatsautoload'];
 const forbidden=new Set(['__proto__','prototype','constructor']);
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 

@@ -1,5 +1,9 @@
 function loadgame()
 {
+    if (argument_count > 0 && argument[0] && global.skipstatsautoload)
+    {
+        return;
+    }
     if (file_exists("User.sav"))
     {
         ini_open("User.sav");

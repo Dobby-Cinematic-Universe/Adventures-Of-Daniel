@@ -301,7 +301,11 @@ export class Engine {
   for(const set of ['keys','pressed','released','buttons','bpressed','breleased'])this.input[set].clear();this.input.mx=.5;this.input.my=.5;
   this.errors=[];this.errorSet.clear();this.onRoomChange?.(this.room.info.Name);return true;
  }
- beginNewAdventure(){this.clearPointer();this.roomStates.clear();this.worldInitialized=false;this.menuReturnRoom=null;this.global=new Proxy({}, {get:(o,k)=>o[k]??0});this.cheats={...DEFAULT_CHEATS};this.timeMs=0;}
+ beginNewAdventure(){
+  this.clearPointer();this.roomStates.clear();this.worldInitialized=false;this.menuReturnRoom=null;
+  // Keep explicit statistics saves available without automatically applying them to this new world.
+  this.global=new Proxy({skipstatsautoload:true}, {get:(o,k)=>o[k]??0});this.cheats={...DEFAULT_CHEATS};this.timeMs=0;
+ }
  adventureResumeRoom(){return this.room?.info.Name==='rMenu'&&this.worldInitialized&&this.roomStates.has(this.menuReturnRoom)?this.assets[this.menuReturnRoom]:-1;}
  setCheat(name,enabled){if(!own(DEFAULT_CHEATS,name))throw new Error('Unknown cheat.');this.cheats[name]=!!enabled;this.drawVersion++;}
  applyCheat(action){

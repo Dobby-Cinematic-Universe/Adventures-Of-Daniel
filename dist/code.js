@@ -204,7 +204,7 @@ if((E.member(E.get("global"),"stocks") > 1)){
 E.call("instance_create_layer",[E.get("x"),E.get("y"),E.get("layer"),E.get("oButton1Stock")]);
 }
 else {}
-E.call("loadgame",[]);
+E.call("loadgame",[true]);
 E.put(E.get("global"),"greentimer",0);
 E.call("layer_set_visible",["specialbutton",(!E.truthy(E.get("visible")))]);
 }
@@ -6157,7 +6157,7 @@ E.call("event_inherited",[]);
 }
 ,
 "gml_Object_oSaver_Create_0":function(E){
-E.call("loadgame",[]);
+E.call("loadgame",[true]);
 }
 ,
 "gml_Object_oSaver_PreCreate_0":function(E){
@@ -7546,6 +7546,10 @@ else {}
 },
 "loadgame":function(E){
 {
+if((((E.get("argument_count") > 0) && E.truthy(E.index(E.get("argument"),0))) && E.truthy(E.member(E.get("global"),"skipstatsautoload")))){
+return ;
+}
+else {}
 if(E.truthy(E.call("file_exists",["User.sav"]))){
 E.call("ini_open",["User.sav"]);
 E.put(E.get("global"),"kills",E.call("ini_read_real",["Save1","gscore",E.member(E.get("global"),"kills")]));

@@ -151,3 +151,14 @@ The runtime now remembers which room an active adventure left when opening the m
 Stationary mouse coordinates no longer override keyboard menu selection every frame. Moving the pointer or clicking still selects the corresponding row.
 
 Six regressions cover all four gameplay rooms, full resources and exact player/weapon identity, collected and destroyed room objects, a stale previous-room file, repeated menu entry, menu world reloads including earlier saves, New Game, fresh statistics continuation, rejected return metadata, and keyboard selection under a stationary pointer. A native browser Menu→Continue check preserved **$1,000, 1,110 bullets, and 50 grenades**. The sequential full suite passes **189 tests** with 128 MB heaps; syntax and both Pages URL layouts pass verification. No extra world copy or room-sized rendering surface was introduced.
+
+
+## New Game does not reload old statistics — October 12, 2026
+
+New Game cleared live globals and room history, but the original player Room Start and saver Create events automatically called `loadgame()`. An existing `User.sav` then restored the previous $1,234.56, 555 bullets, 27 grenades, and other saved values as soon as Home loaded. Without that file, starting again correctly used the original defaults.
+
+Those two initialization calls now identify themselves as automatic loads. A new adventure records a flag in its existing saved globals that blocks them, including after saving and reloading the introduction. Explicit L loads still work, original statistics and world slots remain available, and a cold session retains its original statistics-continuation behavior. New Game and the ending restart both reach Home with $0, 110 bullets, zero grenades, eight hearts, and full slow motion, with inventory, quests, weapon ownership, and cheats reset.
+
+Four additional regressions cover all four gameplay rooms with memory-only, persistent, and failing-write storage; explicit statistics loading; world round-trips during the introduction and at Home; and the original ending restart. They fail against the previous runtime and pass with the fix. No per-frame work, asset allocation, or additional world copy was introduced.
+
+A browser runtime check reset $1,000, 1,110 bullets, 50 grenades, stocks, tapes, and the allowance flag to the original Home defaults while retaining `User.sav`, with zero runtime errors. The full sequential suite passes **193 tests** with 128 MB heaps; syntax and both Pages URL layouts pass verification.
